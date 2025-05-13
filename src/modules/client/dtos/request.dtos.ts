@@ -4,7 +4,7 @@ import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { ClientOptionalDto, ClientRequiredDto } from './fields.dtos'
 
 export class ClientFindManyRequestDto
-	extends IntersectionType(PickType(ClientOptionalDto, ['fullname', 'phone']), PaginationRequestDto, PickType(RequestOtherFieldsDto, ['search']))
+	extends IntersectionType(PickType(ClientOptionalDto, ['fullname', 'phone']), PaginationRequestDto, PickType(RequestOtherFieldsDto, ['search', 'debtValue', 'debtType']))
 	implements ClientFindManyRequest {}
 
 export class ClientFindOneRequestDto extends IntersectionType(PickType(ClientRequiredDto, ['id'])) implements ClientFindOneRequest {}

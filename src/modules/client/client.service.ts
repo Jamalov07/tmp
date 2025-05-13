@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ClientRepository } from './client.repository'
-import { createResponse, DeleteMethodEnum } from '@common'
+import { createResponse, DebtTypeEnum, DeleteMethodEnum } from '@common'
 import {
 	ClientGetOneRequest,
 	ClientCreateOneRequest,
@@ -21,8 +21,8 @@ export class ClientService {
 	}
 
 	async findMany(query: ClientFindManyRequest) {
-		const clients = await this.clientRepository.findMany(query)
-		const clientsCount = await this.clientRepository.countFindMany(query)
+		const clients = await this.clientRepository.findMany({ ...query, pagination: false })
+		// const clientsCount = await this.clientRepository.countFindMany(query)
 
 		const mappedClients = clients.map((c) => {
 			const payment = c.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
@@ -43,12 +43,31 @@ export class ClientService {
 			}
 		})
 
+		const filteredClients = mappedClients.filter((s) => {
+			if (query.debtType && query.debtValue !== undefined) {
+				const value = new Decimal(query.debtValue)
+				switch (query.debtType) {
+					case DebtTypeEnum.gt:
+						return s.debt.gt(value)
+					case DebtTypeEnum.lt:
+						return s.debt.lt(value)
+					case DebtTypeEnum.eq:
+						return s.debt.eq(value)
+					default:
+						return true
+				}
+			}
+			return true
+		})
+
+		const paginatedClients = query.pagination ? filteredClients.slice((query.pageNumber - 1) * query.pageSize, query.pageNumber * query.pageSize) : filteredClients
+
 		const result = query.pagination
 			? {
-					totalCount: clientsCount,
-					pagesCount: Math.ceil(clientsCount / query.pageSize),
-					pageSize: clients.length,
-					data: mappedClients,
+					totalCount: filteredClients.length,
+					pagesCount: Math.ceil(filteredClients.length / query.pageSize),
+					pageSize: paginatedClients.length,
+					data: paginatedClients,
 				}
 			: { data: mappedClients }
 

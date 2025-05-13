@@ -10,7 +10,6 @@ import {
 	SupplierFindOneRequest,
 	SupplierDeleteOneRequest,
 } from './interfaces'
-import { ArrivalService } from '../arrival'
 import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
