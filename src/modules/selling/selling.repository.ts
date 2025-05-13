@@ -27,6 +27,12 @@ export class SellingRepository implements OnModuleInit {
 		const sellings = await this.prisma.sellingModel.findMany({
 			where: {
 				status: query.status,
+				staffId: query.staffId,
+				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
+				date: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
 			},
 			select: {
 				id: true,
@@ -34,6 +40,11 @@ export class SellingRepository implements OnModuleInit {
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				date: true,
+				send: true,
+				sended: true,
+				client: true,
+				staff: true,
 			},
 			...paginationOptions,
 		})
@@ -50,6 +61,11 @@ export class SellingRepository implements OnModuleInit {
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				date: true,
+				send: true,
+				sended: true,
+				client: true,
+				staff: true,
 			},
 		})
 
@@ -60,6 +76,12 @@ export class SellingRepository implements OnModuleInit {
 		const sellingsCount = await this.prisma.sellingModel.count({
 			where: {
 				status: query.status,
+				staffId: query.staffId,
+				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
+				date: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
 			},
 		})
 

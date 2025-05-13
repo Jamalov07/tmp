@@ -1,9 +1,14 @@
 import { GlobalResponse, PaginationResponse } from '@common'
 import { SellingRequired } from './fields.interfaces'
+import { ClientFindOneData } from '../../client'
+import { StaffFindOneData } from '../../staff'
 
 export declare interface SellingFindManyData extends PaginationResponse<SellingFindOneData> {}
 
-export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' | 'status' | 'createdAt'> {}
+export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' | 'status' | 'createdAt' | 'date' | 'send' | 'sended'> {
+	client?: ClientFindOneData
+	staff?: StaffFindOneData
+}
 
 export declare interface SellingFindManyResponse extends GlobalResponse {
 	data: SellingFindManyData

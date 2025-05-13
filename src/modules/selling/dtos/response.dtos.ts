@@ -2,8 +2,16 @@ import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
 import { SellingCreateOneResponse, SellingFindManyData, SellingFindManyResponse, SellingFindOneData, SellingFindOneResponse, SellingModifyResponse } from '../interfaces'
 import { GlobalModifyResponseDto, GlobalResponseDto, PaginationResponseDto } from '@common'
 import { SellingRequiredDto } from './fields.dtos'
+import { ClientFindOneData, ClientFindOneDataDto } from '../../client'
+import { StaffFindOneData, StaffFindOneDataDto } from '../../staff'
 
-export class SellingFindOneDataDto extends PickType(SellingRequiredDto, ['id', 'status', 'createdAt']) implements SellingFindOneData {}
+export class SellingFindOneDataDto extends PickType(SellingRequiredDto, ['id', 'status', 'createdAt', 'date', 'send', 'sended']) implements SellingFindOneData {
+	@ApiProperty({ type: ClientFindOneDataDto })
+	client?: ClientFindOneData
+
+	@ApiProperty({ type: StaffFindOneDataDto })
+	staff?: StaffFindOneData
+}
 
 export class SellingFindManyDataDto extends PaginationResponseDto implements SellingFindManyData {
 	@ApiProperty({ type: SellingFindOneDataDto, isArray: true })
