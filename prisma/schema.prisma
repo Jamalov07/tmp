@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum ActionMethodEnum {
+  get     @map("get")
+  put     @map("put")
+  post    @map("post")
+  patch   @map("patch")
+  delete  @map("delete")
+
+  @@map("action_method")
+}
+
+enum UserTypeEnum {
+  staff     @map("staff")
+  client    @map("client")
+  supplier  @map("supplier")
+
+  @@map("user_type")
+}
+
+enum SellingStatusEnum {
+  accepted     @map("accepted")
+  notaccepted  @map("notaccepted")
+
+  @@map("selling_status")
+}
+
+enum ServiceTypeEnum {
+  selling    @map("selling")
+  arrival    @map("arrival")
+  returning  @map("returning")
+  staff      @map("staff")
+  supplier   @map("supplier")
+  client   @map("client")
+  none       @map("none")
+
+  @@map("service_type")
+}
+
+
+model ActionModel {
+  id            String            @map("id")             @db.Uuid       @default(dbgenerated("GEN_RANDOM_UUID()"))
+  url           String            @map("url")            @db.VarChar()
+  name          String            @map("name")           @db.VarChar()
+  method        ActionMethodEnum  
+  description   String            @map("description")    @db.VarChar()  @default("")
+  permissionId  String?           @map("permission_id")  @db.Uuid
+
+  permission  PermissionModel?  @relation(fields: [ permissionId ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+  
+  users  UserModel[]
+
+  @@id([ id ])
+  @@index([ id ])
+  @@unique([ url, name, method ])
+  @@map("action")
+}
+
+model PermissionModel {
+  id         String     @map("id")          @db.Uuid         @default(dbgenerated("GEN_RANDOM_UUID()"))
+  name       String     @map("name")        @db.VarChar()
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  actions   ActionModel[]
+
+  @@id([ id ])
+  @@index([ id ])
+  @@unique([ name ])
+  @@map("permission")
+}
+
+
+model UserModel {
+  id        String   @map("id")        @db.Uuid       @default(dbgenerated("GEN_RANDOM_UUID()"))
+  phone     String   @map("phone")     @db.VarChar()  @unique 
+  fullname  String   @map("fullname")  @db.VarChar()
+  password  String   @map("password")  @db.VarChar()  
+  token     String?  @map("token")     @db.VarChar()  
+  type      UserTypeEnum
+ 
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  actions          ActionModel[]
+  productMVs       ProductMVModel[]
+
+  payments         PaymentModel[]    @relation(name: "addedtome")
+  sellings         SellingModel[]    @relation(name: "addedtome")
+  arrivals         ArrivalModel[]    @relation(name: "addedtome")
+  returnings       ReturningModel[]  @relation(name: "addedtome")
+
+  addedPayments    PaymentModel[]    @relation(name: "addedfromme")
+  addedSellings    SellingModel[]    @relation(name: "addedfromme")
+  addedArrivals    ArrivalModel[]    @relation(name: "addedfromme")
+  addedReturnings  ReturningModel[]  @relation(name: "addedfromme")
+  
+  @@id([ id ])
+  @@index([ id ])
+  @@map("user")
+}
+
+model PaymentModel {
+  id           String   @map("id")            @db.Uuid            @default(dbgenerated("GEN_RANDOM_UUID()"))
+  sum          Decimal  @map("sum")           @db.Decimal(10, 3)  @default(0)
+  cash         Decimal  @map("cash")          @db.Decimal(10, 3)  @default(0)
+  card         Decimal  @map("card")          @db.Decimal(10, 3)  @default(0)
+  other        Decimal  @map("other")         @db.Decimal(10, 3)  @default(0)
+  transfer     Decimal  @map("transfer")      @db.Decimal(10, 3)  @default(0)
+  fromBalance  Decimal  @map("from_balance")  @db.Decimal(10, 3)  @default(0)
+  description  String   @map("description")   @db.VarChar()       @default("")
+  userId       String   @map("user_id")       @db.Uuid
+
+  type         ServiceTypeEnum                                    @default(none)
+  sellingId    String?          @map("selling_id")    @db.Uuid @unique
+  arrivalId    String?          @map("arrival_id")    @db.Uuid @unique
+  returningId  String?          @map("returning_id")  @db.Uuid @unique
+  staffId      String           @map("staff_id")      @db.Uuid
+  
+  user       UserModel        @relation(name: "addedtome",        fields: [ userId      ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+  staff      UserModel        @relation(name: "addedfromme",      fields: [ staffId     ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)  
+  selling    SellingModel?    @relation(name: "sellingpayment",   fields: [ sellingId   ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)  
+  arrival    ArrivalModel?    @relation(name: "arrivalpayment",   fields: [ arrivalId   ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)  
+  returning  ReturningModel?  @relation(name: "returningpayment", fields: [ returningId ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)  
+
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  @@id([ id ])
+  @@index([ id ])
+  @@map("payment")
+}
+
+
+model SellingModel {
+  id        String            @map("id")         @db.Uuid           @default(dbgenerated("GEN_RANDOM_UUID()"))
+  date      DateTime          @map("date")       @db.Timestamptz()  @default(dbgenerated("NOW()"))
+  send      Boolean           @map("send")       @db.Boolean        @default(false)       
+  sended    Boolean           @map("sended")     @db.Boolean        @default(false)       
+  status    SellingStatusEnum @map("status")
+  clientId  String            @map("client_id")  @db.Uuid
+  staffId   String            @map("staff_id")   @db.Uuid
+
+  client  UserModel  @relation(name: "addedtome",   fields: [ clientId ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+  staff   UserModel  @relation(name: "addedfromme", fields: [ staffId  ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+
+  products  ProductMVModel[]
+  payment   PaymentModel?     @relation(name: "sellingpayment")
+
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  @@id([ id ])
+  @@index([ id ])
+  @@map("selling")
+}
+
+
+model ArrivalModel {
+  id          String    @map("id")           @db.Uuid           @default(dbgenerated("GEN_RANDOM_UUID()"))
+  date        DateTime  @map("date")         @db.Timestamptz()  @default(dbgenerated("NOW()"))
+  staffId     String    @map("staff_id")     @db.Uuid
+  supplierId  String    @map("supplier_id")  @db.Uuid
+
+  supplier  UserModel  @relation(name: "addedtome",   fields: [ supplierId ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+  staff     UserModel  @relation(name: "addedfromme", fields: [ staffId    ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+
+  products  ProductMVModel[]
+  payment   PaymentModel?     @relation(name: "arrivalpayment")
+
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  @@id([ id ])
+  @@index([ id ])
+  @@map("arrival")
+}
+
+model ReturningModel {
+  id          String    @map("id")           @db.Uuid           @default(dbgenerated("GEN_RANDOM_UUID()"))
+  date        DateTime  @map("date")         @db.Timestamptz()  @default(dbgenerated("NOW()"))
+  staffId     String    @map("staff_id")     @db.Uuid
+  clientId    String    @map("client_id")    @db.Uuid
+
+  client  UserModel  @relation(name: "addedtome",   fields: [ clientId ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+  staff   UserModel  @relation(name: "addedfromme", fields: [ staffId  ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+
+  products  ProductMVModel[]
+  payment   PaymentModel?     @relation(name: "returningpayment")
+
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  @@id([ id ])
+  @@index([ id ])
+  @@map("returning")
+}
+
+model ProductMVModel {
+  id         String  @map("id")          @db.Uuid            @default(dbgenerated("GEN_RANDOM_UUID()"))
+  price      Decimal @map("price")       @db.Decimal(10, 3)  @default(0)
+  cost       Decimal @map("cost")        @db.Decimal(10, 3)  @default(0)
+  count      Int     @map("count")       @db.Integer         @default(1)
+  productId  String  @map("product_id")  @db.Uuid
+
+  type         ServiceTypeEnum
+  sellingId    String?           @map("selling_id")    @db.Uuid
+  arrivalId    String?           @map("arrival_id")    @db.Uuid
+  returningId  String?           @map("returning_id")  @db.Uuid
+  staffId      String            @map("staff_id")      @db.Uuid
+
+  staff      UserModel        @relation(fields: [ staffId     ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+  product    ProductModel     @relation(fields: [ productId   ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+  selling    SellingModel?    @relation(fields: [ sellingId   ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)  
+  arrival    ArrivalModel?    @relation(fields: [ arrivalId   ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)  
+  returning  ReturningModel?  @relation(fields: [ returningId ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)  
+
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  @@id([ id ])
+  @@index([ id ])
+  @@map("product_mv")
+}
+
+model ProductModel {
+  id         String    @map("id")          @db.Uuid            @default(dbgenerated("GEN_RANDOM_UUID()"))
+  name       String    @map("name")        @db.VarChar()
+  cost       Decimal   @map("cost")        @db.Decimal(10, 3)  @default(0)
+  price      Decimal   @map("price")       @db.Decimal(10, 3)  @default(0)
+  minAmount  Int       @map("min_amount")  @db.Integer         @default(1)
+  count      Int       @map("count")       @db.Integer         @default(1)
+
+  createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
+  updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
+  deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
+
+  productMVs ProductMVModel[]
+
+  @@id([ id ])
+  @@index([ id ])
+  @@unique([ name ])
+  @@map("product")
+}
+
+

@@ -1,0 +1,21 @@
+import { PaginationRequest, RequestOtherFields } from '@common'
+import { ClientPaymentOptional, ClientPaymentRequired } from './fields.interfaces'
+
+export declare interface ClientPaymentFindManyRequest
+	extends Pick<ClientPaymentOptional, 'staffId' | 'userId'>,
+		PaginationRequest,
+		Pick<RequestOtherFields, 'isDeleted' | 'search' | 'startDate' | 'endDate'> {}
+
+export declare interface ClientPaymentFindOneRequest extends Pick<ClientPaymentOptional, 'id'> {}
+
+export declare interface ClientPaymentGetManyRequest extends ClientPaymentOptional, PaginationRequest, Pick<RequestOtherFields, 'ids' | 'isDeleted'> {}
+
+export declare interface ClientPaymentGetOneRequest extends ClientPaymentOptional, Pick<RequestOtherFields, 'isDeleted'> {}
+
+export declare interface ClientPaymentCreateOneRequest
+	extends Pick<ClientPaymentRequired, 'description' | 'userId' | 'card' | 'cash' | 'other' | 'transfer'>,
+		Pick<ClientPaymentOptional, 'staffId'> {}
+
+export declare interface ClientPaymentUpdateOneRequest extends Pick<ClientPaymentOptional, 'userId' | 'card' | 'description' | 'deletedAt' | 'cash' | 'other' | 'transfer'> {}
+
+export declare interface ClientPaymentDeleteOneRequest extends Pick<ClientPaymentOptional, 'id'>, Pick<RequestOtherFields, 'method'> {}
