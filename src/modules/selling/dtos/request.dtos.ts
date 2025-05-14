@@ -4,6 +4,8 @@ import {
 	SellingDeleteOneRequest,
 	SellingFindManyRequest,
 	SellingFindOneRequest,
+	SellingGetPeriodStatsRequest,
+	SellingGetTotalStatsRequest,
 	SellingPayment,
 	SellingProduct,
 	SellingUpdateOneRequest,
@@ -12,8 +14,9 @@ import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { SellingOptionalDto, SellingRequiredDto } from './fields.dtos'
 import { ClientPaymentRequiredDto } from '../../client-payment'
 import { ProductMVRequiredDto } from '../../product-mv'
-import { IsArray, IsOptional, IsUUID, ValidateNested } from 'class-validator'
+import { IsArray, IsEnum, IsOptional, IsUUID, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
+import { StatsTypeEnum } from '../enums'
 
 export class SellingFindManyRequestDto
 	extends IntersectionType(
@@ -71,3 +74,12 @@ export class SellingUpdateOneRequestDto extends IntersectionType(PickType(Sellin
 export class SellingDeleteOneRequestDto
 	extends IntersectionType(PickType(SellingRequiredDto, ['id']), PickType(RequestOtherFieldsDto, ['method']))
 	implements SellingDeleteOneRequest {}
+
+export class SellingGetTotalStatsRequestDto implements SellingGetTotalStatsRequest {}
+
+export class SellingGetPeriodStatsRequestDto implements SellingGetPeriodStatsRequest {
+	@ApiPropertyOptional({ enum: StatsTypeEnum })
+	@IsOptional()
+	@IsEnum(StatsTypeEnum)
+	type?: StatsTypeEnum = StatsTypeEnum.day
+}

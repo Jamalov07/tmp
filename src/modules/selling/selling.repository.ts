@@ -7,10 +7,14 @@ import {
 	SellingFindOneRequest,
 	SellingGetManyRequest,
 	SellingGetOneRequest,
+	SellingGetPeriodStatsRequest,
 	SellingUpdateOneRequest,
 } from './interfaces'
 import { SellingController } from './selling.controller'
 import { ServiceTypeEnum } from '@prisma/client'
+import { StatsTypeEnum } from './enums'
+import { convertUTCtoLocal, extractDateParts } from '../../common'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class SellingRepository implements OnModuleInit {
@@ -103,6 +107,30 @@ export class SellingRepository implements OnModuleInit {
 			where: {
 				id: { in: query.ids },
 				status: query.status,
+			},
+			select: {
+				id: true,
+				status: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				date: true,
+				send: true,
+				sended: true,
+				client: {
+					select: {
+						id: true,
+						fullname: true,
+						phone: true,
+						payments: {
+							where: { type: ServiceTypeEnum.client },
+							select: { card: true, cash: true, other: true, transfer: true },
+						},
+					},
+				},
+				staff: true,
+				payment: true,
+				products: { select: { price: true, count: true, product: { select: { name: true } } } },
 			},
 			...paginationOptions,
 		})
@@ -201,5 +229,149 @@ export class SellingRepository implements OnModuleInit {
 
 	async onModuleInit() {
 		await this.prisma.createActionMethods(SellingController)
+	}
+
+	async getPeriodStats(query: SellingGetPeriodStatsRequest) {
+		if (query.type === StatsTypeEnum.day) {
+			return this.getDayStats()
+		} else if (query.type === StatsTypeEnum.week) {
+			return this.getWeekStats()
+		} else if (query.type === StatsTypeEnum.month) {
+			return this.getMonthStats()
+		} else if (query.type === StatsTypeEnum.year) {
+			return this.getYearStats()
+		}
+	}
+
+	private async getDayStats() {
+		const now = convertUTCtoLocal(new Date())
+		const extractedNow = extractDateParts(now)
+
+		const startDay = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day, 0, 0, 0, 0))
+		const endDay = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day, 23, 59, 59, 999))
+
+		const salesByHour = []
+		for (let hour = 0; hour <= now.getHours(); hour++) {
+			const hourStart = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day, hour, 0, 0, 0))
+			const hourEnd = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day, hour, 59, 59, 999))
+			const sales = await this.prisma.sellingModel.findMany({
+				where: { createdAt: { gte: hourStart, lte: hourEnd } },
+				select: { products: true },
+			})
+
+			const totalSum = sales.reduce((sum, selling) => {
+				const totalPrice = selling.products.reduce((acc, product) => {
+					return acc.plus(new Decimal(product.count).mul(product.price))
+				}, new Decimal(0))
+
+				return sum.plus(totalPrice)
+			}, new Decimal(0))
+
+			const start = extractDateParts(hourStart)
+			salesByHour.push({
+				date: `${String(start.hour).padStart(2, '0')}:${String(start.minute).padStart(2, '0')}`,
+				sum: totalSum.toString(),
+			})
+		}
+		return salesByHour
+	}
+
+	async getWeekStats() {
+		const now = convertUTCtoLocal(new Date())
+		const extractedNow = extractDateParts(now)
+
+		const startDay = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day - 6, 0, 0, 0, 0))
+		const endDay = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day, 23, 59, 59, 999))
+
+		const salesByDay = []
+		for (let day = startDay.getDate(); day <= endDay.getDate(); day++) {
+			const dayStart = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, day, 0, 0, 0, 0))
+
+			const dayEnd = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, day, 23, 59, 59, 999))
+
+			const sales = await this.prisma.sellingModel.findMany({
+				where: { createdAt: { gte: dayStart, lte: dayEnd } },
+				select: { products: true },
+			})
+
+			const totalSum = sales.reduce((sum, selling) => {
+				const totalPrice = selling.products.reduce((acc, product) => {
+					return acc.plus(new Decimal(product.count).mul(product.price))
+				}, new Decimal(0))
+
+				return sum.plus(totalPrice)
+			}, new Decimal(0))
+
+			salesByDay.push({
+				date: `${dayStart.getFullYear()}-${String(dayStart.getMonth() + 1).padStart(2, '0')}-${String(dayStart.getDate()).padStart(2, '0')}`,
+				sum: totalSum.toString(),
+			})
+		}
+		return salesByDay
+	}
+
+	async getMonthStats() {
+		const now = new Date(new Date().setHours(new Date().getHours() + 5))
+		const startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0 + 5, 0, 0, 0)
+		const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+		const dateFormat = (date) => date.toISOString().split('T')[0]
+
+		const salesByDay = []
+		for (let day = 1; day <= endDate.getDate(); day++) {
+			const dayStart = new Date(startDate)
+			dayStart.setDate(day)
+			const dayEnd = new Date(dayStart)
+			dayEnd.setHours(23, 59, 59, 999)
+
+			const sales = await this.prisma.sellingModel.findMany({
+				where: { createdAt: { gte: dayStart, lte: dayEnd } },
+				select: { products: true },
+			})
+
+			const totalSum = sales.reduce((sum, selling) => {
+				const totalPrice = selling.products.reduce((acc, product) => {
+					return acc.plus(new Decimal(product.count).mul(product.price))
+				}, new Decimal(0))
+
+				return sum.plus(totalPrice)
+			}, new Decimal(0))
+
+			salesByDay.push({
+				date: dateFormat(dayStart),
+				sum: totalSum.toString(),
+			})
+		}
+		return salesByDay
+	}
+
+	async getYearStats() {
+		const now = new Date(new Date().setHours(new Date().getHours() + 5))
+		const startDate = new Date(now.getFullYear(), 0, 1, 0 + 5, 0, 0, 0)
+		const endDate = new Date(now.getFullYear(), 11, 31, 23 + 5, 59, 59, 999)
+		const dateFormat = (date) => date.toISOString().split('T')[0].slice(0, 7)
+
+		const salesByMonth = []
+		for (let month = 0; month < 12; month++) {
+			const monthStart = new Date(startDate.getFullYear(), month, 1, 0 + 5, 0, 0, 0)
+			const monthEnd = new Date(startDate.getFullYear(), month + 1, 0, 23 + 5, 59, 59, 999)
+
+			const sales = await this.prisma.sellingModel.findMany({
+				where: { createdAt: { gte: monthStart, lte: monthEnd } },
+				select: { products: true },
+			})
+
+			const totalSum = sales.reduce((sum, selling) => {
+				const totalPrice = selling.products.reduce((acc, product) => {
+					return acc.plus(new Decimal(product.count).mul(product.price))
+				}, new Decimal(0))
+
+				return sum.plus(totalPrice)
+			}, new Decimal(0))
+			salesByMonth.push({
+				date: dateFormat(monthStart),
+				sum: totalSum.toString(),
+			})
+		}
+		return salesByMonth
 	}
 }

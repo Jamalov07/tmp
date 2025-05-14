@@ -10,6 +10,10 @@ import {
 	SellingDeleteOneRequestDto,
 	SellingCreateOneRequestDto,
 	SellingCreateOneResponseDto,
+	SellingGetTotalStatsResponseDto,
+	SellingGetTotalStatsRequestDto,
+	SellingGetPeriodStatsResponseDto,
+	SellingGetPeriodStatsRequestDto,
 } from './dtos'
 import { SellingService } from './selling.service'
 import { AuthOptions, CRequest } from '../../common'
@@ -28,6 +32,22 @@ export class SellingController {
 	@ApiOperation({ summary: 'get all sellings' })
 	async findMany(@Query() query: SellingFindManyRequestDto): Promise<SellingFindManyResponseDto> {
 		return this.sellingService.findMany(query)
+	}
+
+	@Get('total-stats')
+	@ApiOkResponse({ type: SellingGetTotalStatsResponseDto })
+	@ApiOperation({ summary: 'get total stats' })
+	@AuthOptions(false, false)
+	async getTotalStats(@Query() query: SellingGetTotalStatsRequestDto): Promise<SellingGetTotalStatsResponseDto> {
+		return this.sellingService.getTotalStats(query)
+	}
+
+	@Get('period-stats')
+	@ApiOkResponse({ type: SellingGetPeriodStatsResponseDto })
+	@ApiOperation({ summary: 'get period stats' })
+	@AuthOptions(false, false)
+	async getPeriodStats(@Query() query: SellingGetPeriodStatsRequestDto): Promise<SellingGetPeriodStatsResponseDto> {
+		return this.sellingService.getPeriodStats(query)
 	}
 
 	@Get('one')

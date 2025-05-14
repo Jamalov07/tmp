@@ -40,3 +40,29 @@ export declare interface SellingCreateOneResponse extends GlobalResponse {
 export declare interface SellingModifyResponse extends GlobalResponse {
 	data: null
 }
+
+export declare interface Debt {
+	ourDebt: Decimal
+	theirDebt: Decimal
+}
+
+export declare interface SellingGetTotalStatsData {
+	daily: Decimal
+	weekly: Decimal
+	monthly: Decimal
+	yearly: Decimal
+	client: Debt
+	supplier: Debt
+}
+export declare interface SellingGetTotalStatsResponse extends GlobalResponse {
+	data: SellingGetTotalStatsData
+}
+
+export declare interface SellingGetPeriodStatsData {
+	date: string
+	sum: Decimal
+}
+
+export declare interface SellingGetPeriodStatsResponse extends GlobalResponse {
+	data: SellingGetPeriodStatsData[]
+}

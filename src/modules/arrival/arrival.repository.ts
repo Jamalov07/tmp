@@ -96,6 +96,27 @@ export class ArrivalRepository implements OnModuleInit {
 				id: { in: query.ids },
 				supplierId: query.supplierId,
 			},
+			select: {
+				id: true,
+				date: true,
+				supplier: {
+					select: {
+						id: true,
+						fullname: true,
+						phone: true,
+						payments: {
+							where: { type: ServiceTypeEnum.client },
+							select: { card: true, cash: true, other: true, transfer: true },
+						},
+					},
+				},
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				staff: true,
+				payment: true,
+				products: { select: { price: true, count: true, cost: true, product: { select: { name: true } } } },
+			},
 			...paginationOptions,
 		})
 
