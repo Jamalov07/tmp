@@ -77,9 +77,9 @@ export class ReturningService {
 	}
 
 	async updateOne(query: ReturningGetOneRequest, body: ReturningUpdateOneRequest) {
-		await this.getOne(query)
+		const returning = await this.getOne(query)
 
-		await this.returningRepository.updateOne(query, { ...body })
+		await this.returningRepository.updateOne(query, { ...body, staffId: returning.data.staffId })
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}

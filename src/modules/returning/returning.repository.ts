@@ -10,6 +10,7 @@ import {
 	ReturningUpdateOneRequest,
 } from './interfaces'
 import { ReturningController } from './returning.controller'
+import { ServiceTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class ReturningRepository implements OnModuleInit {
@@ -27,6 +28,11 @@ export class ReturningRepository implements OnModuleInit {
 		const returnings = await this.prisma.returningModel.findMany({
 			where: {
 				clientId: query.clientId,
+				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
+				date: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
 			},
 			select: {
 				id: true,
@@ -62,6 +68,11 @@ export class ReturningRepository implements OnModuleInit {
 		const returningsCount = await this.prisma.returningModel.count({
 			where: {
 				clientId: query.clientId,
+				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
+				date: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
 			},
 		})
 
@@ -110,6 +121,21 @@ export class ReturningRepository implements OnModuleInit {
 				clientId: body.clientId,
 				date: body.date,
 				staffId: body.staffId,
+				payment: {
+					create: {
+						cash: body.payment.cash,
+						fromBalance: body.payment.fromBalance,
+						userId: body.clientId,
+						staffId: body.staffId,
+						type: ServiceTypeEnum.returning,
+					},
+				},
+				products: {
+					createMany: {
+						skipDuplicates: false,
+						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.returning, count: p.count, price: p.price, staffId: body.staffId })),
+					},
+				},
 			},
 		})
 		return returning
@@ -122,6 +148,19 @@ export class ReturningRepository implements OnModuleInit {
 				clientId: body.clientId,
 				date: body.date,
 				deletedAt: body.deletedAt,
+				payment: {
+					update: {
+						cash: body.payment.cash,
+						fromBalance: body.payment.fromBalance,
+					},
+				},
+				products: {
+					createMany: {
+						skipDuplicates: false,
+						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId })),
+					},
+					deleteMany: body.productIdsToRemove.map((id) => ({ id: id })),
+				},
 			},
 		})
 

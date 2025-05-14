@@ -10,6 +10,7 @@ import {
 	SellingUpdateOneRequest,
 } from './interfaces'
 import { SellingController } from './selling.controller'
+import { ServiceTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class SellingRepository implements OnModuleInit {
@@ -45,6 +46,8 @@ export class SellingRepository implements OnModuleInit {
 				sended: true,
 				client: true,
 				staff: true,
+				payment: true,
+				products: { select: { price: true, count: true, product: { select: { name: true } } } },
 			},
 			...paginationOptions,
 		})
@@ -66,6 +69,8 @@ export class SellingRepository implements OnModuleInit {
 				sended: true,
 				client: true,
 				staff: true,
+				payment: true,
+				products: { select: { price: true, count: true, product: { select: { name: true } } } },
 			},
 		})
 
@@ -133,6 +138,24 @@ export class SellingRepository implements OnModuleInit {
 				staffId: body.staffId,
 				send: body.send,
 				sended: body.sended,
+				payment: {
+					create: {
+						card: body.payment.card,
+						cash: body.payment.cash,
+						other: body.payment.other,
+						transfer: body.payment.transfer,
+						description: body.payment.description,
+						userId: body.clientId,
+						staffId: body.staffId,
+						type: ServiceTypeEnum.selling,
+					},
+				},
+				products: {
+					createMany: {
+						skipDuplicates: false,
+						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId })),
+					},
+				},
 			},
 		})
 		return selling
@@ -142,10 +165,26 @@ export class SellingRepository implements OnModuleInit {
 		const selling = await this.prisma.sellingModel.update({
 			where: { id: query.id },
 			data: {
+				date: body.date,
 				status: body.status,
 				clientId: body.clientId,
-				date: body.date,
 				deletedAt: body.deletedAt,
+				payment: {
+					update: {
+						card: body.payment.card,
+						cash: body.payment.cash,
+						other: body.payment.other,
+						transfer: body.payment.transfer,
+						description: body.payment.description,
+					},
+				},
+				products: {
+					createMany: {
+						skipDuplicates: false,
+						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId })),
+					},
+					deleteMany: body.productIdsToRemove.map((id) => ({ id: id })),
+				},
 			},
 		})
 

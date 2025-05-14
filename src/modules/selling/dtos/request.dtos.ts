@@ -1,8 +1,19 @@
-import { PickType, IntersectionType, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { SellingCreateOneRequest, SellingDeleteOneRequest, SellingFindManyRequest, SellingFindOneRequest, SellingPayment, SellingUpdateOneRequest } from '../interfaces'
+import { PickType, IntersectionType, ApiPropertyOptional } from '@nestjs/swagger'
+import {
+	SellingCreateOneRequest,
+	SellingDeleteOneRequest,
+	SellingFindManyRequest,
+	SellingFindOneRequest,
+	SellingPayment,
+	SellingProduct,
+	SellingUpdateOneRequest,
+} from '../interfaces'
 import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { SellingOptionalDto, SellingRequiredDto } from './fields.dtos'
 import { ClientPaymentRequiredDto } from '../../client-payment'
+import { ProductMVRequiredDto } from '../../product-mv'
+import { IsArray, IsOptional, IsUUID, ValidateNested } from 'class-validator'
+import { Type } from 'class-transformer'
 
 export class SellingFindManyRequestDto
 	extends IntersectionType(
@@ -16,15 +27,46 @@ export class SellingFindOneRequestDto extends IntersectionType(PickType(SellingR
 
 export class SellingPaymentDto extends IntersectionType(PickType(ClientPaymentRequiredDto, ['card', 'cash', 'other', 'transfer', 'description'])) implements SellingPayment {}
 
+export class SellingProductDto extends PickType(ProductMVRequiredDto, ['count', 'price', 'productId']) implements SellingProduct {}
+
 export class SellingCreateOneRequestDto
-	extends IntersectionType(PickType(SellingRequiredDto, ['clientId', 'date', 'send', 'status']), PickType(SellingOptionalDto, ['staffId']))
+	extends IntersectionType(PickType(SellingRequiredDto, ['clientId', 'date', 'send']), PickType(SellingOptionalDto, ['staffId']))
 	implements SellingCreateOneRequest
 {
 	@ApiPropertyOptional({ type: SellingPaymentDto })
+	@IsOptional()
+	@ValidateNested()
+	@Type(() => SellingPaymentDto)
 	payment?: SellingPayment
+
+	@ApiPropertyOptional({ type: SellingProductDto, isArray: true })
+	@IsOptional()
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => SellingProductDto)
+	products?: SellingProduct[]
 }
 
-export class SellingUpdateOneRequestDto extends IntersectionType(PickType(SellingOptionalDto, ['deletedAt', 'clientId', 'date', 'status'])) implements SellingUpdateOneRequest {}
+export class SellingUpdateOneRequestDto extends IntersectionType(PickType(SellingOptionalDto, ['deletedAt', 'clientId', 'date', 'status'])) implements SellingUpdateOneRequest {
+	@ApiPropertyOptional({ type: SellingPaymentDto })
+	@IsOptional()
+	@ValidateNested()
+	@Type(() => SellingPaymentDto)
+	payment?: SellingPayment
+
+	@ApiPropertyOptional({ type: SellingProductDto, isArray: true })
+	@IsOptional()
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => SellingProductDto)
+	products?: SellingProduct[]
+
+	@ApiPropertyOptional({ type: String, isArray: true })
+	@IsOptional()
+	@IsArray()
+	@IsUUID('4', { each: true })
+	productIdsToRemove?: string[]
+}
 
 export class SellingDeleteOneRequestDto
 	extends IntersectionType(PickType(SellingRequiredDto, ['id']), PickType(RequestOtherFieldsDto, ['method']))

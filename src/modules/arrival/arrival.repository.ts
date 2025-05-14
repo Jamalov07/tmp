@@ -10,6 +10,7 @@ import {
 	ArrivalUpdateOneRequest,
 } from './interfaces'
 import { ArrivalController } from './arrival.controller'
+import { ServiceTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class ArrivalRepository implements OnModuleInit {
@@ -27,14 +28,22 @@ export class ArrivalRepository implements OnModuleInit {
 		const arrivals = await this.prisma.arrivalModel.findMany({
 			where: {
 				supplierId: query.supplierId,
+				OR: [{ supplier: { fullname: { contains: query.search, mode: 'insensitive' } } }, { supplier: { phone: { contains: query.search, mode: 'insensitive' } } }],
+				date: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
 			},
 			select: {
 				id: true,
 				date: true,
-				supplierId: true,
+				supplier: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				staff: true,
+				payment: true,
+				products: { select: { price: true, count: true, cost: true, product: { select: { name: true } } } },
 			},
 			...paginationOptions,
 		})
@@ -48,10 +57,13 @@ export class ArrivalRepository implements OnModuleInit {
 			select: {
 				id: true,
 				date: true,
-				supplierId: true,
+				supplier: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				staff: true,
+				payment: true,
+				products: { select: { price: true, count: true, cost: true, product: { select: { name: true } } } },
 			},
 		})
 
@@ -62,6 +74,11 @@ export class ArrivalRepository implements OnModuleInit {
 		const arrivalsCount = await this.prisma.arrivalModel.count({
 			where: {
 				supplierId: query.supplierId,
+				OR: [{ supplier: { fullname: { contains: query.search, mode: 'insensitive' } } }, { supplier: { phone: { contains: query.search, mode: 'insensitive' } } }],
+				date: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
 			},
 		})
 
@@ -110,6 +127,24 @@ export class ArrivalRepository implements OnModuleInit {
 				supplierId: body.supplierId,
 				date: body.date,
 				staffId: body.staffId,
+				payment: {
+					create: {
+						card: body.payment.card,
+						cash: body.payment.cash,
+						other: body.payment.other,
+						transfer: body.payment.transfer,
+						description: body.payment.description,
+						userId: body.supplierId,
+						staffId: body.staffId,
+						type: ServiceTypeEnum.arrival,
+					},
+				},
+				products: {
+					createMany: {
+						skipDuplicates: false,
+						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.arrival, cost: p.cost, count: p.count, price: p.price, staffId: body.staffId })),
+					},
+				},
 			},
 		})
 		return arrival
@@ -122,6 +157,22 @@ export class ArrivalRepository implements OnModuleInit {
 				supplierId: body.supplierId,
 				date: body.date,
 				deletedAt: body.deletedAt,
+				payment: {
+					update: {
+						card: body.payment.card,
+						cash: body.payment.cash,
+						other: body.payment.other,
+						transfer: body.payment.transfer,
+						description: body.payment.description,
+					},
+				},
+				products: {
+					createMany: {
+						skipDuplicates: false,
+						data: body.products.map((p) => ({ productId: p.productId, cost: p.cost, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId })),
+					},
+					deleteMany: body.productIdsToRemove.map((id) => ({ id: id })),
+				},
 			},
 		})
 

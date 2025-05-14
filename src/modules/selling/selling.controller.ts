@@ -12,7 +12,7 @@ import {
 	SellingCreateOneResponseDto,
 } from './dtos'
 import { SellingService } from './selling.service'
-import { CRequest } from '../../common'
+import { AuthOptions, CRequest } from '../../common'
 
 @ApiTags('Selling')
 @Controller('selling')
@@ -38,6 +38,7 @@ export class SellingController {
 	}
 
 	@Post('one')
+	@AuthOptions(true, true)
 	@ApiOperation({ summary: 'create one selling' })
 	@ApiOkResponse({ type: SellingCreateOneResponseDto })
 	async createOne(@Req() request: CRequest, @Body() body: SellingCreateOneRequestDto): Promise<SellingCreateOneResponseDto> {
@@ -45,6 +46,7 @@ export class SellingController {
 	}
 
 	@Patch('one')
+	@AuthOptions(true, true)
 	@ApiOperation({ summary: 'update one selling' })
 	@ApiOkResponse({ type: SellingModifyResponseDto })
 	async updateOne(@Query() query: SellingFindOneRequestDto, @Body() body: SellingUpdateOneRequestDto): Promise<SellingModifyResponseDto> {

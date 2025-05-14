@@ -77,9 +77,9 @@ export class ArrivalService {
 	}
 
 	async updateOne(query: ArrivalGetOneRequest, body: ArrivalUpdateOneRequest) {
-		await this.getOne(query)
+		const arrival = await this.getOne(query)
 
-		await this.arrivalRepository.updateOne(query, { ...body })
+		await this.arrivalRepository.updateOne(query, { ...body, staffId: arrival.data.staffId })
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}
