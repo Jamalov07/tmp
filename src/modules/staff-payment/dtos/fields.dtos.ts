@@ -1,13 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { DefaultOptionalFieldsDto, DefaultRequiredFieldsDto } from '../../../common'
+import { DefaultOptionalFieldsDto, DefaultRequiredFieldsDto, IsDecimalIntOrBigInt } from '../../../common'
 import { StaffPaymentOptional, StaffPaymentRequired } from '../interfaces'
 import { IsDecimal, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
 import { Decimal } from '@prisma/client/runtime/library'
 
 export class StaffPaymentRequiredDto extends DefaultRequiredFieldsDto implements StaffPaymentRequired {
-	@ApiProperty({ type: BigInt })
+	@ApiProperty({ type: Number })
 	@IsNotEmpty()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	sum: Decimal
 
 	@ApiProperty({ type: String })
@@ -27,9 +27,9 @@ export class StaffPaymentRequiredDto extends DefaultRequiredFieldsDto implements
 }
 
 export class StaffPaymentOptionalDto extends DefaultOptionalFieldsDto implements StaffPaymentOptional {
-	@ApiPropertyOptional({ type: BigInt })
+	@ApiPropertyOptional({ type: Number })
 	@IsOptional()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	sum?: Decimal
 
 	@ApiPropertyOptional({ type: String })

@@ -95,7 +95,12 @@ export class ClientService {
 
 		return createResponse({
 			data: {
-				...client,
+				id: client.id,
+				fullname: client.fullname,
+				phone: client.phone,
+				createdAt: client.createdAt,
+				updatedAt: client.updatedAt,
+				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
 				debt: payment.plus(sellingPayment),
 				lastArrivalDate: client.sellings?.length ? client.sellings[0].date : null,

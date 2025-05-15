@@ -36,11 +36,14 @@ export class ReturningRepository implements OnModuleInit {
 			},
 			select: {
 				id: true,
-				date: true,
-				clientId: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				date: true,
+				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				payment: { select: { id: true, cash: true, fromBalance: true } },
+				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 			...paginationOptions,
 		})
@@ -53,11 +56,14 @@ export class ReturningRepository implements OnModuleInit {
 			where: { id: query.id },
 			select: {
 				id: true,
-				date: true,
-				clientId: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				date: true,
+				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				payment: { select: { id: true, cash: true, fromBalance: true } },
+				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 		})
 
@@ -119,12 +125,12 @@ export class ReturningRepository implements OnModuleInit {
 		const returning = await this.prisma.returningModel.create({
 			data: {
 				clientId: body.clientId,
-				date: body.date,
+				date: new Date(body.date),
 				staffId: body.staffId,
 				payment: {
 					create: {
-						cash: body.payment.cash,
-						fromBalance: body.payment.fromBalance,
+						cash: body.payment?.cash,
+						fromBalance: body.payment?.fromBalance,
 						userId: body.clientId,
 						staffId: body.staffId,
 						type: ServiceTypeEnum.returning,
@@ -133,9 +139,22 @@ export class ReturningRepository implements OnModuleInit {
 				products: {
 					createMany: {
 						skipDuplicates: false,
-						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.returning, count: p.count, price: p.price, staffId: body.staffId })),
+						data: body.products
+							? body.products?.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.returning, count: p.count, price: p.price, staffId: body.staffId }))
+							: [],
 					},
 				},
+			},
+			select: {
+				id: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				date: true,
+				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				payment: { select: { id: true, cash: true, fromBalance: true } },
+				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 		})
 		return returning
@@ -146,20 +165,22 @@ export class ReturningRepository implements OnModuleInit {
 			where: { id: query.id },
 			data: {
 				clientId: body.clientId,
-				date: body.date,
+				date: body.date ? new Date(body.date) : undefined,
 				deletedAt: body.deletedAt,
 				payment: {
 					update: {
-						cash: body.payment.cash,
-						fromBalance: body.payment.fromBalance,
+						cash: body.payment?.cash,
+						fromBalance: body.payment?.fromBalance,
 					},
 				},
 				products: {
 					createMany: {
 						skipDuplicates: false,
-						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId })),
+						data: body.products
+							? body.products?.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.returning, count: p.count, price: p.price, staffId: body.staffId }))
+							: [],
 					},
-					deleteMany: body.productIdsToRemove.map((id) => ({ id: id })),
+					deleteMany: body.productIdsToRemove?.map((id) => ({ id: id })),
 				},
 			},
 		})
@@ -173,6 +194,21 @@ export class ReturningRepository implements OnModuleInit {
 		})
 
 		return returning
+	}
+
+	async findManyReturningProductMv(ids: string[]) {
+		const productmvs = await this.prisma.productMVModel.findMany({
+			where: { id: { in: ids }, type: ServiceTypeEnum.returning },
+			select: {
+				id: true,
+				price: true,
+				cost: true,
+				count: true,
+				product: true,
+			},
+		})
+
+		return productmvs
 	}
 
 	async onModuleInit() {

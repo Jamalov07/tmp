@@ -123,6 +123,13 @@ export class StaffRepository implements OnModuleInit {
 				type: UserTypeEnum.staff,
 				actions: { connect: body.actionsToConnect.map((r) => ({ id: r })) },
 			},
+			select: {
+				id: true,
+				createdAt: true,
+				fullname: true,
+				phone: true,
+				actions: { select: { id: true, description: true, method: true, url: true, name: true, permission: true } },
+			},
 		})
 		return user
 	}

@@ -78,7 +78,7 @@ export class PermissionService {
 
 		await this.permissionRepository.createOne({ ...body })
 
-		return createResponse({ data: null, success: { messages: ['create success'] } })
+		return createResponse({ data: null, success: { messages: ['create one success'] } })
 	}
 
 	async updateOne(query: PermissionGetOneRequest, body: PermissionUpdateOneRequest) {

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { ClientPaymentRepository } from './client-payment.repository'
 import { createResponse, CRequest, DeleteMethodEnum } from '@common'
 import {
@@ -10,13 +10,20 @@ import {
 	ClientPaymentFindOneRequest,
 	ClientPaymentDeleteOneRequest,
 } from './interfaces'
+import { ClientService } from '../client'
 
 @Injectable()
 export class ClientPaymentService {
 	private readonly clientPaymentRepository: ClientPaymentRepository
+	private readonly clientService: ClientService
 
-	constructor(clientPaymentRepository: ClientPaymentRepository) {
+	constructor(
+		clientPaymentRepository: ClientPaymentRepository,
+		@Inject(forwardRef(() => ClientService))
+		clientService: ClientService,
+	) {
 		this.clientPaymentRepository = clientPaymentRepository
+		this.clientService = clientService
 	}
 
 	async findMany(query: ClientPaymentFindManyRequest) {
@@ -39,7 +46,7 @@ export class ClientPaymentService {
 		const clientPayment = await this.clientPaymentRepository.findOne(query)
 
 		if (!clientPayment) {
-			throw new BadRequestException('clientPayment not found')
+			throw new BadRequestException('client payment not found')
 		}
 
 		return createResponse({ data: { ...clientPayment }, success: { messages: ['find one success'] } })
@@ -64,14 +71,16 @@ export class ClientPaymentService {
 		const clientPayment = await this.clientPaymentRepository.getOne(query)
 
 		if (!clientPayment) {
-			throw new BadRequestException('clientPayment not found')
+			throw new BadRequestException('client payment not found')
 		}
 
 		return createResponse({ data: clientPayment, success: { messages: ['get one success'] } })
 	}
 
 	async createOne(request: CRequest, body: ClientPaymentCreateOneRequest) {
-		const clientPayment = await this.clientPaymentRepository.createOne({ ...body, userId: request.user.id })
+		await this.clientService.findOne({ id: body.userId })
+
+		const clientPayment = await this.clientPaymentRepository.createOne({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: clientPayment, success: { messages: ['create one success'] } })
 	}

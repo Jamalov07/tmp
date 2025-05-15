@@ -1,10 +1,11 @@
 import { GlobalResponse, PaginationResponse } from '../../../common'
+import { PermissionFindOneData } from '../../permission'
 import { ActionRequired } from './fields.interfaces'
 
 export declare interface ActionFindManyData extends PaginationResponse<ActionFindOneData> {}
 
 export declare interface ActionFindOneData extends Pick<ActionRequired, 'id' | 'name' | 'url' | 'method' | 'description'> {
-	// role: RoleFindOneData
+	permission: PermissionFindOneData
 }
 
 export declare interface ActionFindManyResponse extends GlobalResponse {

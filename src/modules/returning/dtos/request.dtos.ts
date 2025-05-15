@@ -8,11 +8,11 @@ import {
 	ReturningProduct,
 	ReturningUpdateOneRequest,
 } from '../interfaces'
-import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
+import { IsDecimalIntOrBigInt, PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { ReturningOptionalDto, ReturningRequiredDto } from './fields.dtos'
 import { ProductMVRequiredDto } from '../../product-mv'
 import { Decimal } from '@prisma/client/runtime/library'
-import { IsArray, IsDecimal, IsNotEmpty, IsOptional, IsUUID, ValidateNested } from 'class-validator'
+import { IsArray, IsNotEmpty, IsOptional, IsUUID, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 
 export class ReturningFindManyRequestDto
@@ -22,14 +22,14 @@ export class ReturningFindManyRequestDto
 export class ReturningFindOneRequestDto extends IntersectionType(PickType(ReturningRequiredDto, ['id'])) implements ReturningFindOneRequest {}
 
 export class ReturningPaymentDto implements ReturningPayment {
-	@ApiProperty({ type: BigInt })
+	@ApiProperty({ type: Number })
 	@IsNotEmpty()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	cash: Decimal
 
-	@ApiProperty({ type: BigInt })
+	@ApiProperty({ type: Number })
 	@IsNotEmpty()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	fromBalance: Decimal
 }
 

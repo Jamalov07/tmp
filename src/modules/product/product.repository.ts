@@ -39,7 +39,6 @@ export class ProductRepository {
 				minAmount: true,
 				productMVs: {
 					where: { type: ServiceTypeEnum.selling },
-					include: { selling: true },
 					orderBy: { selling: { date: 'desc' } },
 					take: 1,
 					select: { selling: { select: { date: true } } },
@@ -64,7 +63,6 @@ export class ProductRepository {
 				minAmount: true,
 				productMVs: {
 					where: { type: ServiceTypeEnum.selling },
-					include: { selling: true },
 					orderBy: { selling: { date: 'desc' } },
 					take: 1,
 					select: { selling: { select: { date: true } } },

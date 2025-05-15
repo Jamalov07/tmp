@@ -19,13 +19,13 @@ export class ActionRepository {
 		const actions = await this.prisma.actionModel.findMany({
 			where: {
 				method: query.method,
-				roleId: query.roleId,
+				permissionId: query.permissionId,
 				url: { contains: query.url, mode: 'insensitive' },
 				name: { contains: query.name, mode: 'insensitive' },
 				description: { contains: query.description, mode: 'insensitive' },
 			},
 			...paginationOptions,
-			select: { id: true, method: true, url: true, description: true, role: true, name: true },
+			select: { id: true, method: true, url: true, description: true, permission: true, name: true },
 		})
 
 		return actions
@@ -39,7 +39,7 @@ export class ActionRepository {
 
 		const actionsCount = await this.prisma.actionModel.count({
 			where: {
-				roleId: query.roleId,
+				permissionId: query.permissionId,
 				method: query.method,
 				url: { contains: query.url, mode: 'insensitive' },
 				name: { contains: query.name, mode: 'insensitive' },
@@ -54,7 +54,7 @@ export class ActionRepository {
 	async findOne(query: ActionFindOneRequest) {
 		const action = await this.prisma.actionModel.findFirst({
 			where: { id: query.id },
-			select: { id: true, method: true, url: true, description: true, role: true, name: true },
+			select: { id: true, method: true, url: true, description: true, permission: true, name: true },
 		})
 
 		return action
@@ -70,7 +70,7 @@ export class ActionRepository {
 			where: {
 				id: { in: query.ids },
 				method: query.method,
-				roleId: query.roleId,
+				permissionId: query.permissionId,
 				url: query.url,
 				name: query.name,
 				description: query.description,
@@ -86,7 +86,7 @@ export class ActionRepository {
 			where: {
 				id: { in: query.ids },
 				method: query.method,
-				roleId: query.roleId,
+				permissionId: query.permissionId,
 				url: query.url,
 				name: query.name,
 				description: query.description,
@@ -104,7 +104,7 @@ export class ActionRepository {
 				url: query.url,
 				name: query.name,
 				description: query.description,
-				roleId: query.roleId,
+				permissionId: query.permissionId,
 			},
 		})
 
@@ -113,7 +113,7 @@ export class ActionRepository {
 	async updateOne(query: ActionGetOneRequest, body: ActionUpdateOneRequest) {
 		const action = await this.prisma.actionModel.update({
 			where: { id: query.id },
-			data: { description: body.description, roleId: body.roleId },
+			data: { description: body.description, permissionId: body.permissionId },
 		})
 
 		return action

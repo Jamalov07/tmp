@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { SupplierPaymentRepository } from './supplier-payment.repository'
 import { createResponse, CRequest, DeleteMethodEnum } from '@common'
 import {
@@ -10,13 +10,20 @@ import {
 	SupplierPaymentFindOneRequest,
 	SupplierPaymentDeleteOneRequest,
 } from './interfaces'
+import { SupplierService } from '../supplier/'
 
 @Injectable()
 export class SupplierPaymentService {
 	private readonly supplierPaymentRepository: SupplierPaymentRepository
+	private readonly supplierService: SupplierService
 
-	constructor(supplierPaymentRepository: SupplierPaymentRepository) {
+	constructor(
+		supplierPaymentRepository: SupplierPaymentRepository,
+		@Inject(forwardRef(() => SupplierService))
+		supplierService: SupplierService,
+	) {
 		this.supplierPaymentRepository = supplierPaymentRepository
+		this.supplierService = supplierService
 	}
 
 	async findMany(query: SupplierPaymentFindManyRequest) {
@@ -39,7 +46,7 @@ export class SupplierPaymentService {
 		const supplierPayment = await this.supplierPaymentRepository.findOne(query)
 
 		if (!supplierPayment) {
-			throw new BadRequestException('supplierPayment not found')
+			throw new BadRequestException('supplier payment not found')
 		}
 
 		return createResponse({ data: { ...supplierPayment }, success: { messages: ['find one success'] } })
@@ -64,14 +71,16 @@ export class SupplierPaymentService {
 		const supplierPayment = await this.supplierPaymentRepository.getOne(query)
 
 		if (!supplierPayment) {
-			throw new BadRequestException('supplierPayment not found')
+			throw new BadRequestException('supplier payment not found')
 		}
 
 		return createResponse({ data: supplierPayment, success: { messages: ['get one success'] } })
 	}
 
 	async createOne(request: CRequest, body: SupplierPaymentCreateOneRequest) {
-		const supplierPayment = await this.supplierPaymentRepository.createOne({ ...body, userId: request.user.id })
+		await this.supplierService.findOne({ id: body.userId })
+
+		const supplierPayment = await this.supplierPaymentRepository.createOne({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: supplierPayment, success: { messages: ['create one success'] } })
 	}

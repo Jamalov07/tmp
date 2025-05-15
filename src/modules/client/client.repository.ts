@@ -61,7 +61,7 @@ export class ClientRepository implements OnModuleInit {
 
 	async findOne(query: ClientFindOneRequest) {
 		const client = await this.prisma.userModel.findFirst({
-			where: { id: query.id },
+			where: { id: query.id, type: UserTypeEnum.client },
 			select: {
 				id: true,
 				fullname: true,
@@ -148,6 +148,12 @@ export class ClientRepository implements OnModuleInit {
 				password: password,
 				phone: body.phone,
 				type: UserTypeEnum.client,
+			},
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				createdAt: true,
 			},
 		})
 		return client

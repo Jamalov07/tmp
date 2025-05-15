@@ -10,13 +10,16 @@ import {
 	StaffPaymentFindOneRequest,
 	StaffPaymentDeleteOneRequest,
 } from './interfaces'
+import { StaffService } from '../staff'
 
 @Injectable()
 export class StaffPaymentService {
 	private readonly staffPaymentRepository: StaffPaymentRepository
+	private readonly staffService: StaffService
 
-	constructor(staffPaymentRepository: StaffPaymentRepository) {
+	constructor(staffPaymentRepository: StaffPaymentRepository, staffService: StaffService) {
 		this.staffPaymentRepository = staffPaymentRepository
+		this.staffService = staffService
 	}
 
 	async findMany(query: StaffPaymentFindManyRequest) {
@@ -39,7 +42,7 @@ export class StaffPaymentService {
 		const staffPayment = await this.staffPaymentRepository.findOne(query)
 
 		if (!staffPayment) {
-			throw new BadRequestException('staffPayment not found')
+			throw new BadRequestException('staff payment not found')
 		}
 
 		return createResponse({ data: { ...staffPayment }, success: { messages: ['find one success'] } })
@@ -64,14 +67,16 @@ export class StaffPaymentService {
 		const staffPayment = await this.staffPaymentRepository.getOne(query)
 
 		if (!staffPayment) {
-			throw new BadRequestException('staffPayment not found')
+			throw new BadRequestException('staff payment not found')
 		}
 
 		return createResponse({ data: staffPayment, success: { messages: ['get one success'] } })
 	}
 
 	async createOne(request: CRequest, body: StaffPaymentCreateOneRequest) {
-		const staffPayment = await this.staffPaymentRepository.createOne({ ...body, userId: request.user.id })
+		await this.staffService.findOne({ id: body.userId })
+
+		const staffPayment = await this.staffPaymentRepository.createOne({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: staffPayment, success: { messages: ['create one success'] } })
 	}

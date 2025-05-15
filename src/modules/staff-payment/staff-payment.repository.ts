@@ -36,7 +36,8 @@ export class StaffPaymentRepository implements OnModuleInit {
 			},
 			select: {
 				id: true,
-				staffId: true,
+				user: { select: { id: true, fullname: true, phone: true } },
+				staff: { select: { id: true, fullname: true, phone: true } },
 				sum: true,
 				updatedAt: true,
 				createdAt: true,
@@ -53,7 +54,8 @@ export class StaffPaymentRepository implements OnModuleInit {
 			where: { id: query.id },
 			select: {
 				id: true,
-				staffId: true,
+				user: { select: { id: true, fullname: true, phone: true } },
+				staff: { select: { id: true, fullname: true, phone: true } },
 				sum: true,
 				updatedAt: true,
 				createdAt: true,
@@ -125,6 +127,13 @@ export class StaffPaymentRepository implements OnModuleInit {
 				staffId: body.staffId,
 				description: body.description,
 				type: ServiceTypeEnum.staff,
+			},
+			select: {
+				id: true,
+				sum: true,
+				description: true,
+				createdAt: true,
+				user: { select: { id: true, fullname: true, phone: true } },
 			},
 		})
 		return staffPayment

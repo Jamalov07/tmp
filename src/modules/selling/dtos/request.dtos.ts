@@ -14,7 +14,7 @@ import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { SellingOptionalDto, SellingRequiredDto } from './fields.dtos'
 import { ClientPaymentRequiredDto } from '../../client-payment'
 import { ProductMVRequiredDto } from '../../product-mv'
-import { IsArray, IsEnum, IsOptional, IsUUID, ValidateNested } from 'class-validator'
+import { ArrayNotEmpty, IsArray, IsEnum, IsOptional, IsUUID, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 import { StatsTypeEnum } from '../enums'
 
@@ -33,7 +33,7 @@ export class SellingPaymentDto extends IntersectionType(PickType(ClientPaymentRe
 export class SellingProductDto extends PickType(ProductMVRequiredDto, ['count', 'price', 'productId']) implements SellingProduct {}
 
 export class SellingCreateOneRequestDto
-	extends IntersectionType(PickType(SellingRequiredDto, ['clientId', 'date', 'send']), PickType(SellingOptionalDto, ['staffId']))
+	extends IntersectionType(PickType(SellingRequiredDto, ['clientId', 'date', 'send', 'status']), PickType(SellingOptionalDto, ['staffId']))
 	implements SellingCreateOneRequest
 {
 	@ApiPropertyOptional({ type: SellingPaymentDto })
@@ -45,6 +45,7 @@ export class SellingCreateOneRequestDto
 	@ApiPropertyOptional({ type: SellingProductDto, isArray: true })
 	@IsOptional()
 	@IsArray()
+	@ArrayNotEmpty()
 	@ValidateNested({ each: true })
 	@Type(() => SellingProductDto)
 	products?: SellingProduct[]

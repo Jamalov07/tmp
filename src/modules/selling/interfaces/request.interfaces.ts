@@ -19,7 +19,7 @@ export declare interface SellingPayment extends Pick<ClientPaymentRequired, 'car
 
 export declare interface SellingProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId'> {}
 
-export declare interface SellingCreateOneRequest extends Pick<SellingRequired, 'clientId' | 'date' | 'send'>, Pick<SellingOptional, 'staffId' | 'sended' | 'status'> {
+export declare interface SellingCreateOneRequest extends Pick<SellingRequired, 'clientId' | 'date' | 'send' | 'status'>, Pick<SellingOptional, 'staffId' | 'sended'> {
 	payment?: SellingPayment
 	products?: SellingProduct[]
 }

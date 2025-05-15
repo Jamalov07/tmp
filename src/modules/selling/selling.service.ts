@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { SellingRepository } from './selling.repository'
 import { createResponse, CRequest, DeleteMethodEnum } from '@common'
 import { SellingStatusEnum } from '@prisma/client'
@@ -15,29 +15,32 @@ import {
 } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ArrivalService } from '../arrival'
+import { ClientService } from '../client'
 
 @Injectable()
 export class SellingService {
 	private readonly sellingRepository: SellingRepository
 	private readonly arrivalService: ArrivalService
+	private readonly clientService: ClientService
 
-	constructor(sellingRepository: SellingRepository, arrivalService: ArrivalService) {
+	constructor(sellingRepository: SellingRepository, @Inject(forwardRef(() => ArrivalService)) arrivalService: ArrivalService, clientService: ClientService) {
 		this.sellingRepository = sellingRepository
 		this.arrivalService = arrivalService
+		this.clientService = clientService
 	}
 
 	async findMany(query: SellingFindManyRequest) {
 		const sellings = await this.sellingRepository.findMany(query)
 		const sellingsCount = await this.sellingRepository.countFindMany(query)
 
-		let calc: {
-			totalPrice: Decimal
-			totalPayment: Decimal
-			totalCardPayment: Decimal
-			totalCashPayment: Decimal
-			totalOtherPayment: Decimal
-			totalTransferPayment: Decimal
-			totalDebt: Decimal
+		const calc = {
+			totalPrice: new Decimal(0),
+			totalPayment: new Decimal(0),
+			totalCardPayment: new Decimal(0),
+			totalCashPayment: new Decimal(0),
+			totalOtherPayment: new Decimal(0),
+			totalTransferPayment: new Decimal(0),
+			totalDebt: new Decimal(0),
 		}
 
 		const mappedSellings = sellings.map((selling) => {
@@ -121,17 +124,17 @@ export class SellingService {
 	}
 
 	async createOne(request: CRequest, body: SellingCreateOneRequest) {
+		await this.clientService.findOne({ id: body.clientId })
 		let sended = false
 		if (body.send) {
 			sended = true
 		}
-		let status: SellingStatusEnum = SellingStatusEnum.notaccepted
 
 		if (Object.values(body.payment).some((value) => value !== 0)) {
-			status = SellingStatusEnum.accepted
+			body.status = SellingStatusEnum.accepted
 		}
 
-		const selling = await this.sellingRepository.createOne({ ...body, staffId: request.user.id, sended: sended, status: status })
+		const selling = await this.sellingRepository.createOne({ ...body, staffId: request.user.id, sended: sended })
 
 		return createResponse({ data: selling, success: { messages: ['create one success'] } })
 	}

@@ -10,13 +10,19 @@ import {
 	ReturningFindOneRequest,
 	ReturningDeleteOneRequest,
 } from './interfaces'
+import { ClientService } from '../client'
+import { ProductService } from '../product'
 
 @Injectable()
 export class ReturningService {
 	private readonly returningRepository: ReturningRepository
+	private readonly clientService: ClientService
+	private readonly productService: ProductService
 
-	constructor(returningRepository: ReturningRepository) {
+	constructor(returningRepository: ReturningRepository, clientService: ClientService, productService: ProductService) {
 		this.returningRepository = returningRepository
+		this.clientService = clientService
+		this.productService = productService
 	}
 
 	async findMany(query: ReturningFindManyRequest) {
@@ -71,6 +77,18 @@ export class ReturningService {
 	}
 
 	async createOne(request: CRequest, body: ReturningCreateOneRequest) {
+		await this.clientService.findOne({ id: body.clientId })
+
+		//update product: incr
+		if (body.products && body.products.length) {
+			body.products.map(async (pr) => {
+				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
+					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
+				})
+				await this.productService.updateOne({ id: product.data.id }, { count: product.data.count + pr.count })
+			})
+		}
+
 		const returning = await this.returningRepository.createOne({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: returning, success: { messages: ['create one success'] } })
@@ -78,6 +96,24 @@ export class ReturningService {
 
 	async updateOne(query: ReturningGetOneRequest, body: ReturningUpdateOneRequest) {
 		const returning = await this.getOne(query)
+
+		//update product: decr
+		if (body.productIdsToRemove && body.productIdsToRemove.length) {
+			const productMVs = await this.returningRepository.findManyReturningProductMv(body.productIdsToRemove ?? [])
+
+			productMVs.map(async (pmv) => {
+				await this.productService.updateOne({ id: pmv.product.id }, { count: pmv.product.count - pmv.count })
+			})
+		}
+		//update product: incr
+		if (body.products && body.products.length) {
+			body.products.map(async (pr) => {
+				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
+					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
+				})
+				await this.productService.updateOne({ id: product.data.id }, { count: product.data.count + pr.count })
+			})
+		}
 
 		await this.returningRepository.updateOne(query, { ...body, staffId: returning.data.staffId })
 

@@ -37,7 +37,8 @@ export class ClientPaymentRepository implements OnModuleInit {
 			},
 			select: {
 				id: true,
-				staffId: true,
+				staff: { select: { id: true, fullname: true, phone: true } },
+				user: { select: { id: true, fullname: true, phone: true } },
 				card: true,
 				cash: true,
 				description: true,
@@ -55,10 +56,11 @@ export class ClientPaymentRepository implements OnModuleInit {
 
 	async findOne(query: ClientPaymentFindOneRequest) {
 		const clientPayment = await this.prisma.paymentModel.findFirst({
-			where: { id: query.id },
+			where: { id: query.id, type: ServiceTypeEnum.client },
 			select: {
 				id: true,
-				staffId: true,
+				staff: { select: { id: true, fullname: true, phone: true } },
+				user: { select: { id: true, fullname: true, phone: true } },
 				card: true,
 				cash: true,
 				description: true,
@@ -138,6 +140,19 @@ export class ClientPaymentRepository implements OnModuleInit {
 				staffId: body.staffId,
 				description: body.description,
 				type: ServiceTypeEnum.client,
+			},
+			select: {
+				id: true,
+				staff: { select: { id: true, fullname: true, phone: true } },
+				user: { select: { id: true, fullname: true, phone: true } },
+				card: true,
+				cash: true,
+				description: true,
+				other: true,
+				transfer: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
 			},
 		})
 		return clientPayment

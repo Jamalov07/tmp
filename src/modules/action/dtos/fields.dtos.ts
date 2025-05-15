@@ -28,7 +28,7 @@ export class ActionRequiredDto extends PickType(DefaultRequiredFieldsDto, ['id']
 	@ApiProperty({ type: String })
 	@IsNotEmpty()
 	@IsUUID('4')
-	roleId: string
+	permissionId: string
 }
 
 export class ActionOptionalDto extends PickType(DefaultOptionalFieldsDto, ['id']) implements ActionOptional {
@@ -55,5 +55,5 @@ export class ActionOptionalDto extends PickType(DefaultOptionalFieldsDto, ['id']
 	@ApiPropertyOptional({ type: String })
 	@IsOptional()
 	@IsUUID('4')
-	roleId?: string
+	permissionId?: string
 }

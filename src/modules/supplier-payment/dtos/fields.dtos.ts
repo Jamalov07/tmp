@@ -1,28 +1,28 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { DefaultOptionalFieldsDto, DefaultRequiredFieldsDto } from '../../../common'
+import { DefaultOptionalFieldsDto, DefaultRequiredFieldsDto, IsDecimalIntOrBigInt } from '../../../common'
 import { SupplierPaymentOptional, SupplierPaymentRequired } from '../interfaces'
-import { IsDecimal, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
 import { Decimal } from '@prisma/client/runtime/library'
 
 export class SupplierPaymentRequiredDto extends DefaultRequiredFieldsDto implements SupplierPaymentRequired {
-	@ApiProperty({ type: BigInt })
+	@ApiProperty({ type: Number })
 	@IsNotEmpty()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	card: Decimal
 
-	@ApiProperty({ type: BigInt })
+	@ApiProperty({ type: Number })
 	@IsNotEmpty()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	cash: Decimal
 
-	@ApiProperty({ type: BigInt })
+	@ApiProperty({ type: Number })
 	@IsNotEmpty()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	other: Decimal
 
-	@ApiProperty({ type: BigInt })
+	@ApiProperty({ type: Number })
 	@IsNotEmpty()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	transfer: Decimal
 
 	@ApiProperty({ type: String })
@@ -42,24 +42,24 @@ export class SupplierPaymentRequiredDto extends DefaultRequiredFieldsDto impleme
 }
 
 export class SupplierPaymentOptionalDto extends DefaultOptionalFieldsDto implements SupplierPaymentOptional {
-	@ApiPropertyOptional({ type: BigInt })
+	@ApiPropertyOptional({ type: Number })
 	@IsOptional()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	card?: Decimal
 
-	@ApiPropertyOptional({ type: BigInt })
+	@ApiPropertyOptional({ type: Number })
 	@IsOptional()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	cash?: Decimal
 
-	@ApiPropertyOptional({ type: BigInt })
+	@ApiPropertyOptional({ type: Number })
 	@IsOptional()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	other?: Decimal
 
-	@ApiPropertyOptional({ type: BigInt })
+	@ApiPropertyOptional({ type: Number })
 	@IsOptional()
-	@IsDecimal()
+	@IsDecimalIntOrBigInt()
 	transfer?: Decimal
 
 	@ApiPropertyOptional({ type: String })

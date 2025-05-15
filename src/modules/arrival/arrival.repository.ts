@@ -37,13 +37,13 @@ export class ArrivalRepository implements OnModuleInit {
 			select: {
 				id: true,
 				date: true,
-				supplier: true,
+				supplier: { select: { fullname: true, phone: true, id: true } },
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
-				staff: true,
-				payment: true,
-				products: { select: { price: true, count: true, cost: true, product: { select: { name: true } } } },
+				staff: { select: { fullname: true, phone: true, id: true } },
+				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+				products: { select: { id: true, price: true, count: true, cost: true, product: { select: { name: true, cost: true, count: true, price: true, id: true } } } },
 			},
 			...paginationOptions,
 		})
@@ -57,13 +57,13 @@ export class ArrivalRepository implements OnModuleInit {
 			select: {
 				id: true,
 				date: true,
-				supplier: true,
+				supplier: { select: { fullname: true, phone: true, id: true } },
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
-				staff: true,
-				payment: true,
-				products: { select: { price: true, count: true, cost: true, product: { select: { name: true } } } },
+				staff: { select: { fullname: true, phone: true, id: true } },
+				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+				products: { select: { id: true, price: true, count: true, cost: true, product: { select: { name: true } } } },
 			},
 		})
 
@@ -146,7 +146,7 @@ export class ArrivalRepository implements OnModuleInit {
 		const arrival = await this.prisma.arrivalModel.create({
 			data: {
 				supplierId: body.supplierId,
-				date: body.date,
+				date: new Date(body.date),
 				staffId: body.staffId,
 				payment: {
 					create: {
@@ -167,6 +167,17 @@ export class ArrivalRepository implements OnModuleInit {
 					},
 				},
 			},
+			select: {
+				id: true,
+				date: true,
+				supplier: { select: { fullname: true, phone: true, id: true } },
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				staff: { select: { fullname: true, phone: true, id: true } },
+				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+				products: { select: { id: true, price: true, count: true, cost: true, product: { select: { name: true } } } },
+			},
 		})
 		return arrival
 	}
@@ -176,23 +187,25 @@ export class ArrivalRepository implements OnModuleInit {
 			where: { id: query.id },
 			data: {
 				supplierId: body.supplierId,
-				date: body.date,
+				date: body.date ? new Date(body.date) : undefined,
 				deletedAt: body.deletedAt,
 				payment: {
 					update: {
-						card: body.payment.card,
-						cash: body.payment.cash,
-						other: body.payment.other,
-						transfer: body.payment.transfer,
-						description: body.payment.description,
+						card: body.payment?.card,
+						cash: body.payment?.cash,
+						other: body.payment?.other,
+						transfer: body.payment?.transfer,
+						description: body.payment?.description,
 					},
 				},
 				products: {
 					createMany: {
 						skipDuplicates: false,
-						data: body.products.map((p) => ({ productId: p.productId, cost: p.cost, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId })),
+						data: body.products
+							? body.products?.map((p) => ({ productId: p.productId, cost: p.cost, type: ServiceTypeEnum.arrival, count: p.count, price: p.price, staffId: body.staffId }))
+							: [],
 					},
-					deleteMany: body.productIdsToRemove.map((id) => ({ id: id })),
+					deleteMany: body.productIdsToRemove?.map((id) => ({ id: id })),
 				},
 			},
 		})
@@ -206,6 +219,21 @@ export class ArrivalRepository implements OnModuleInit {
 		})
 
 		return arrival
+	}
+
+	async findManyArrivalProductMv(ids: string[]) {
+		const productmvs = await this.prisma.productMVModel.findMany({
+			where: { id: { in: ids }, type: ServiceTypeEnum.arrival },
+			select: {
+				id: true,
+				price: true,
+				cost: true,
+				count: true,
+				product: true,
+			},
+		})
+
+		return productmvs
 	}
 
 	async onModuleInit() {

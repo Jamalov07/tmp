@@ -12,7 +12,7 @@ import {
 	ArrivalCreateOneResponseDto,
 } from './dtos'
 import { ArrivalService } from './arrival.service'
-import { CRequest } from '../../common'
+import { AuthOptions, CRequest } from '../../common'
 
 @ApiTags('Arrival')
 @Controller('arrival')
@@ -38,6 +38,7 @@ export class ArrivalController {
 	}
 
 	@Post('one')
+	@AuthOptions(true, true)
 	@ApiOperation({ summary: 'create one arrival' })
 	@ApiOkResponse({ type: ArrivalCreateOneResponseDto })
 	async createOne(@Req() request: CRequest, @Body() body: ArrivalCreateOneRequestDto): Promise<ArrivalCreateOneResponseDto> {
@@ -45,6 +46,7 @@ export class ArrivalController {
 	}
 
 	@Patch('one')
+	@AuthOptions(true, true)
 	@ApiOperation({ summary: 'update one arrival' })
 	@ApiOkResponse({ type: ArrivalModifyResponseDto })
 	async updateOne(@Query() query: ArrivalFindOneRequestDto, @Body() body: ArrivalUpdateOneRequestDto): Promise<ArrivalModifyResponseDto> {

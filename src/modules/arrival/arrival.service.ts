@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { ArrivalRepository } from './arrival.repository'
 import { createResponse, CRequest, DeleteMethodEnum } from '@common'
 import {
@@ -10,13 +10,23 @@ import {
 	ArrivalFindOneRequest,
 	ArrivalDeleteOneRequest,
 } from './interfaces'
+import { SupplierService } from '../supplier'
+import { ProductService } from '../product'
 
 @Injectable()
 export class ArrivalService {
 	private readonly arrivalRepository: ArrivalRepository
+	private readonly supplierService: SupplierService
+	private readonly productService: ProductService
 
-	constructor(arrivalRepository: ArrivalRepository) {
+	constructor(
+		arrivalRepository: ArrivalRepository,
+		@Inject(forwardRef(() => SupplierService)) supplierService: SupplierService,
+		@Inject(forwardRef(() => ProductService)) productService: ProductService,
+	) {
 		this.arrivalRepository = arrivalRepository
+		this.supplierService = supplierService
+		this.productService = productService
 	}
 
 	async findMany(query: ArrivalFindManyRequest) {
@@ -71,6 +81,18 @@ export class ArrivalService {
 	}
 
 	async createOne(request: CRequest, body: ArrivalCreateOneRequest) {
+		await this.supplierService.findOne({ id: body.supplierId })
+
+		//update product: incr
+		if (body.products && body.products.length) {
+			body.products.map(async (pr) => {
+				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
+					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
+				})
+				await this.productService.updateOne({ id: product.data.id }, { cost: pr.cost, price: pr.price, count: product.data.count + pr.count })
+			})
+		}
+
 		const arrival = await this.arrivalRepository.createOne({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: arrival, success: { messages: ['create one success'] } })
@@ -78,6 +100,24 @@ export class ArrivalService {
 
 	async updateOne(query: ArrivalGetOneRequest, body: ArrivalUpdateOneRequest) {
 		const arrival = await this.getOne(query)
+
+		//update product: decr
+		if (body.productIdsToRemove && body.productIdsToRemove.length) {
+			const productMVs = await this.arrivalRepository.findManyArrivalProductMv(body.productIdsToRemove ?? [])
+
+			productMVs.map(async (pmv) => {
+				await this.productService.updateOne({ id: pmv.product.id }, { count: pmv.product.count - pmv.count })
+			})
+		}
+		//update product: incr
+		if (body.products && body.products.length) {
+			body.products.map(async (pr) => {
+				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
+					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
+				})
+				await this.productService.updateOne({ id: product.data.id }, { cost: pr.cost, price: pr.price, count: product.data.count + pr.count })
+			})
+		}
 
 		await this.arrivalRepository.updateOne(query, { ...body, staffId: arrival.data.staffId })
 

@@ -95,7 +95,12 @@ export class SupplierService {
 
 		return createResponse({
 			data: {
-				...supplier,
+				id: supplier.id,
+				fullname: supplier.fullname,
+				phone: supplier.phone,
+				createdAt: supplier.createdAt,
+				updatedAt: supplier.updatedAt,
+				deletedAt: supplier.deletedAt,
 				actionIds: supplier.actions.map((a) => a.id),
 				debt: payment.plus(arrivalPayment),
 				lastArrivalDate: supplier.arrivals?.length ? supplier.arrivals[0].date : null,

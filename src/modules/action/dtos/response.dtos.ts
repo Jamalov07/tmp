@@ -2,10 +2,11 @@ import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
 import { GlobalModifyResponseDto, GlobalResponseDto, PaginationResponseDto } from '../../../common'
 import { ActionFindManyData, ActionFindOneData, ActionFindOneResponse, ActionModifyResponse } from '../interfaces'
 import { ActionRequiredDto } from './fields.dtos'
+import { PermissionFindOneData, PermissionFindOneDataDto } from '../../permission'
 
 export class ActionFindOneDataDto extends PickType(ActionRequiredDto, ['id', 'url', 'name', 'method', 'description']) implements ActionFindOneData {
-	// @ApiProperty({ type: RoleFindOneDataDto })
-	// role: RoleFindOneData
+	@ApiProperty({ type: PermissionFindOneDataDto })
+	permission: PermissionFindOneData
 }
 
 export class ActionFindManyDataDto extends PaginationResponseDto implements ActionFindManyData {

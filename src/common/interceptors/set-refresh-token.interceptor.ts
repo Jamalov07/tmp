@@ -44,13 +44,9 @@ export class RefreshTokenInterceptor implements NestInterceptor {
 			if (!payload || !payload?.id) {
 				throw new UnauthorizedException('Invalid token payload')
 			}
-			const user =
-				(await this.prismaService.staffModel.findFirst({
-					where: { id: payload?.id, token: token },
-				})) ??
-				(await this.prismaService.partnerModel.findFirst({
-					where: { id: payload?.id, token: token },
-				}))
+			const user = await this.prismaService.userModel.findFirst({
+				where: { id: payload?.id, token: token },
+			})
 
 			if (!user) {
 				throw new UnauthorizedException('user not found with this token')
@@ -66,6 +62,7 @@ export class RefreshTokenInterceptor implements NestInterceptor {
 
 			return next.handle()
 		} catch (e) {
+			console.log(e)
 			throw new UnauthorizedException(e?.message || 'Token validation failed')
 		}
 	}

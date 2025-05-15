@@ -60,7 +60,7 @@ export class SupplierRepository implements OnModuleInit {
 
 	async findOne(query: SupplierFindOneRequest) {
 		const supplier = await this.prisma.userModel.findFirst({
-			where: { id: query.id },
+			where: { id: query.id, type: UserTypeEnum.supplier },
 			select: {
 				id: true,
 				fullname: true,
@@ -146,6 +146,12 @@ export class SupplierRepository implements OnModuleInit {
 				password: password,
 				phone: body.phone,
 				type: UserTypeEnum.supplier,
+			},
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				createdAt: true,
 			},
 		})
 		return supplier

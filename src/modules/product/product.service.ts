@@ -16,10 +16,15 @@ export class ProductService {
 		const productsCount = await this.productRepository.countFindMany(query)
 
 		const mappedProducts = products.map((p) => {
+			console.log(p.productMVs)
+			const lastSellingDate = p.productMVs?.length ? p.productMVs[0].selling.date : null
+
+			delete p.productMVs
+
 			return {
 				...p,
 				totalCost: p.cost.mul(p.count),
-				lastSellingDate: p.productMVs?.length ? p.productMVs[0].selling.date : null,
+				lastSellingDate: lastSellingDate,
 			}
 		})
 
@@ -42,12 +47,16 @@ export class ProductService {
 			throw new BadRequestException('product not found')
 		}
 
+		const pro = {
+			...product,
+			totalCost: product.cost.mul(product.count),
+			lastSellingDate: product.productMVs?.length ? product.productMVs[0].selling.date : null,
+		}
+
+		delete pro.productMVs
+
 		return createResponse({
-			data: {
-				...product,
-				totalCost: product.cost.mul(product.count),
-				lastSellingDate: product.productMVs?.length ? product.productMVs[0].selling.date : null,
-			},
+			data: pro,
 			success: { messages: ['find one success'] },
 		})
 	}
@@ -85,7 +94,7 @@ export class ProductService {
 
 		await this.productRepository.createOne({ ...body })
 
-		return createResponse({ data: null, success: { messages: ['create success'] } })
+		return createResponse({ data: null, success: { messages: ['create one success'] } })
 	}
 
 	async updateOne(query: ProductGetOneRequest, body: ProductUpdateOneRequest) {
@@ -98,7 +107,7 @@ export class ProductService {
 
 		await this.productRepository.updateOne(query, { ...body })
 
-		return createResponse({ data: null, success: { messages: ['update success'] } })
+		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}
 
 	async deleteOne(query: ProductGetOneRequest) {
@@ -106,6 +115,6 @@ export class ProductService {
 
 		await this.productRepository.deleteOne(query)
 
-		return createResponse({ data: null, success: { messages: ['delete success'] } })
+		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}
 }

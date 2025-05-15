@@ -12,7 +12,7 @@ export class ActionController {
 
 	@Get('many')
 	@ApiOkResponse({ type: ActionFindManyResponseDto })
-	@ApiOperation({ summary: 'get all staffs' })
+	@ApiOperation({ summary: 'get all actions' })
 	async findMany(@Query() query: ActionFindManyRequestDto): Promise<ActionFindManyResponseDto> {
 		return this.actionService.findMany(query)
 	}
