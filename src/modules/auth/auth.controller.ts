@@ -13,6 +13,7 @@ export class AuthController {
 	}
 
 	@Get('profile')
+	@AuthOptions(true, true)
 	@ApiOperation({ summary: 'staff profile' })
 	@ApiOkResponse({ type: StaffFindOneResponseDto })
 	async getStaffProfile(@Req() request: CRequest): Promise<StaffFindOneResponseDto> {

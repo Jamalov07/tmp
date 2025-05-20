@@ -31,7 +31,7 @@ export class SellingController {
 	@ApiOkResponse({ type: SellingFindManyResponseDto })
 	@ApiOperation({ summary: 'get all sellings' })
 	async findMany(@Query() query: SellingFindManyRequestDto): Promise<SellingFindManyResponseDto> {
-		return this.sellingService.findMany(query)
+		return this.sellingService.findMany({ ...query, isDeleted: false })
 	}
 
 	@Get('total-stats')

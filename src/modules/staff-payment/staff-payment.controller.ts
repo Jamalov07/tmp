@@ -27,7 +27,7 @@ export class StaffPaymentController {
 	@ApiOkResponse({ type: StaffPaymentFindManyResponseDto })
 	@ApiOperation({ summary: 'get all staffPayments' })
 	async findMany(@Query() query: StaffPaymentFindManyRequestDto): Promise<StaffPaymentFindManyResponseDto> {
-		return this.staffPaymentService.findMany(query)
+		return this.staffPaymentService.findMany({ ...query, isDeleted: false })
 	}
 
 	@Get('one')

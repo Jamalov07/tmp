@@ -27,7 +27,7 @@ export class ReturningController {
 	@ApiOkResponse({ type: ReturningFindManyResponseDto })
 	@ApiOperation({ summary: 'get all returnings' })
 	async findMany(@Query() query: ReturningFindManyRequestDto): Promise<ReturningFindManyResponseDto> {
-		return this.returningService.findMany(query)
+		return this.returningService.findMany({ ...query, isDeleted: false })
 	}
 
 	@Get('one')

@@ -27,7 +27,7 @@ export class ProductController {
 	@ApiOperation({ summary: 'get all products' })
 	@AuthOptions(false, false)
 	async findMany(@Query() query: ProductFindManyRequestDto): Promise<ProductFindManyResponseDto> {
-		return this.productService.findMany(query)
+		return this.productService.findMany({ ...query, isDeleted: false })
 	}
 
 	@Get('one')

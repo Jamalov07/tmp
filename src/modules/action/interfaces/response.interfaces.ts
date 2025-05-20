@@ -5,7 +5,7 @@ import { ActionRequired } from './fields.interfaces'
 export declare interface ActionFindManyData extends PaginationResponse<ActionFindOneData> {}
 
 export declare interface ActionFindOneData extends Pick<ActionRequired, 'id' | 'name' | 'url' | 'method' | 'description'> {
-	permission: PermissionFindOneData
+	permission?: PermissionFindOneData
 }
 
 export declare interface ActionFindManyResponse extends GlobalResponse {

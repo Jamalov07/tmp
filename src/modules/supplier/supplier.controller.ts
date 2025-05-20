@@ -26,7 +26,7 @@ export class SupplierController {
 	@ApiOkResponse({ type: SupplierFindManyResponseDto })
 	@ApiOperation({ summary: 'get all suppliers' })
 	async findMany(@Query() query: SupplierFindManyRequestDto): Promise<SupplierFindManyResponseDto> {
-		return this.supplierService.findMany(query)
+		return this.supplierService.findMany({ ...query, isDeleted: false })
 	}
 
 	@Get('one')
