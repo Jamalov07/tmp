@@ -11,6 +11,7 @@ import {
 	StaffPaymentDeleteOneRequest,
 } from './interfaces'
 import { StaffService } from '../staff'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class StaffPaymentService {
@@ -26,14 +27,23 @@ export class StaffPaymentService {
 		const staffPayments = await this.staffPaymentRepository.findMany(query)
 		const staffPaymentsCount = await this.staffPaymentRepository.countFindMany(query)
 
+		const calc = {
+			sum: new Decimal(0),
+		}
+
+		for (const payment of staffPayments) {
+			calc.sum = calc.sum.plus(payment.sum)
+		}
+
 		const result = query.pagination
 			? {
 					totalCount: staffPaymentsCount,
 					pagesCount: Math.ceil(staffPaymentsCount / query.pageSize),
 					pageSize: staffPayments.length,
 					data: staffPayments,
+					calc: calc,
 				}
-			: { data: staffPayments }
+			: { data: staffPayments, calc: calc }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}

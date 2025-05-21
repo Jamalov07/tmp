@@ -11,6 +11,7 @@ import {
 	SupplierPaymentDeleteOneRequest,
 } from './interfaces'
 import { SupplierService } from '../supplier/'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class SupplierPaymentService {
@@ -30,14 +31,29 @@ export class SupplierPaymentService {
 		const supplierPayments = await this.supplierPaymentRepository.findMany(query)
 		const supplierPaymentsCount = await this.supplierPaymentRepository.countFindMany(query)
 
+		const calc = {
+			totalCard: new Decimal(0),
+			totalCash: new Decimal(0),
+			totalOther: new Decimal(0),
+			totalTransfer: new Decimal(0),
+		}
+
+		for (const payment of supplierPayments) {
+			calc.totalCard = calc.totalCard.plus(payment.card)
+			calc.totalCash = calc.totalCash.plus(payment.cash)
+			calc.totalOther = calc.totalOther.plus(payment.other)
+			calc.totalTransfer = calc.totalTransfer.plus(payment.transfer)
+		}
+
 		const result = query.pagination
 			? {
 					totalCount: supplierPaymentsCount,
 					pagesCount: Math.ceil(supplierPaymentsCount / query.pageSize),
 					pageSize: supplierPayments.length,
 					data: supplierPayments,
+					calc: calc,
 				}
-			: { data: supplierPayments }
+			: { data: supplierPayments, calc: calc }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
