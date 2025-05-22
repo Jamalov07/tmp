@@ -17,6 +17,7 @@ import {
 	ArrivalModule,
 	ReturningModule,
 	ClientPaymentModule,
+	ProductMVModule,
 } from '@module'
 import { appConfig, databaseConfig, jwtConfig } from '@config'
 import { AuthGuard, CheckPermissionGuard } from '@common'
@@ -40,6 +41,7 @@ import { AuthGuard, CheckPermissionGuard } from '@common'
 		SellingModule,
 		ArrivalModule,
 		ReturningModule,
+		ProductMVModule,
 		ProductModule,
 		CronModule,
 		ExcelModule,

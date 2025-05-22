@@ -1,7 +1,7 @@
 import { PaginationRequest, RequestOtherFields } from '@common'
 import { ProductOptional, ProductRequired } from './fields.interfaces'
 
-export declare interface ProductFindManyRequest extends Pick<ProductOptional, 'name'>, PaginationRequest, Pick<RequestOtherFields, 'isDeleted'> {}
+export declare interface ProductFindManyRequest extends Pick<ProductOptional, 'name'>, PaginationRequest, Pick<RequestOtherFields, 'isDeleted' | 'search'> {}
 
 export declare interface ProductFindOneRequest extends Pick<ProductRequired, 'id'> {}
 

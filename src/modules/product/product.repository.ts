@@ -27,7 +27,7 @@ export class ProductRepository {
 
 		const products = await this.prisma.productModel.findMany({
 			where: {
-				name: { contains: query.name, mode: 'insensitive' },
+				name: { contains: query.search, mode: 'insensitive' },
 			},
 			select: {
 				id: true,
@@ -76,7 +76,7 @@ export class ProductRepository {
 	async countFindMany(query: ProductFindManyRequest) {
 		const productsCount = await this.prisma.productModel.count({
 			where: {
-				name: { contains: query.name, mode: 'insensitive' },
+				name: { contains: query.search, mode: 'insensitive' },
 			},
 		})
 
