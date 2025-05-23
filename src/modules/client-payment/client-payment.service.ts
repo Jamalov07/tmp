@@ -12,6 +12,7 @@ import {
 } from './interfaces'
 import { ClientService } from '../client'
 import { Decimal } from '@prisma/client/runtime/library'
+import { ServiceTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class ClientPaymentService {
@@ -110,11 +111,21 @@ export class ClientPaymentService {
 	}
 
 	async deleteOne(query: ClientPaymentDeleteOneRequest) {
-		await this.getOne(query)
-		if (query.method === DeleteMethodEnum.hard) {
-			await this.clientPaymentRepository.deleteOne(query)
+		const payment = await this.getOne(query)
+		if (payment.data.type === ServiceTypeEnum.selling) {
+			await this.clientPaymentRepository.updateOne(query, {
+				card: new Decimal(0),
+				cash: new Decimal(0),
+				other: new Decimal(0),
+				transfer: new Decimal(0),
+				description: '',
+			})
 		} else {
-			await this.clientPaymentRepository.updateOne(query, { deletedAt: new Date() })
+			if (query.method === DeleteMethodEnum.hard) {
+				await this.clientPaymentRepository.deleteOne(query)
+			} else {
+				await this.clientPaymentRepository.updateOne(query, { deletedAt: new Date() })
+			}
 		}
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}

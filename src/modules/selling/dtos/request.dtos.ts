@@ -33,7 +33,7 @@ export class SellingPaymentDto extends IntersectionType(PickType(ClientPaymentRe
 export class SellingProductDto extends PickType(ProductMVRequiredDto, ['count', 'price', 'productId']) implements SellingProduct {}
 
 export class SellingCreateOneRequestDto
-	extends IntersectionType(PickType(SellingRequiredDto, ['clientId', 'date', 'send', 'status']), PickType(SellingOptionalDto, ['staffId']))
+	extends IntersectionType(PickType(SellingRequiredDto, ['clientId', 'date', 'send']), PickType(SellingOptionalDto, ['staffId']))
 	implements SellingCreateOneRequest
 {
 	@ApiPropertyOptional({ type: SellingPaymentDto })

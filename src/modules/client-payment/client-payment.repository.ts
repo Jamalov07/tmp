@@ -28,12 +28,13 @@ export class ClientPaymentRepository implements OnModuleInit {
 		const clientPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				staffId: query.staffId,
-				type: ServiceTypeEnum.client,
+				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
 					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
 				},
+				AND: [{ card: { not: 0 } }, { cash: { not: 0 } }, { other: { not: 0 } }, { transfer: { not: 0 } }, { description: { notIn: [null, ''] } }],
 			},
 			select: {
 				id: true,
@@ -56,7 +57,11 @@ export class ClientPaymentRepository implements OnModuleInit {
 
 	async findOne(query: ClientPaymentFindOneRequest) {
 		const clientPayment = await this.prisma.paymentModel.findFirst({
-			where: { id: query.id, type: ServiceTypeEnum.client },
+			where: {
+				id: query.id,
+				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
+				AND: [{ card: { not: 0 } }, { cash: { not: 0 } }, { other: { not: 0 } }, { transfer: { not: 0 } }, { description: { notIn: [null, ''] } }],
+			},
 			select: {
 				id: true,
 				staff: { select: { id: true, fullname: true, phone: true } },
@@ -79,7 +84,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 		const clientPaymentsCount = await this.prisma.paymentModel.count({
 			where: {
 				staffId: query.staffId,
-				type: ServiceTypeEnum.client,
+				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
@@ -100,7 +105,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 		const clientPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				id: { in: query.ids },
-				type: ServiceTypeEnum.client,
+				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
 				staffId: query.staffId,
 			},
 			...paginationOptions,
@@ -122,7 +127,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 			where: {
 				id: { in: query.ids },
 				staffId: query.staffId,
-				type: ServiceTypeEnum.client,
+				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
 			},
 		})
 
