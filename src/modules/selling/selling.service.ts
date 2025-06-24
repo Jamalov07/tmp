@@ -105,16 +105,15 @@ export class SellingService {
 		const mappedSellings = sellings.map((s) => {
 			const p = s.payment
 
-			const hasMeaningfulPayment =
-				(p.card && !p.card.equals(0)) ||
-				(p.cash && !p.cash.equals(0)) ||
-				(p.other && !p.other.equals(0)) ||
-				(p.transfer && !p.transfer.equals(0)) ||
-				(p.description && p.description.trim() !== '')
+			const hasNonZeroPayment = !p.card.equals(0) || !p.cash.equals(0) || !p.other.equals(0) || !p.transfer.equals(0)
+
+			const hasDescription = p.description.trim() !== ''
+
+			const shouldKeepPayment = hasNonZeroPayment || hasDescription
 
 			return {
 				...s,
-				payment: hasMeaningfulPayment ? p : null,
+				payment: shouldKeepPayment ? p : null,
 			}
 		})
 
