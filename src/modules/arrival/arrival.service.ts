@@ -51,6 +51,10 @@ export class ArrivalService {
 				return acc.plus(new Decimal(product.count).mul(product.price))
 			}, new Decimal(0))
 
+			const totalCost = arrival.products.reduce((acc, product) => {
+				return acc.plus(new Decimal(product.count).mul(product.cost))
+			}, new Decimal(0))
+
 			calc.totalPrice = calc.totalPrice.plus(totalPrice)
 			calc.totalPayment = calc.totalPayment.plus(totalPayment)
 			calc.totalDebt = calc.totalDebt.plus(totalPrice.minus(totalPayment))
@@ -70,8 +74,9 @@ export class ArrivalService {
 			return {
 				...arrival,
 				payment: hasMeaningfulPayment ? p : null,
-				debt: totalPrice.minus(totalPayment),
+				debt: totalCost.minus(totalPayment),
 				totalPayment: totalPayment,
+				totalCost: totalCost,
 				totalPrice: totalPrice,
 			}
 		})
