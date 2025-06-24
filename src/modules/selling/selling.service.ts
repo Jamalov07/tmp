@@ -154,17 +154,15 @@ export class SellingService {
 	async updateOne(query: SellingGetOneRequest, body: SellingUpdateOneRequest) {
 		const selling = await this.getOne(query)
 
-		let status: SellingStatusEnum = selling.data.status
-
-		if (status !== SellingStatusEnum.accepted) {
+		if (body.status !== SellingStatusEnum.accepted) {
 			if (body.payment) {
 				if (Object.values(body.payment).some((value) => value !== 0)) {
-					status = SellingStatusEnum.accepted
+					body.status = SellingStatusEnum.accepted
 				}
 			}
 		}
 
-		await this.sellingRepository.updateOne(query, { ...body, status: status, staffId: selling.data.staffId })
+		await this.sellingRepository.updateOne(query, { ...body, status: body.status, staffId: selling.data.staffId })
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}
