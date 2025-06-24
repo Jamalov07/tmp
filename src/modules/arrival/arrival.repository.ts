@@ -150,11 +150,11 @@ export class ArrivalRepository implements OnModuleInit {
 				staffId: body.staffId,
 				payment: {
 					create: {
-						card: body.payment.card,
-						cash: body.payment.cash,
-						other: body.payment.other,
-						transfer: body.payment.transfer,
-						description: body.payment.description,
+						card: body.payment?.card,
+						cash: body.payment?.cash,
+						other: body.payment?.other,
+						transfer: body.payment?.transfer,
+						description: body.payment?.description,
 						userId: body.supplierId,
 						staffId: body.staffId,
 						type: ServiceTypeEnum.arrival,
