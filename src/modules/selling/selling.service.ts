@@ -157,8 +157,10 @@ export class SellingService {
 		let status: SellingStatusEnum = selling.data.status
 
 		if (status !== SellingStatusEnum.accepted) {
-			if (Object.values(body.payment).some((value) => value !== 0)) {
-				status = SellingStatusEnum.accepted
+			if (body.payment) {
+				if (Object.values(body.payment).some((value) => value !== 0)) {
+					status = SellingStatusEnum.accepted
+				}
 			}
 		}
 
