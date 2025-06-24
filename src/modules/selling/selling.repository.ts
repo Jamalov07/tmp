@@ -11,7 +11,7 @@ import {
 	SellingUpdateOneRequest,
 } from './interfaces'
 import { SellingController } from './selling.controller'
-import { ServiceTypeEnum } from '@prisma/client'
+import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
 import { StatsTypeEnum } from './enums'
 import { convertUTCtoLocal, extractDateParts } from '../../common'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -197,9 +197,16 @@ export class SellingRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
-				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
+				products: { select: { id: true, price: true, count: true, product: { select: { name: true, id: true } } } },
 			},
 		})
+
+		if (body.status === SellingStatusEnum.accepted) {
+			for (const product of selling.products) {
+				await this.prisma.productMVModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
+			}
+		}
+
 		return selling
 	}
 
@@ -230,7 +237,27 @@ export class SellingRepository implements OnModuleInit {
 					deleteMany: body.productIdsToRemove?.map((id) => ({ id: id })),
 				},
 			},
+			select: {
+				id: true,
+				status: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				date: true,
+				send: true,
+				sended: true,
+				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+				products: { select: { id: true, price: true, count: true, product: { select: { name: true, id: true } } } },
+			},
 		})
+
+		if (body.status === SellingStatusEnum.accepted) {
+			for (const product of selling.products) {
+				await this.prisma.productMVModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
+			}
+		}
 
 		return selling
 	}
