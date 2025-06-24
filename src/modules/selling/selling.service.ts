@@ -143,7 +143,20 @@ export class SellingService {
 		if (body.payment) {
 			if (Object.values(body.payment).some((value) => value !== 0)) {
 				body.status = SellingStatusEnum.accepted
+				if (body.date) {
+					if (new Date(body.date).getDate() === new Date().getDate()) {
+						body.date = new Date(body.date)
+					} else {
+						body.date = new Date(new Date(body.date).setHours(0, 0, 0, 0))
+					}
+				} else {
+					body.date = new Date()
+				}
 			}
+		}
+
+		if (body.status === SellingStatusEnum.accepted) {
+			body.date = new Date()
 		}
 
 		const selling = await this.sellingRepository.createOne({ ...body, staffId: request.user.id, sended: sended })
@@ -158,8 +171,12 @@ export class SellingService {
 			if (body.payment) {
 				if (Object.values(body.payment).some((value) => value !== 0)) {
 					body.status = SellingStatusEnum.accepted
+					body.date = new Date()
 				}
 			}
+		}
+		if (body.status === SellingStatusEnum.accepted) {
+			body.date = new Date()
 		}
 
 		await this.sellingRepository.updateOne(query, { ...body, status: body.status, staffId: selling.data.staffId })
