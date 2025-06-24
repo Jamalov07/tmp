@@ -33,14 +33,29 @@ export class ArrivalService {
 		const arrivals = await this.arrivalRepository.findMany(query)
 		const arrivalsCount = await this.arrivalRepository.countFindMany(query)
 
+		const mappedArrivals = arrivals.map((a) => {
+			const p = a.payment
+
+			const hasMeaningfulPayment =
+				(p.card && !p.card.equals(0)) ||
+				(p.cash && !p.cash.equals(0)) ||
+				(p.other && !p.other.equals(0)) ||
+				(p.transfer && !p.transfer.equals(0)) ||
+				(p.description && p.description.trim() !== '')
+			return {
+				...a,
+				payment: hasMeaningfulPayment ? p : null,
+			}
+		})
+
 		const result = query.pagination
 			? {
 					totalCount: arrivalsCount,
 					pagesCount: Math.ceil(arrivalsCount / query.pageSize),
-					pageSize: arrivals.length,
-					data: arrivals,
+					pageSize: mappedArrivals.length,
+					data: mappedArrivals,
 				}
-			: { data: arrivals }
+			: { data: mappedArrivals }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
