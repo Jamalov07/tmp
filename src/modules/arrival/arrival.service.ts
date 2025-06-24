@@ -12,6 +12,7 @@ import {
 } from './interfaces'
 import { SupplierService } from '../supplier'
 import { ProductService } from '../product'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class ArrivalService {
@@ -33,8 +34,32 @@ export class ArrivalService {
 		const arrivals = await this.arrivalRepository.findMany(query)
 		const arrivalsCount = await this.arrivalRepository.countFindMany(query)
 
-		const mappedArrivals = arrivals.map((a) => {
-			const p = a.payment
+		const calc = {
+			totalPrice: new Decimal(0),
+			totalPayment: new Decimal(0),
+			totalCardPayment: new Decimal(0),
+			totalCashPayment: new Decimal(0),
+			totalOtherPayment: new Decimal(0),
+			totalTransferPayment: new Decimal(0),
+			totalDebt: new Decimal(0),
+		}
+
+		const mappedArrivals = arrivals.map((arrival) => {
+			const totalPayment = arrival.payment.card.plus(arrival.payment.cash).plus(arrival.payment.other).plus(arrival.payment.transfer)
+
+			const totalPrice = arrival.products.reduce((acc, product) => {
+				return acc.plus(new Decimal(product.count).mul(product.price))
+			}, new Decimal(0))
+
+			calc.totalPrice = calc.totalPrice.plus(totalPrice)
+			calc.totalPayment = calc.totalPayment.plus(totalPayment)
+			calc.totalDebt = calc.totalDebt.plus(totalPrice.minus(totalPayment))
+			calc.totalCardPayment = calc.totalCardPayment.plus(arrival.payment.card)
+			calc.totalCashPayment = calc.totalCashPayment.plus(arrival.payment.cash)
+			calc.totalOtherPayment = calc.totalOtherPayment.plus(arrival.payment.other)
+			calc.totalTransferPayment = calc.totalTransferPayment.plus(arrival.payment.transfer)
+
+			const p = arrival.payment
 
 			const hasMeaningfulPayment =
 				(p.card && !p.card.equals(0)) ||
@@ -43,8 +68,11 @@ export class ArrivalService {
 				(p.transfer && !p.transfer.equals(0)) ||
 				(p.description && p.description.trim() !== '')
 			return {
-				...a,
+				...arrival,
 				payment: hasMeaningfulPayment ? p : null,
+				debt: totalPrice.minus(totalPayment),
+				totalPayment: totalPayment,
+				totalPrice: totalPrice,
 			}
 		})
 
@@ -54,8 +82,9 @@ export class ArrivalService {
 					pagesCount: Math.ceil(arrivalsCount / query.pageSize),
 					pageSize: mappedArrivals.length,
 					data: mappedArrivals,
+					calc: calc,
 				}
-			: { data: mappedArrivals }
+			: { data: mappedArrivals, calc: calc }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
