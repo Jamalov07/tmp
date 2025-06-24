@@ -102,24 +102,29 @@ export class SellingService {
 		const sellings = await this.sellingRepository.getMany(query)
 		const sellingsCount = await this.sellingRepository.countGetMany(query)
 
-		const maappedSellings = sellings.map((s) => {
-			let payment = null
-			if (s.payment.card || s.payment.cash || s.payment.other || s.payment.transfer || s.payment.description) {
-				payment = s.payment
-			}
+		const mappedSellings = sellings.map((s) => {
+			const p = s.payment
+
+			const hasMeaningfulPayment =
+				(p.card && !p.card.equals(0)) ||
+				(p.cash && !p.cash.equals(0)) ||
+				(p.other && !p.other.equals(0)) ||
+				(p.transfer && !p.transfer.equals(0)) ||
+				(p.description && p.description.trim() !== '')
+
 			return {
 				...s,
-				payment: payment,
+				payment: hasMeaningfulPayment ? p : null,
 			}
 		})
 
 		const result = query.pagination
 			? {
 					pagesCount: Math.ceil(sellingsCount / query.pageSize),
-					pageSize: maappedSellings.length,
-					data: maappedSellings,
+					pageSize: mappedSellings.length,
+					data: mappedSellings,
 				}
-			: { data: maappedSellings }
+			: { data: mappedSellings }
 
 		return createResponse({ data: result, success: { messages: ['get many success'] } })
 	}
