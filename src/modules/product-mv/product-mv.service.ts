@@ -1,3 +1,4 @@
+import { CRequest } from '@common'
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ProductMVRepository } from './product-mv.repository'
 import {
@@ -75,8 +76,8 @@ export class ProductMVService {
 		return createResponse({ data: product, success: { messages: ['get one success'] } })
 	}
 
-	async createOneSelling(body: SellingProductMVCreateOneRequest) {
-		await this.productMVRepository.createOneSelling({ ...body })
+	async createOneSelling(request: CRequest, body: SellingProductMVCreateOneRequest) {
+		await this.productMVRepository.createOneSelling({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
 	}

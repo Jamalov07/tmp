@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req } from '@nestjs/common'
 import { ProductMVService } from './product-mv.service'
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger'
 import {
@@ -14,7 +14,7 @@ import {
 	SellingProductMVCreateOneRequestDto,
 	SellingProductMVUpdateOneRequestDto,
 } from './dtos'
-import { AuthOptions } from '../../common'
+import { AuthOptions, CRequest } from '../../common'
 import { ProductModifyResponseDto } from '../product/dtos'
 
 @Controller('product-mv')
@@ -40,10 +40,11 @@ export class ProductMVController {
 	}
 
 	@Post('selling/one')
+	@AuthOptions(true, true)
 	@ApiOperation({ summary: 'add one selling product' })
 	@ApiOkResponse({ type: ProductModifyResponseDto })
-	async createOneSelling(@Body() body: SellingProductMVCreateOneRequestDto): Promise<ProductModifyResponseDto> {
-		return this.productMVService.createOneSelling(body)
+	async createOneSelling(@Req() request: CRequest, @Body() body: SellingProductMVCreateOneRequestDto): Promise<ProductModifyResponseDto> {
+		return this.productMVService.createOneSelling(request, body)
 	}
 
 	@Post('arrival/one')
