@@ -51,7 +51,7 @@ export class SellingRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
-				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
+				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 			...paginationOptions,
 		})
