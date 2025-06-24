@@ -58,8 +58,18 @@ export class SellingService {
 			calc.totalOtherPayment = calc.totalOtherPayment.plus(selling.payment.other)
 			calc.totalTransferPayment = calc.totalTransferPayment.plus(selling.payment.transfer)
 
+			const p = selling.payment
+
+			const hasMeaningfulPayment =
+				(p.card && !p.card.equals(0)) ||
+				(p.cash && !p.cash.equals(0)) ||
+				(p.other && !p.other.equals(0)) ||
+				(p.transfer && !p.transfer.equals(0)) ||
+				(p.description && p.description.trim() !== '')
+
 			return {
 				...selling,
+				payment: hasMeaningfulPayment ? p : null,
 				debt: totalPrice.minus(totalPayment),
 				totalPayment: totalPayment,
 				totalPrice: totalPrice,
@@ -102,28 +112,13 @@ export class SellingService {
 		const sellings = await this.sellingRepository.getMany(query)
 		const sellingsCount = await this.sellingRepository.countGetMany(query)
 
-		const mappedSellings = sellings.map((s) => {
-			const p = s.payment
-
-			const hasNonZeroPayment = !p.card.equals(0) || !p.cash.equals(0) || !p.other.equals(0) || !p.transfer.equals(0)
-
-			const hasDescription = p.description.trim() !== ''
-
-			const shouldKeepPayment = hasNonZeroPayment || hasDescription
-
-			return {
-				...s,
-				payment: shouldKeepPayment ? p : null,
-			}
-		})
-
 		const result = query.pagination
 			? {
 					pagesCount: Math.ceil(sellingsCount / query.pageSize),
-					pageSize: mappedSellings.length,
-					data: mappedSellings,
+					pageSize: sellings.length,
+					data: sellings,
 				}
-			: { data: mappedSellings }
+			: { data: sellings }
 
 		return createResponse({ data: result, success: { messages: ['get many success'] } })
 	}
