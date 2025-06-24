@@ -130,8 +130,10 @@ export class SellingService {
 			sended = true
 		}
 
-		if (Object.values(body.payment).some((value) => value !== 0)) {
-			body.status = SellingStatusEnum.accepted
+		if (body.payment) {
+			if (Object.values(body.payment).some((value) => value !== 0)) {
+				body.status = SellingStatusEnum.accepted
+			}
 		}
 
 		const selling = await this.sellingRepository.createOne({ ...body, staffId: request.user.id, sended: sended })
