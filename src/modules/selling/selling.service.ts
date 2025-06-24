@@ -102,13 +102,24 @@ export class SellingService {
 		const sellings = await this.sellingRepository.getMany(query)
 		const sellingsCount = await this.sellingRepository.countGetMany(query)
 
+		const maappedSellings = sellings.map((s) => {
+			let payment = null
+			if (s.payment.card || s.payment.cash || s.payment.other || s.payment.transfer || s.payment.description) {
+				payment = s.payment
+			}
+			return {
+				...s,
+				payment: payment,
+			}
+		})
+
 		const result = query.pagination
 			? {
 					pagesCount: Math.ceil(sellingsCount / query.pageSize),
-					pageSize: sellings.length,
-					data: sellings,
+					pageSize: maappedSellings.length,
+					data: maappedSellings,
 				}
-			: { data: sellings }
+			: { data: maappedSellings }
 
 		return createResponse({ data: result, success: { messages: ['get many success'] } })
 	}
