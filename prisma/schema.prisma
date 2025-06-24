@@ -148,7 +148,7 @@ model SellingModel {
   date      DateTime          @map("date")       @db.Timestamptz()  @default(dbgenerated("NOW()"))
   send      Boolean           @map("send")       @db.Boolean        @default(false)       
   sended    Boolean           @map("sended")     @db.Boolean        @default(false)       
-  status    SellingStatusEnum @map("status")
+  status    SellingStatusEnum @map("status")                        @default(notaccepted)
   clientId  String            @map("client_id")  @db.Uuid
   staffId   String            @map("staff_id")   @db.Uuid
 
