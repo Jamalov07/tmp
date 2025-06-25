@@ -1,8 +1,22 @@
 import { Decimal } from '@prisma/client/runtime/library'
 import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
-import { ClientCreateOneResponse, ClientFindManyData, ClientFindManyResponse, ClientFindOneData, ClientFindOneResponse, ClientModifyResponse } from '../interfaces'
+import { ClientCreateOneResponse, ClientDeed, ClientFindManyData, ClientFindManyResponse, ClientFindOneData, ClientFindOneResponse, ClientModifyResponse } from '../interfaces'
 import { GlobalModifyResponseDto, GlobalResponseDto, PaginationResponseDto } from '@common'
 import { ClientRequiredDto } from './fields.dtos'
+
+export class ClientDeedDto implements ClientDeed {
+	@ApiProperty({ type: Date })
+	date: Date
+
+	@ApiProperty({ enum: ['debit', 'kredit'] })
+	type: 'debit' | 'credit'
+
+	@ApiProperty({ type: Decimal })
+	value: Decimal
+
+	@ApiProperty({ type: String })
+	description: string
+}
 
 export class ClientFindOneDataDto extends PickType(ClientRequiredDto, ['id', 'fullname', 'createdAt', 'phone']) implements ClientFindOneData {
 	@ApiProperty({ type: Number })
@@ -10,6 +24,9 @@ export class ClientFindOneDataDto extends PickType(ClientRequiredDto, ['id', 'fu
 
 	@ApiProperty({ type: Date })
 	lastArrivalDate?: Date
+
+	@ApiProperty({ type: ClientDeedDto, isArray: true })
+	deed?: ClientDeed[]
 }
 
 export class ClientFindManyDataDto extends PaginationResponseDto implements ClientFindManyData {

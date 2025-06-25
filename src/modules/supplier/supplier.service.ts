@@ -9,6 +9,7 @@ import {
 	SupplierFindManyRequest,
 	SupplierFindOneRequest,
 	SupplierDeleteOneRequest,
+	SupplierDeed,
 } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -81,17 +82,29 @@ export class SupplierService {
 			throw new BadRequestException('supplier not found')
 		}
 
-		const payment = supplier.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
+		const deeds: SupplierDeed[] = []
+
+		const payment = supplier.payments.reduce((acc, curr) => {
+			deeds.push({ type: 'debit', value: curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer), date: curr.createdAt, description: curr.description })
+
+			return acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer)
+		}, new Decimal(0))
 
 		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
 			const productsSum = arr.products.reduce((a, p) => {
 				return a.plus(p.cost.mul(p.count))
 			}, new Decimal(0))
 
+			deeds.push({ type: 'credit', value: productsSum, date: arr.date, description: '' })
+
 			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
+
+			deeds.push({ type: 'debit', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))
+
+		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
 		return createResponse({
 			data: {
@@ -103,6 +116,7 @@ export class SupplierService {
 				deletedAt: supplier.deletedAt,
 				actionIds: supplier.actions.map((a) => a.id),
 				debt: payment.plus(arrivalPayment),
+				deeds: filteredDeeds,
 				lastArrivalDate: supplier.arrivals?.length ? supplier.arrivals[0].date : null,
 			},
 			success: { messages: ['find one success'] },

@@ -67,14 +67,14 @@ export class SupplierRepository implements OnModuleInit {
 				arrivals: {
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true } },
+						payment: { select: { card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
 						products: { select: { cost: true, count: true, price: true } },
 					},
 					orderBy: { date: 'desc' },
 				},
 				payments: {
 					where: { type: ServiceTypeEnum.supplier },
-					select: { card: true, cash: true, other: true, transfer: true },
+					select: { card: true, cash: true, other: true, transfer: true, description: true, createdAt: true },
 				},
 				phone: true,
 				actions: true,

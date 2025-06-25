@@ -72,12 +72,12 @@ export class ClientRepository implements OnModuleInit {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client },
-					select: { card: true, cash: true, other: true, transfer: true },
+					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true } },
+						payment: { select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true } },
 						products: { select: { cost: true, count: true, price: true } },
 					},
 					orderBy: { date: 'desc' },
