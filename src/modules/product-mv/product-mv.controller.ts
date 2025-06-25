@@ -50,15 +50,15 @@ export class ProductMVController {
 	@Post('arrival/one')
 	@ApiOperation({ summary: 'add one arrival product' })
 	@ApiOkResponse({ type: ProductModifyResponseDto })
-	async createOneArrival(@Body() body: arrivalProductMVCreateOneRequestDto): Promise<ProductModifyResponseDto> {
-		return this.productMVService.createOneArrival(body)
+	async createOneArrival(@Req() request: CRequest, @Body() body: arrivalProductMVCreateOneRequestDto): Promise<ProductModifyResponseDto> {
+		return this.productMVService.createOneArrival(request, body)
 	}
 
 	@Post('returning/one')
 	@ApiOperation({ summary: 'add one returning product' })
 	@ApiOkResponse({ type: ProductModifyResponseDto })
-	async createOneReturning(@Body() body: ReturningProductMVCreateOneRequestDto): Promise<ProductModifyResponseDto> {
-		return this.productMVService.createOneReturning(body)
+	async createOneReturning(@Req() request: CRequest, @Body() body: ReturningProductMVCreateOneRequestDto): Promise<ProductModifyResponseDto> {
+		return this.productMVService.createOneReturning(request, body)
 	}
 
 	@Patch('selling/one')

@@ -82,14 +82,14 @@ export class ProductMVService {
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
 	}
 
-	async createOneArrival(body: ArrivalProductMVCreateOneRequest) {
-		await this.productMVRepository.createOneArrival({ ...body })
+	async createOneArrival(request: CRequest, body: ArrivalProductMVCreateOneRequest) {
+		await this.productMVRepository.createOneArrival({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
 	}
 
-	async createOneReturning(body: ReturningProductMVCreateOneRequest) {
-		await this.productMVRepository.createOneReturning({ ...body })
+	async createOneReturning(request: CRequest, body: ReturningProductMVCreateOneRequest) {
+		await this.productMVRepository.createOneReturning({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
 	}
