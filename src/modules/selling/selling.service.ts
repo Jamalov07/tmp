@@ -16,17 +16,26 @@ import {
 import { Decimal } from '@prisma/client/runtime/library'
 import { ArrivalService } from '../arrival'
 import { ClientService } from '../client'
+import { ExcelService } from '../shared/excel'
+import { Response } from 'express'
 
 @Injectable()
 export class SellingService {
 	private readonly sellingRepository: SellingRepository
 	private readonly arrivalService: ArrivalService
 	private readonly clientService: ClientService
+	private readonly excelService: ExcelService
 
-	constructor(sellingRepository: SellingRepository, @Inject(forwardRef(() => ArrivalService)) arrivalService: ArrivalService, clientService: ClientService) {
+	constructor(
+		sellingRepository: SellingRepository,
+		@Inject(forwardRef(() => ArrivalService)) arrivalService: ArrivalService,
+		clientService: ClientService,
+		excelService: ExcelService,
+	) {
 		this.sellingRepository = sellingRepository
 		this.arrivalService = arrivalService
 		this.clientService = clientService
+		this.excelService = excelService
 	}
 
 	async findMany(query: SellingFindManyRequest) {
@@ -89,6 +98,10 @@ export class SellingService {
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
 
+	async excelDownloadMany(res: Response, query: SellingFindManyRequest) {
+		return this.excelService.sellingDownloadMany(res, query)
+	}
+
 	async findOne(query: SellingFindOneRequest) {
 		const selling = await this.sellingRepository.findOne(query)
 
@@ -106,6 +119,10 @@ export class SellingService {
 			data: { ...selling, debt: totalPrice.minus(totalPayment), totalPayment: totalPayment, totalPrice: totalPrice },
 			success: { messages: ['find one success'] },
 		})
+	}
+
+	async excelDownloadOne(res: Response, query: SellingFindOneRequest) {
+		return this.excelService.sellingDownloadOne(res, query)
 	}
 
 	async getMany(query: SellingGetManyRequest) {

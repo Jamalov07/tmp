@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	SellingFindManyRequestDto,
@@ -17,6 +17,7 @@ import {
 } from './dtos'
 import { SellingService } from './selling.service'
 import { AuthOptions, CRequest } from '../../common'
+import { Response } from 'express'
 
 @ApiTags('Selling')
 @Controller('selling')
@@ -32,6 +33,12 @@ export class SellingController {
 	@ApiOperation({ summary: 'get all sellings' })
 	async findMany(@Query() query: SellingFindManyRequestDto): Promise<SellingFindManyResponseDto> {
 		return this.sellingService.findMany({ ...query, isDeleted: false })
+	}
+
+	@Get('excel-download/many')
+	@ApiOperation({ summary: 'download many sellings' })
+	async excelDownloadMany(@Res() res: Response, @Query() query: SellingFindManyRequestDto) {
+		return this.sellingService.excelDownloadMany(res, query)
 	}
 
 	@Get('total-stats')
@@ -55,6 +62,12 @@ export class SellingController {
 	@ApiOkResponse({ type: SellingFindOneResponseDto })
 	async findOne(@Query() query: SellingFindOneRequestDto): Promise<SellingFindOneResponseDto> {
 		return this.sellingService.findOne(query)
+	}
+
+	@Get('excel-download/one')
+	@ApiOperation({ summary: 'download many sellings' })
+	async excelDownloadOne(@Res() res: Response, @Query() query: SellingFindOneRequestDto) {
+		return this.sellingService.excelDownloadOne(res, query)
 	}
 
 	@Post('one')

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	ArrivalFindManyRequestDto,
@@ -13,6 +13,7 @@ import {
 } from './dtos'
 import { ArrivalService } from './arrival.service'
 import { AuthOptions, CRequest } from '../../common'
+import { Response } from 'express'
 
 @ApiTags('Arrival')
 @Controller('arrival')
@@ -30,11 +31,23 @@ export class ArrivalController {
 		return this.arrivalService.findMany(query)
 	}
 
+	@Get('excel-download/many')
+	@ApiOperation({ summary: 'excel download many arrivals' })
+	async excelDownloadMany(@Res() res: Response, @Query() query: ArrivalFindManyRequestDto) {
+		return this.arrivalService.excelDownloadMany(res, query)
+	}
+
 	@Get('one')
 	@ApiOperation({ summary: 'find one arrival' })
 	@ApiOkResponse({ type: ArrivalFindOneResponseDto })
 	async findOne(@Query() query: ArrivalFindOneRequestDto): Promise<ArrivalFindOneResponseDto> {
 		return this.arrivalService.findOne(query)
+	}
+
+	@Get('excel-download/one')
+	@ApiOperation({ summary: 'download many arrivals' })
+	async excelDownloadOne(@Res() res: Response, @Query() query: ArrivalFindOneRequestDto) {
+		return this.arrivalService.excelDownloadOne(res, query)
 	}
 
 	@Post('one')

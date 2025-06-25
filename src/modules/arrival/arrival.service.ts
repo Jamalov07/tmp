@@ -13,21 +13,26 @@ import {
 import { SupplierService } from '../supplier'
 import { ProductService } from '../product'
 import { Decimal } from '@prisma/client/runtime/library'
+import { ExcelService } from '../shared'
+import { Response } from 'express'
 
 @Injectable()
 export class ArrivalService {
 	private readonly arrivalRepository: ArrivalRepository
 	private readonly supplierService: SupplierService
 	private readonly productService: ProductService
+	private readonly excelService: ExcelService
 
 	constructor(
 		arrivalRepository: ArrivalRepository,
 		@Inject(forwardRef(() => SupplierService)) supplierService: SupplierService,
 		@Inject(forwardRef(() => ProductService)) productService: ProductService,
+		excelService: ExcelService,
 	) {
 		this.arrivalRepository = arrivalRepository
 		this.supplierService = supplierService
 		this.productService = productService
+		this.excelService = excelService
 	}
 
 	async findMany(query: ArrivalFindManyRequest) {
@@ -92,6 +97,14 @@ export class ArrivalService {
 			: { data: mappedArrivals, calc: calc }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
+	}
+
+	async excelDownloadMany(res: Response, query: ArrivalFindManyRequest) {
+		return this.excelService.arrivalDownloadMany(res, query)
+	}
+
+	async excelDownloadOne(res: Response, query: ArrivalFindOneRequest) {
+		return this.excelService.arrivalDownloadOne(res, query)
 	}
 
 	async findOne(query: ArrivalFindOneRequest) {

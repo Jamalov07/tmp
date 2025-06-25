@@ -145,6 +145,7 @@ model PaymentModel {
 
 model SellingModel {
   id        String            @map("id")         @db.Uuid           @default(dbgenerated("GEN_RANDOM_UUID()"))
+  publicId  Int               @map("public_id")  @db.Integer        @default(autoincrement())
   date      DateTime          @map("date")       @db.Timestamptz()  @default(dbgenerated("NOW()"))
   send      Boolean           @map("send")       @db.Boolean        @default(false)       
   sended    Boolean           @map("sended")     @db.Boolean        @default(false)       
