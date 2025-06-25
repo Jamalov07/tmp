@@ -2,6 +2,7 @@ import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
 import {
 	SupplierCreateOneResponse,
 	SupplierDeed,
+	SupplierDeedInfo,
 	SupplierFindManyData,
 	SupplierFindManyResponse,
 	SupplierFindOneData,
@@ -25,6 +26,21 @@ export class SupplierDeedDto implements SupplierDeed {
 	@ApiProperty({ type: String })
 	description: string
 }
+
+export class SupplierDeedInfoDto implements SupplierDeedInfo {
+	@ApiProperty({ type: SupplierDeedDto, isArray: true })
+	deeds: SupplierDeedDto[]
+
+	@ApiProperty({ type: Decimal })
+	debt: Decimal
+
+	@ApiProperty({ type: Decimal })
+	totalCredit: Decimal
+
+	@ApiProperty({ type: Decimal })
+	totalDebit: Decimal
+}
+
 export class SupplierFindOneDataDto extends PickType(SupplierRequiredDto, ['id', 'fullname', 'createdAt', 'phone']) implements SupplierFindOneData {
 	@ApiProperty({ type: Number })
 	debt?: Decimal
@@ -32,8 +48,8 @@ export class SupplierFindOneDataDto extends PickType(SupplierRequiredDto, ['id',
 	@ApiProperty({ type: Date })
 	lastArrivalDate?: Date
 
-	@ApiProperty({ type: SupplierDeedDto, isArray: true })
-	deed?: SupplierDeed[]
+	@ApiProperty({ type: SupplierDeedInfoDto })
+	deedInfo?: SupplierDeedInfo[]
 }
 
 export class SupplierFindManyDataDto extends PaginationResponseDto implements SupplierFindManyData {

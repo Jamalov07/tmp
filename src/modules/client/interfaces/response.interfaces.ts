@@ -9,12 +9,19 @@ export declare interface ClientDeed {
 	description: string
 }
 
+export declare interface ClientDeedInfo {
+	deeds: ClientDeed[]
+	totalCredit: Decimal
+	totalDebit: Decimal
+	debt: Decimal
+}
+
 export declare interface ClientFindManyData extends PaginationResponse<ClientFindOneData> {}
 
 export declare interface ClientFindOneData extends Pick<ClientRequired, 'id' | 'fullname' | 'createdAt' | 'phone'> {
 	debt?: Decimal
 	lastArrivalDate?: Date
-	deed?: ClientDeed[]
+	deedInfo?: ClientDeedInfo
 }
 
 export declare interface ClientFindManyResponse extends GlobalResponse {

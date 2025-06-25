@@ -9,12 +9,19 @@ export declare interface SupplierDeed {
 	description: string
 }
 
+export declare interface SupplierDeedInfo {
+	deeds: SupplierDeed[]
+	totalCredit: Decimal
+	totalDebit: Decimal
+	debt: Decimal
+}
+
 export declare interface SupplierFindManyData extends PaginationResponse<SupplierFindOneData> {}
 
 export declare interface SupplierFindOneData extends Pick<SupplierRequired, 'id' | 'fullname' | 'createdAt' | 'phone'> {
 	lastArrivalDate?: Date
 	debt?: Decimal
-	deed?: SupplierDeed[]
+	deedInfo?: SupplierDeedInfo[]
 }
 
 export declare interface SupplierFindManyResponse extends GlobalResponse {

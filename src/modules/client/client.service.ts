@@ -82,11 +82,16 @@ export class ClientService {
 			throw new BadRequestException('client not found')
 		}
 		const deeds: ClientDeed[] = []
+		const totalDebit: Decimal = new Decimal(0)
+		const totalCredit: Decimal = new Decimal(0)
 
 		const payment = client.payments.reduce((acc, curr) => {
-			deeds.push({ type: 'debit', value: curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer), date: curr.createdAt, description: curr.description })
+			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
 
-			return acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			deeds.push({ type: 'debit', value: totalPayment, date: curr.createdAt, description: curr.description })
+			totalDebit.plus(totalPayment)
+
+			return acc.plus(totalPayment)
 		}, new Decimal(0))
 
 		const sellingPayment = client.sellings.reduce((acc, sel) => {
@@ -95,10 +100,12 @@ export class ClientService {
 			}, new Decimal(0))
 
 			deeds.push({ type: 'credit', value: productsSum, date: sel.date, description: '' })
+			totalCredit.plus(productsSum)
 
 			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
 
 			deeds.push({ type: 'debit', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
+			totalDebit.plus(totalPayment)
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))
@@ -115,7 +122,12 @@ export class ClientService {
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
 				debt: payment.plus(sellingPayment),
-				deeds: filteredDeeds,
+				deedInfo: {
+					totalDebit: totalDebit,
+					totalCredit: totalCredit,
+					debt: totalDebit.minus(totalCredit),
+					deeds: filteredDeeds,
+				},
 				lastArrivalDate: client.sellings?.length ? client.sellings[0].date : null,
 			},
 			success: { messages: ['find one success'] },

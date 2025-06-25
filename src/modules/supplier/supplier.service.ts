@@ -83,11 +83,15 @@ export class SupplierService {
 		}
 
 		const deeds: SupplierDeed[] = []
+		const totalDebit: Decimal = new Decimal(0)
+		const totalCredit: Decimal = new Decimal(0)
 
 		const payment = supplier.payments.reduce((acc, curr) => {
-			deeds.push({ type: 'debit', value: curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer), date: curr.createdAt, description: curr.description })
+			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			deeds.push({ type: 'debit', value: totalPayment, date: curr.createdAt, description: curr.description })
+			totalDebit.plus(totalPayment)
 
-			return acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			return acc.plus(totalPayment)
 		}, new Decimal(0))
 
 		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
@@ -96,10 +100,12 @@ export class SupplierService {
 			}, new Decimal(0))
 
 			deeds.push({ type: 'credit', value: productsSum, date: arr.date, description: '' })
+			totalCredit.plus(productsSum)
 
 			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
 
 			deeds.push({ type: 'debit', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
+			totalDebit.plus(totalPayment)
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))
@@ -116,7 +122,12 @@ export class SupplierService {
 				deletedAt: supplier.deletedAt,
 				actionIds: supplier.actions.map((a) => a.id),
 				debt: payment.plus(arrivalPayment),
-				deeds: filteredDeeds,
+				deedInfo: {
+					totalDebit: totalDebit,
+					totalCredit: totalCredit,
+					debt: totalDebit.minus(totalCredit),
+					deeds: filteredDeeds,
+				},
 				lastArrivalDate: supplier.arrivals?.length ? supplier.arrivals[0].date : null,
 			},
 			success: { messages: ['find one success'] },
