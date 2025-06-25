@@ -83,13 +83,13 @@ export class SupplierService {
 		}
 
 		const deeds: SupplierDeed[] = []
-		const totalDebit: Decimal = new Decimal(0)
-		const totalCredit: Decimal = new Decimal(0)
+		let totalDebit: Decimal = new Decimal(0)
+		let totalCredit: Decimal = new Decimal(0)
 
 		const payment = supplier.payments.reduce((acc, curr) => {
 			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
 			deeds.push({ type: 'debit', value: totalPayment, date: curr.createdAt, description: curr.description })
-			totalDebit.plus(totalPayment)
+			totalDebit = totalDebit.plus(totalPayment)
 
 			return acc.plus(totalPayment)
 		}, new Decimal(0))
@@ -100,12 +100,12 @@ export class SupplierService {
 			}, new Decimal(0))
 
 			deeds.push({ type: 'credit', value: productsSum, date: arr.date, description: '' })
-			totalCredit.plus(productsSum)
+			totalCredit = totalCredit.plus(productsSum)
 
 			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
 
 			deeds.push({ type: 'debit', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
-			totalDebit.plus(totalPayment)
+			totalDebit = totalDebit.plus(totalPayment)
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))
