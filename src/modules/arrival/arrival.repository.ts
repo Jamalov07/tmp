@@ -43,8 +43,12 @@ export class ArrivalRepository implements OnModuleInit {
 				deletedAt: true,
 				staff: { select: { fullname: true, phone: true, id: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
-				products: { select: { id: true, price: true, count: true, cost: true, product: { select: { name: true, cost: true, count: true, price: true, id: true } } } },
+				products: {
+					orderBy: [{ createdAt: 'desc' }],
+					select: { id: true, price: true, count: true, cost: true, product: { select: { name: true, cost: true, count: true, price: true, id: true } } },
+				},
 			},
+			orderBy: [{ createdAt: 'desc' }],
 			...paginationOptions,
 		})
 
@@ -63,7 +67,7 @@ export class ArrivalRepository implements OnModuleInit {
 				deletedAt: true,
 				staff: { select: { fullname: true, phone: true, id: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
-				products: { select: { id: true, price: true, count: true, cost: true, product: { select: { name: true } } } },
+				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, cost: true, product: { select: { name: true } } } },
 			},
 		})
 
@@ -179,6 +183,19 @@ export class ArrivalRepository implements OnModuleInit {
 				products: { select: { id: true, price: true, count: true, cost: true, product: { select: { name: true } } } },
 			},
 		})
+
+		if (body.products) {
+			for (const product of body.products) {
+				const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
+				if (pr) {
+					await this.prisma.productModel.update({
+						where: { id: product.productId },
+						data: { cost: product.cost, price: product.price, count: { increment: product.count } },
+					})
+				}
+			}
+		}
+
 		return arrival
 	}
 
@@ -209,6 +226,18 @@ export class ArrivalRepository implements OnModuleInit {
 				},
 			},
 		})
+
+		if (body.products) {
+			for (const product of body.products) {
+				const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
+				if (pr) {
+					await this.prisma.productModel.update({
+						where: { id: product.productId },
+						data: { cost: product.cost, price: product.price, count: { increment: product.count } },
+					})
+				}
+			}
+		}
 
 		return arrival
 	}

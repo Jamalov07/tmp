@@ -203,7 +203,7 @@ export class SellingRepository implements OnModuleInit {
 
 		if (body.status === SellingStatusEnum.accepted) {
 			for (const product of selling.products) {
-				await this.prisma.productMVModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
+				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 			}
 		}
 

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { ProductRepository } from './product.repository'
 import { createResponse } from '@common'
 import { ProductGetOneRequest, ProductCreateOneRequest, ProductUpdateOneRequest, ProductGetManyRequest, ProductFindManyRequest, ProductFindOneRequest } from './interfaces'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class ProductService {
@@ -15,17 +16,43 @@ export class ProductService {
 		const products = await this.productRepository.findMany(query)
 		const productsCount = await this.productRepository.countFindMany(query)
 
+		const calcPage = {
+			totalPrice: new Decimal(0),
+			totalCost: new Decimal(0),
+			totalCount: new Decimal(0),
+		}
+
+		const calcTotal = {
+			totalPrice: new Decimal(0),
+			totalCost: new Decimal(0),
+			totalCount: new Decimal(0),
+		}
+
 		const mappedProducts = products.map((p) => {
-			console.log(p.productMVs)
 			const lastSellingDate = p.productMVs?.length ? p.productMVs[0].selling.date : null
 
 			delete p.productMVs
 
-			return {
+			const product = {
 				...p,
 				totalCost: p.cost.mul(p.count),
+				totalPrice: p.price.mul(p.count),
 				lastSellingDate: lastSellingDate,
 			}
+
+			calcPage.totalCost = calcPage.totalCost.plus(product.totalCost)
+			calcPage.totalPrice = calcPage.totalPrice.plus(product.totalPrice)
+			calcPage.totalCount = calcPage.totalCount.plus(product.count)
+
+			return product
+		})
+
+		const allProducts = await this.productRepository.findMany({ pagination: false })
+
+		allProducts.map((pro) => {
+			calcTotal.totalCost = calcTotal.totalCost.plus(pro.cost.mul(pro.count))
+			calcTotal.totalPrice = calcTotal.totalPrice.plus(pro.price.mul(pro.count))
+			calcTotal.totalCount = calcTotal.totalCount.plus(pro.count)
 		})
 
 		const result = query.pagination
@@ -34,8 +61,9 @@ export class ProductService {
 					pagesCount: Math.ceil(productsCount / query.pageSize),
 					pageSize: products.length,
 					data: mappedProducts,
+					calc: { calcPage, calcTotal },
 				}
-			: { data: mappedProducts }
+			: { data: mappedProducts, calc: { calcPage, calcTotal } }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}

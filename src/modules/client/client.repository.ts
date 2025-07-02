@@ -9,7 +9,7 @@ import {
 	ClientGetOneRequest,
 	ClientUpdateOneRequest,
 } from './interfaces'
-import { ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
+import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import { ClientController } from './client.controller'
 
@@ -45,10 +45,11 @@ export class ClientRepository implements OnModuleInit {
 					select: { card: true, cash: true, other: true, transfer: true },
 				},
 				sellings: {
+					where: { status: SellingStatusEnum.accepted },
 					select: {
 						date: true,
 						payment: { select: { card: true, cash: true, other: true, transfer: true } },
-						products: { select: { cost: true, count: true, price: true } },
+						products: { select: { count: true, price: true } },
 					},
 					orderBy: { date: 'desc' },
 				},
@@ -60,6 +61,9 @@ export class ClientRepository implements OnModuleInit {
 	}
 
 	async findOne(query: ClientFindOneRequest) {
+		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+
 		const client = await this.prisma.userModel.findFirst({
 			where: { id: query.id, type: UserTypeEnum.client },
 			select: {
@@ -71,16 +75,29 @@ export class ClientRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				payments: {
-					where: { type: ServiceTypeEnum.client },
+					where: { type: ServiceTypeEnum.client, createdAt: { gte: deedStartDate, lte: deedEndDate } },
 					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
+					where: { status: SellingStatusEnum.accepted, date: { gte: deedStartDate, lte: deedEndDate } },
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true } },
 						products: { select: { cost: true, count: true, price: true } },
+						payment: {
+							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
+							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+						},
 					},
 					orderBy: { date: 'desc' },
+				},
+				returnings: {
+					where: { status: SellingStatusEnum.accepted, createdAt: { gte: deedStartDate, lte: deedEndDate } },
+					select: {
+						payment: {
+							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
+							select: { fromBalance: true, createdAt: true, description: true },
+						},
+					},
 				},
 			},
 		})

@@ -118,7 +118,7 @@ model PaymentModel {
   other        Decimal  @map("other")         @db.Decimal(10, 3)  @default(0)
   transfer     Decimal  @map("transfer")      @db.Decimal(10, 3)  @default(0)
   fromBalance  Decimal  @map("from_balance")  @db.Decimal(10, 3)  @default(0)
-  description  String   @map("description")   @db.VarChar()       @default("")
+  description  String?  @map("description")   @db.VarChar()       @default("")
   userId       String   @map("user_id")       @db.Uuid
 
   type         ServiceTypeEnum                                    @default(none)
@@ -193,6 +193,7 @@ model ArrivalModel {
 model ReturningModel {
   id          String    @map("id")           @db.Uuid           @default(dbgenerated("GEN_RANDOM_UUID()"))
   date        DateTime  @map("date")         @db.Timestamptz()  @default(dbgenerated("NOW()"))
+  status      SellingStatusEnum @map("status")                  @default(notaccepted)
   staffId     String    @map("staff_id")     @db.Uuid
   clientId    String    @map("client_id")    @db.Uuid
 

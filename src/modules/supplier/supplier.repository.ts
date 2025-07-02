@@ -59,21 +59,28 @@ export class SupplierRepository implements OnModuleInit {
 	}
 
 	async findOne(query: SupplierFindOneRequest) {
+		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+
 		const supplier = await this.prisma.userModel.findFirst({
 			where: { id: query.id, type: UserTypeEnum.supplier },
 			select: {
 				id: true,
 				fullname: true,
 				arrivals: {
+					where: { date: { gte: deedStartDate, lte: deedEndDate } },
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
+						payment: {
+							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
+							select: { card: true, cash: true, other: true, transfer: true, description: true, createdAt: true },
+						},
 						products: { select: { cost: true, count: true, price: true } },
 					},
 					orderBy: { date: 'desc' },
 				},
 				payments: {
-					where: { type: ServiceTypeEnum.supplier },
+					where: { type: ServiceTypeEnum.supplier, createdAt: { gte: deedStartDate, lte: deedEndDate } },
 					select: { card: true, cash: true, other: true, transfer: true, description: true, createdAt: true },
 				},
 				phone: true,

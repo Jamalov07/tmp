@@ -161,10 +161,15 @@ export class SellingService {
 			if (Object.values(body.payment).some((value) => value !== 0)) {
 				body.status = SellingStatusEnum.accepted
 				if (body.date) {
-					if (new Date(body.date).getDate() === new Date().getDate()) {
-						body.date = new Date(body.date)
+					const inputDate = new Date(body.date)
+					const now = new Date()
+
+					const isToday = inputDate.getFullYear() === now.getFullYear() && inputDate.getMonth() === now.getMonth() && inputDate.getDate() === now.getDate()
+
+					if (isToday) {
+						body.date = now
 					} else {
-						body.date = new Date(new Date(body.date).setHours(0, 0, 0, 0))
+						body.date = new Date(inputDate.setHours(0, 0, 0, 0))
 					}
 				} else {
 					body.date = new Date()

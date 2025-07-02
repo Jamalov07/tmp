@@ -30,16 +30,15 @@ export class ClientService {
 
 			const sellingPayment = c.sellings.reduce((acc, sel) => {
 				const productsSum = sel.products.reduce((a, p) => {
-					return a.plus(p.cost.mul(p.count))
+					return a.plus(p.price.mul(p.count))
 				}, new Decimal(0))
 
 				const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-
 				return acc.plus(productsSum).minus(totalPayment)
 			}, new Decimal(0))
 			return {
 				...c,
-				debt: payment.plus(sellingPayment),
+				debt: sellingPayment.minus(payment),
 				lastSellingDate: c.sellings?.length ? c.sellings[0].date : null,
 			}
 		})
@@ -87,8 +86,8 @@ export class ClientService {
 
 		const payment = client.payments.reduce((acc, curr) => {
 			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
 
-			deeds.push({ type: 'debit', value: totalPayment, date: curr.createdAt, description: curr.description })
 			totalDebit = totalDebit.plus(totalPayment)
 
 			return acc.plus(totalPayment)
@@ -96,19 +95,23 @@ export class ClientService {
 
 		const sellingPayment = client.sellings.reduce((acc, sel) => {
 			const productsSum = sel.products.reduce((a, p) => {
-				return a.plus(p.cost.mul(p.count))
+				return a.plus(p.price.mul(p.count))
 			}, new Decimal(0))
 
-			deeds.push({ type: 'credit', value: productsSum, date: sel.date, description: '' })
+			deeds.push({ type: 'debit', action: 'selling', value: productsSum, date: sel.date, description: '' })
 			totalCredit = totalCredit.plus(productsSum)
 
 			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
 
-			deeds.push({ type: 'debit', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
+			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
 			totalDebit = totalDebit.plus(totalPayment)
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))
+
+		client.returnings.map((returning) => {
+			deeds.push({ type: 'credit', action: 'returning', value: returning.payment.fromBalance, date: returning.payment.createdAt, description: returning.payment.description })
+		})
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
@@ -121,7 +124,7 @@ export class ClientService {
 				updatedAt: client.updatedAt,
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
-				debt: payment.plus(sellingPayment),
+				debt: sellingPayment.minus(payment),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,

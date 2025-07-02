@@ -6,7 +6,10 @@ export declare interface ClientFindManyRequest
 		PaginationRequest,
 		Pick<RequestOtherFields, 'isDeleted' | 'search' | 'debtType' | 'debtValue'> {}
 
-export declare interface ClientFindOneRequest extends Pick<ClientOptional, 'id'> {}
+export declare interface ClientFindOneRequest extends Pick<ClientOptional, 'id'> {
+	deedStartDate?: Date
+	deedEndDate?: Date
+}
 
 export declare interface ClientGetManyRequest extends ClientOptional, PaginationRequest, Pick<RequestOtherFields, 'ids' | 'isDeleted'> {}
 

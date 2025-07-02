@@ -3,7 +3,7 @@ import { ReturningRequired } from './fields.interfaces'
 
 export declare interface ReturningFindManyData extends PaginationResponse<ReturningFindOneData> {}
 
-export declare interface ReturningFindOneData extends Pick<ReturningRequired, 'id' | 'date' | 'createdAt'> {}
+export declare interface ReturningFindOneData extends Pick<ReturningRequired, 'id' | 'status' | 'date' | 'createdAt'> {}
 
 export declare interface ReturningFindManyResponse extends GlobalResponse {
 	data: ReturningFindManyData

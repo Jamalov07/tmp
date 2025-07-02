@@ -1,3 +1,4 @@
+import { Decimal } from '@prisma/client/runtime/library'
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ReturningRepository } from './returning.repository'
 import { createResponse, CRequest, DeleteMethodEnum } from '@common'
@@ -12,6 +13,7 @@ import {
 } from './interfaces'
 import { ClientService } from '../client'
 import { ProductService } from '../product'
+import { SellingStatusEnum } from '@prisma/client'
 
 @Injectable()
 export class ReturningService {
@@ -29,14 +31,33 @@ export class ReturningService {
 		const returnings = await this.returningRepository.findMany(query)
 		const returningsCount = await this.returningRepository.countFindMany(query)
 
+		const mappedReturnings = returnings.map((returning) => {
+			const totalPayment = returning.payment.fromBalance.plus(returning.payment.cash)
+
+			const totalPrice = returning.products.reduce((acc, product) => {
+				return acc.plus(new Decimal(product.count).mul(product.price))
+			}, new Decimal(0))
+
+			const p = returning.payment
+
+			const hasMeaningfulPayment = (p.fromBalance && !p.fromBalance.equals(0)) || (p.cash && !p.cash.equals(0))
+			return {
+				...returning,
+				payment: hasMeaningfulPayment ? p : null,
+				debt: totalPrice.minus(totalPayment),
+				totalPayment: totalPayment,
+				totalPrice: totalPrice,
+			}
+		})
+
 		const result = query.pagination
 			? {
 					totalCount: returningsCount,
 					pagesCount: Math.ceil(returningsCount / query.pageSize),
-					pageSize: returnings.length,
-					data: returnings,
+					pageSize: mappedReturnings.length,
+					data: mappedReturnings,
 				}
-			: { data: returnings }
+			: { data: mappedReturnings }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
@@ -79,14 +100,28 @@ export class ReturningService {
 	async createOne(request: CRequest, body: ReturningCreateOneRequest) {
 		await this.clientService.findOne({ id: body.clientId })
 
-		//update product: incr
-		if (body.products && body.products.length) {
-			body.products.map(async (pr) => {
-				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
-					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
-				})
-				await this.productService.updateOne({ id: product.data.id }, { count: product.data.count + pr.count })
-			})
+		if (body.payment) {
+			if (Object.values(body.payment).some((value) => value !== 0)) {
+				body.status = SellingStatusEnum.accepted
+				if (body.date) {
+					const inputDate = new Date(body.date)
+					const now = new Date()
+
+					const isToday = inputDate.getFullYear() === now.getFullYear() && inputDate.getMonth() === now.getMonth() && inputDate.getDate() === now.getDate()
+
+					if (isToday) {
+						body.date = now
+					} else {
+						body.date = new Date(inputDate.setHours(0, 0, 0, 0))
+					}
+				} else {
+					body.date = new Date()
+				}
+			}
+		}
+
+		if (body.status === SellingStatusEnum.accepted) {
+			body.date = new Date()
 		}
 
 		const returning = await this.returningRepository.createOne({ ...body, staffId: request.user.id })
@@ -97,22 +132,21 @@ export class ReturningService {
 	async updateOne(query: ReturningGetOneRequest, body: ReturningUpdateOneRequest) {
 		const returning = await this.getOne(query)
 
-		//update product: decr
-		if (body.productIdsToRemove && body.productIdsToRemove.length) {
-			const productMVs = await this.returningRepository.findManyReturningProductMv(body.productIdsToRemove ?? [])
-
-			productMVs.map(async (pmv) => {
-				await this.productService.updateOne({ id: pmv.product.id }, { count: pmv.product.count - pmv.count })
-			})
+		if (returning.data.status === SellingStatusEnum.accepted) {
+			body.productIdsToRemove = []
+			body.products = []
 		}
-		//update product: incr
-		if (body.products && body.products.length) {
-			body.products.map(async (pr) => {
-				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
-					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
-				})
-				await this.productService.updateOne({ id: product.data.id }, { count: product.data.count + pr.count })
-			})
+
+		if (body.status !== SellingStatusEnum.accepted) {
+			if (body.payment) {
+				if (Object.values(body.payment).some((value) => value !== 0)) {
+					body.status = SellingStatusEnum.accepted
+					body.date = new Date()
+				}
+			}
+		}
+		if (body.status === SellingStatusEnum.accepted) {
+			body.date = new Date()
 		}
 
 		await this.returningRepository.updateOne(query, { ...body, staffId: returning.data.staffId })

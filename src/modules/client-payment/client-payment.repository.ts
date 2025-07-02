@@ -60,7 +60,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 			where: {
 				id: query.id,
 				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
-				AND: [{ card: { not: 0 } }, { cash: { not: 0 } }, { other: { not: 0 } }, { transfer: { not: 0 } }, { description: { notIn: [null, ''] } }],
+				AND: [{ card: { not: 0 } }, { cash: { not: 0 } }, { other: { not: 0 } }, { transfer: { not: 0 } }, { description: { notIn: [''] } }],
 			},
 			select: {
 				id: true,

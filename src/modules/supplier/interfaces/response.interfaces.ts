@@ -5,6 +5,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 export declare interface SupplierDeed {
 	type: 'debit' | 'credit'
 	date: Date
+	action: 'payment' | 'arrival'
 	value: Decimal
 	description: string
 }

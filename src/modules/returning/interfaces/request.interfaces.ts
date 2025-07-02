@@ -4,7 +4,7 @@ import { ProductMVRequired } from '../../product-mv'
 import { PaymentModel } from '@prisma/client'
 
 export declare interface ReturningFindManyRequest
-	extends Pick<ReturningOptional, 'clientId' | 'staffId'>,
+	extends Pick<ReturningOptional, 'clientId' | 'staffId' | 'status'>,
 		PaginationRequest,
 		Pick<RequestOtherFields, 'isDeleted' | 'search' | 'startDate' | 'endDate'> {}
 
@@ -18,12 +18,12 @@ export declare interface ReturningPayment extends Pick<PaymentModel, 'fromBalanc
 
 export declare interface ReturningProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId'> {}
 
-export declare interface ReturningCreateOneRequest extends Pick<ReturningRequired, 'clientId' | 'date'>, Pick<ReturningOptional, 'staffId'> {
+export declare interface ReturningCreateOneRequest extends Pick<ReturningRequired, 'clientId' | 'date'>, Pick<ReturningOptional, 'staffId' | 'status'> {
 	payment?: ReturningPayment
 	products?: ReturningProduct[]
 }
 
-export declare interface ReturningUpdateOneRequest extends Pick<ReturningOptional, 'deletedAt' | 'clientId' | 'date' | 'staffId'> {
+export declare interface ReturningUpdateOneRequest extends Pick<ReturningOptional, 'deletedAt' | 'clientId' | 'date' | 'staffId' | 'status'> {
 	payment?: ReturningPayment
 	products?: ReturningProduct[]
 	productIdsToRemove?: string[]

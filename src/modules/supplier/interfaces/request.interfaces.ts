@@ -6,7 +6,10 @@ export declare interface SupplierFindManyRequest
 		PaginationRequest,
 		Pick<RequestOtherFields, 'isDeleted' | 'search' | 'debtType' | 'debtValue'> {}
 
-export declare interface SupplierFindOneRequest extends Pick<SupplierOptional, 'id'> {}
+export declare interface SupplierFindOneRequest extends Pick<SupplierOptional, 'id'> {
+	deedStartDate?: Date
+	deedEndDate?: Date
+}
 
 export declare interface SupplierGetManyRequest extends SupplierOptional, PaginationRequest, Pick<RequestOtherFields, 'ids' | 'isDeleted'> {}
 

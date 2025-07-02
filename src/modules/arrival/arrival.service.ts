@@ -41,6 +41,7 @@ export class ArrivalService {
 
 		const calc = {
 			totalPrice: new Decimal(0),
+			totalCost: new Decimal(0),
 			totalPayment: new Decimal(0),
 			totalCardPayment: new Decimal(0),
 			totalCashPayment: new Decimal(0),
@@ -61,8 +62,9 @@ export class ArrivalService {
 			}, new Decimal(0))
 
 			calc.totalPrice = calc.totalPrice.plus(totalPrice)
+			calc.totalCost = calc.totalCost.plus(totalCost)
 			calc.totalPayment = calc.totalPayment.plus(totalPayment)
-			calc.totalDebt = calc.totalDebt.plus(totalPrice.minus(totalPayment))
+			calc.totalDebt = calc.totalDebt.plus(totalCost.minus(totalPayment))
 			calc.totalCardPayment = calc.totalCardPayment.plus(arrival.payment.card)
 			calc.totalCashPayment = calc.totalCashPayment.plus(arrival.payment.cash)
 			calc.totalOtherPayment = calc.totalOtherPayment.plus(arrival.payment.other)
@@ -145,16 +147,6 @@ export class ArrivalService {
 	async createOne(request: CRequest, body: ArrivalCreateOneRequest) {
 		await this.supplierService.findOne({ id: body.supplierId })
 
-		//update product: incr
-		if (body.products && body.products.length) {
-			body.products.map(async (pr) => {
-				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
-					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
-				})
-				await this.productService.updateOne({ id: product.data.id }, { cost: pr.cost, price: pr.price, count: product.data.count + pr.count })
-			})
-		}
-
 		const arrival = await this.arrivalRepository.createOne({ ...body, staffId: request.user.id })
 
 		return createResponse({ data: arrival, success: { messages: ['create one success'] } })
@@ -169,15 +161,6 @@ export class ArrivalService {
 
 			productMVs.map(async (pmv) => {
 				await this.productService.updateOne({ id: pmv.product.id }, { count: pmv.product.count - pmv.count })
-			})
-		}
-		//update product: incr
-		if (body.products && body.products.length) {
-			body.products.map(async (pr) => {
-				const product = await this.productService.findOne({ id: pr.productId }).catch((e) => {
-					throw new BadRequestException(`product not found with this id: ${pr.productId}`)
-				})
-				await this.productService.updateOne({ id: product.data.id }, { cost: pr.cost, price: pr.price, count: product.data.count + pr.count })
 			})
 		}
 

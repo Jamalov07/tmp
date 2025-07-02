@@ -10,7 +10,7 @@ import {
 	ReturningUpdateOneRequest,
 } from './interfaces'
 import { ReturningController } from './returning.controller'
-import { ServiceTypeEnum } from '@prisma/client'
+import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class ReturningRepository implements OnModuleInit {
@@ -27,6 +27,7 @@ export class ReturningRepository implements OnModuleInit {
 
 		const returnings = await this.prisma.returningModel.findMany({
 			where: {
+				status: query.status,
 				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				date: {
@@ -36,6 +37,7 @@ export class ReturningRepository implements OnModuleInit {
 			},
 			select: {
 				id: true,
+				status: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
@@ -43,7 +45,7 @@ export class ReturningRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, cash: true, fromBalance: true } },
-				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
+				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 			...paginationOptions,
 		})
@@ -56,6 +58,7 @@ export class ReturningRepository implements OnModuleInit {
 			where: { id: query.id },
 			select: {
 				id: true,
+				status: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
@@ -63,7 +66,7 @@ export class ReturningRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, cash: true, fromBalance: true } },
-				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
+				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 		})
 
@@ -73,6 +76,7 @@ export class ReturningRepository implements OnModuleInit {
 	async countFindMany(query: ReturningFindManyRequest) {
 		const returningsCount = await this.prisma.returningModel.count({
 			where: {
+				status: query.status,
 				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				date: {
@@ -95,6 +99,7 @@ export class ReturningRepository implements OnModuleInit {
 			where: {
 				id: { in: query.ids },
 				clientId: query.clientId,
+				status: query.status,
 			},
 			...paginationOptions,
 		})
@@ -104,7 +109,7 @@ export class ReturningRepository implements OnModuleInit {
 
 	async getOne(query: ReturningGetOneRequest) {
 		const returning = await this.prisma.returningModel.findFirst({
-			where: { id: query.id, clientId: query.clientId, staffId: query.staffId },
+			where: { id: query.id, clientId: query.clientId, staffId: query.staffId, status: query.status },
 		})
 
 		return returning
@@ -115,6 +120,7 @@ export class ReturningRepository implements OnModuleInit {
 			where: {
 				id: { in: query.ids },
 				clientId: query.clientId,
+				status: query.status,
 			},
 		})
 
@@ -124,6 +130,7 @@ export class ReturningRepository implements OnModuleInit {
 	async createOne(body: ReturningCreateOneRequest) {
 		const returning = await this.prisma.returningModel.create({
 			data: {
+				status: body.status,
 				clientId: body.clientId,
 				date: new Date(body.date),
 				staffId: body.staffId,
@@ -147,6 +154,7 @@ export class ReturningRepository implements OnModuleInit {
 			},
 			select: {
 				id: true,
+				status: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
@@ -157,15 +165,33 @@ export class ReturningRepository implements OnModuleInit {
 				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 		})
+
+		if (body.status === SellingStatusEnum.accepted) {
+			if (body.products) {
+				for (const product of body.products) {
+					const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
+					if (pr) {
+						await this.prisma.productModel.update({
+							where: { id: product.productId },
+							data: { count: { increment: product.count } },
+						})
+					}
+				}
+			}
+		}
+
 		return returning
 	}
 
 	async updateOne(query: ReturningGetOneRequest, body: ReturningUpdateOneRequest) {
+		const existReturning = await this.findOne(query)
+
 		const returning = await this.prisma.returningModel.update({
 			where: { id: query.id },
 			data: {
-				clientId: body.clientId,
 				date: body.date ? new Date(body.date) : undefined,
+				status: body.status,
+				clientId: body.clientId,
 				deletedAt: body.deletedAt,
 				payment: {
 					update: {
@@ -184,6 +210,20 @@ export class ReturningRepository implements OnModuleInit {
 				},
 			},
 		})
+
+		if (body.status === SellingStatusEnum.accepted && existReturning.status !== SellingStatusEnum.accepted) {
+			if (body.products) {
+				for (const product of body.products) {
+					const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
+					if (pr) {
+						await this.prisma.productModel.update({
+							where: { id: product.productId },
+							data: { count: { increment: product.count } },
+						})
+					}
+				}
+			}
+		}
 
 		return returning
 	}

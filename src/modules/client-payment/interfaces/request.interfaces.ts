@@ -13,8 +13,8 @@ export declare interface ClientPaymentGetManyRequest extends ClientPaymentOption
 export declare interface ClientPaymentGetOneRequest extends ClientPaymentOptional, Pick<RequestOtherFields, 'isDeleted'> {}
 
 export declare interface ClientPaymentCreateOneRequest
-	extends Pick<ClientPaymentRequired, 'description' | 'userId' | 'card' | 'cash' | 'other' | 'transfer'>,
-		Pick<ClientPaymentOptional, 'staffId'> {}
+	extends Pick<ClientPaymentRequired, 'userId' | 'card' | 'cash' | 'other' | 'transfer'>,
+		Pick<ClientPaymentOptional, 'description' | 'staffId'> {}
 
 export declare interface ClientPaymentUpdateOneRequest extends Pick<ClientPaymentOptional, 'userId' | 'card' | 'description' | 'deletedAt' | 'cash' | 'other' | 'transfer'> {}
 
