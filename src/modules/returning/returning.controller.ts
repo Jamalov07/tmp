@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	ReturningFindManyRequestDto,
@@ -13,6 +13,7 @@ import {
 } from './dtos'
 import { ReturningService } from './returning.service'
 import { CRequest } from '../../common'
+import { Response } from 'express'
 
 @ApiTags('Returning')
 @Controller('returning')
@@ -30,11 +31,23 @@ export class ReturningController {
 		return this.returningService.findMany({ ...query, isDeleted: false })
 	}
 
+	@Get('excel-download/many')
+	@ApiOperation({ summary: 'download many returning' })
+	async excelDownloadMany(@Res() res: Response, @Query() query: ReturningFindManyRequestDto) {
+		return this.returningService.excelDownloadMany(res, query)
+	}
+
 	@Get('one')
 	@ApiOperation({ summary: 'find one returning' })
 	@ApiOkResponse({ type: ReturningFindOneResponseDto })
 	async findOne(@Query() query: ReturningFindOneRequestDto): Promise<ReturningFindOneResponseDto> {
 		return this.returningService.findOne(query)
+	}
+
+	@Get('excel-download/one')
+	@ApiOperation({ summary: 'download one returning' })
+	async excelDownloadOne(@Res() res: Response, @Query() query: ReturningFindOneRequestDto) {
+		return this.returningService.excelDownloadOne(res, query)
 	}
 
 	@Post('one')

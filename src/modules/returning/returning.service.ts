@@ -14,17 +14,21 @@ import {
 import { ClientService } from '../client'
 import { ProductService } from '../product'
 import { SellingStatusEnum } from '@prisma/client'
+import { ExcelService } from '../shared'
+import { Response } from 'express'
 
 @Injectable()
 export class ReturningService {
 	private readonly returningRepository: ReturningRepository
 	private readonly clientService: ClientService
 	private readonly productService: ProductService
+	private readonly excelService: ExcelService
 
-	constructor(returningRepository: ReturningRepository, clientService: ClientService, productService: ProductService) {
+	constructor(returningRepository: ReturningRepository, clientService: ClientService, productService: ProductService, excelService: ExcelService) {
 		this.returningRepository = returningRepository
 		this.clientService = clientService
 		this.productService = productService
+		this.excelService = excelService
 	}
 
 	async findMany(query: ReturningFindManyRequest) {
@@ -62,6 +66,10 @@ export class ReturningService {
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
 
+	async excelDownloadMany(res: Response, query: ReturningFindManyRequest) {
+		return this.excelService.returningDownloadMany(res, query)
+	}
+
 	async findOne(query: ReturningFindOneRequest) {
 		const returning = await this.returningRepository.findOne(query)
 
@@ -70,6 +78,10 @@ export class ReturningService {
 		}
 
 		return createResponse({ data: { ...returning }, success: { messages: ['find one success'] } })
+	}
+
+	async excelDownloadOne(res: Response, query: ReturningFindOneRequest) {
+		return this.excelService.returningDownloadOne(res, query)
 	}
 
 	async getMany(query: ReturningGetManyRequest) {

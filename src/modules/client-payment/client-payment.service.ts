@@ -13,19 +13,24 @@ import {
 import { ClientService } from '../client'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ServiceTypeEnum } from '@prisma/client'
+import { ExcelService } from '../shared'
+import { Response } from 'express'
 
 @Injectable()
 export class ClientPaymentService {
 	private readonly clientPaymentRepository: ClientPaymentRepository
 	private readonly clientService: ClientService
+	private readonly excelService: ExcelService
 
 	constructor(
 		clientPaymentRepository: ClientPaymentRepository,
 		@Inject(forwardRef(() => ClientService))
 		clientService: ClientService,
+		excelService: ExcelService,
 	) {
 		this.clientPaymentRepository = clientPaymentRepository
 		this.clientService = clientService
+		this.excelService = excelService
 	}
 
 	async findMany(query: ClientPaymentFindManyRequest) {
@@ -57,6 +62,10 @@ export class ClientPaymentService {
 			: { data: clientPayments, calc: calc }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
+	}
+
+	async excelDownloadMany(res: Response, query: ClientPaymentFindManyRequest) {
+		return this.excelService.clientPaymentDownloadMany(res, query)
 	}
 
 	async findOne(query: ClientPaymentFindOneRequest) {
