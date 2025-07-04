@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Res } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	ClientFindManyRequestDto,
@@ -12,6 +12,7 @@ import {
 	ClientCreateOneResponseDto,
 } from './dtos'
 import { ClientService } from './client.service'
+import { Response } from 'express'
 
 @ApiTags('Client')
 @Controller('client')
@@ -34,6 +35,18 @@ export class ClientController {
 	@ApiOkResponse({ type: ClientFindOneResponseDto })
 	async findOne(@Query() query: ClientFindOneRequestDto): Promise<ClientFindOneResponseDto> {
 		return this.clientService.findOne(query)
+	}
+
+	@Get('excel-download/one')
+	@ApiOperation({ summary: 'download one client' })
+	async excelDownloadOne(@Res() res: Response, @Query() query: ClientFindOneRequestDto) {
+		return this.clientService.excelDownloadOne(res, query)
+	}
+
+	@Get('excel-with-product-download/one')
+	@ApiOperation({ summary: 'download one client' })
+	async excelWithProductDownloadOne(@Res() res: Response, @Query() query: ClientFindOneRequestDto) {
+		return this.clientService.excelWithProductDownloadOne(res, query)
 	}
 
 	@Post('one')

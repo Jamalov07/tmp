@@ -5,7 +5,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 export declare interface SupplierDeed {
 	type: 'debit' | 'credit'
 	date: Date
-	action: 'payment' | 'arrival'
+	action?: 'payment' | 'arrival'
 	value: Decimal
 	description: string
 }
@@ -22,7 +22,7 @@ export declare interface SupplierFindManyData extends PaginationResponse<Supplie
 export declare interface SupplierFindOneData extends Pick<SupplierRequired, 'id' | 'fullname' | 'createdAt' | 'phone'> {
 	lastArrivalDate?: Date
 	debt?: Decimal
-	deedInfo?: SupplierDeedInfo[]
+	deedInfo?: SupplierDeedInfo
 }
 
 export declare interface SupplierFindManyResponse extends GlobalResponse {

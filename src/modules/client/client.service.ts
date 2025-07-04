@@ -12,13 +12,17 @@ import {
 	ClientDeed,
 } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
+import { ExcelService } from '../shared'
+import { Response } from 'express'
 
 @Injectable()
 export class ClientService {
 	private readonly clientRepository: ClientRepository
+	private readonly excelService: ExcelService
 
-	constructor(clientRepository: ClientRepository) {
+	constructor(clientRepository: ClientRepository, excelService: ExcelService) {
 		this.clientRepository = clientRepository
+		this.excelService = excelService
 	}
 
 	async findMany(query: ClientFindManyRequest) {
@@ -135,6 +139,14 @@ export class ClientService {
 			},
 			success: { messages: ['find one success'] },
 		})
+	}
+
+	async excelDownloadOne(res: Response, query: ClientFindOneRequest) {
+		return this.excelService.clientDeedDownloadOne(res, query)
+	}
+
+	async excelWithProductDownloadOne(res: Response, query: ClientFindOneRequest) {
+		return this.excelService.clientDeedWithProductDownloadOne(res, query)
 	}
 
 	async getMany(query: ClientGetManyRequest) {

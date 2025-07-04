@@ -25,6 +25,9 @@ export class SupplierDeedDto implements SupplierDeed {
 
 	@ApiProperty({ type: String })
 	description: string
+
+	@ApiProperty({ enum: ['payment', 'arrival'] })
+	action?: 'payment' | 'arrival'
 }
 
 export class SupplierDeedInfoDto implements SupplierDeedInfo {
@@ -49,7 +52,7 @@ export class SupplierFindOneDataDto extends PickType(SupplierRequiredDto, ['id',
 	lastArrivalDate?: Date
 
 	@ApiProperty({ type: SupplierDeedInfoDto })
-	deedInfo?: SupplierDeedInfo[]
+	deedInfo?: SupplierDeedInfo
 }
 
 export class SupplierFindManyDataDto extends PaginationResponseDto implements SupplierFindManyData {

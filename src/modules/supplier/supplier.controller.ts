@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Res } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	SupplierFindManyRequestDto,
@@ -12,6 +12,7 @@ import {
 	SupplierCreateOneResponseDto,
 } from './dtos'
 import { SupplierService } from './supplier.service'
+import { Response } from 'express'
 
 @ApiTags('Supplier')
 @Controller('supplier')
@@ -34,6 +35,18 @@ export class SupplierController {
 	@ApiOkResponse({ type: SupplierFindOneResponseDto })
 	async findOne(@Query() query: SupplierFindOneRequestDto): Promise<SupplierFindOneResponseDto> {
 		return this.supplierService.findOne(query)
+	}
+
+	@Get('excel-download/one')
+	@ApiOperation({ summary: 'download one supplier' })
+	async excelDownloadOne(@Res() res: Response, @Query() query: SupplierFindOneRequestDto) {
+		return this.supplierService.excelDownloadOne(res, query)
+	}
+
+	@Get('excel-with-product-download/one')
+	@ApiOperation({ summary: 'download one supplier' })
+	async excelWithProductDownloadOne(@Res() res: Response, @Query() query: SupplierFindOneRequestDto) {
+		return this.supplierService.excelWithProductDownloadOne(res, query)
 	}
 
 	@Post('one')
