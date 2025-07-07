@@ -79,6 +79,10 @@ export class SupplierService {
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
 
+	async excelDownloadMany(res: Response, query: SupplierFindManyRequest) {
+		return this.excelService.supplierDownloadMany(res, query)
+	}
+
 	async findOne(query: SupplierFindOneRequest) {
 		const supplier = await this.supplierRepository.findOne(query)
 

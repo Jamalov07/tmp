@@ -30,6 +30,12 @@ export class ClientController {
 		return this.clientService.findMany(query)
 	}
 
+	@Get('excel-download/many')
+	@ApiOperation({ summary: 'download many clients' })
+	async excelDownloadMany(@Res() res: Response, @Query() query: ClientFindManyRequestDto) {
+		return this.clientService.excelDownloadMany(res, query)
+	}
+
 	@Get('one')
 	@ApiOperation({ summary: 'find one client' })
 	@ApiOkResponse({ type: ClientFindOneResponseDto })

@@ -78,6 +78,10 @@ export class ClientService {
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
 
+	async excelDownloadMany(res: Response, query: ClientFindManyRequest) {
+		return this.excelService.clientDownloadMany(res, query)
+	}
+
 	async findOne(query: ClientFindOneRequest) {
 		const client = await this.clientRepository.findOne(query)
 

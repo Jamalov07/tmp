@@ -9,8 +9,9 @@ import { ArrivalFindManyRequest, ArrivalFindOneRequest } from '../../arrival'
 import { ReturningFindManyRequest, ReturningFindOneRequest } from '../../returning'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ClientPaymentFindManyRequest } from '../../client-payment'
-import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
-import { ClientDeed, ClientFindOneRequest } from '../../client'
+import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
+import { ClientDeed, ClientFindManyRequest, ClientFindOneRequest } from '../../client'
+import { DebtTypeEnum } from '../../../common'
 @Injectable()
 export class ExcelService {
 	private readonly prisma: PrismaService
@@ -1230,6 +1231,233 @@ export class ExcelService {
 		res.end()
 	}
 
+	async clientDownloadMany(res: Response, query: ClientFindManyRequest) {
+		const clients = await this.prisma.userModel.findMany({
+			where: {
+				fullname: query.fullname,
+				type: UserTypeEnum.client,
+				OR: [{ fullname: { contains: query.search, mode: 'insensitive' } }, { phone: { contains: query.search, mode: 'insensitive' } }],
+			},
+			select: {
+				fullname: true,
+				phone: true,
+				payments: {
+					where: { type: ServiceTypeEnum.client, deletedAt: null },
+					select: { card: true, cash: true, other: true, transfer: true },
+				},
+				sellings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						date: true,
+						payment: { select: { card: true, cash: true, other: true, transfer: true } },
+						products: { select: { count: true, price: true } },
+					},
+					orderBy: { date: 'desc' },
+				},
+			},
+		})
+
+		const mappedClients = clients.map((c) => {
+			const payment = c.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
+
+			const sellingPayment = c.sellings.reduce((acc, sel) => {
+				const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+				const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
+				return acc.plus(productsSum).minus(totalPayment)
+			}, new Decimal(0))
+
+			return {
+				fullname: c.fullname,
+				phone: c.phone,
+				debt: sellingPayment.minus(payment),
+				lastSellingDate: c.sellings?.[0]?.date ?? null,
+			}
+		})
+
+		const filteredClients = mappedClients.filter((s) => {
+			if (query.debtType && query.debtValue !== undefined) {
+				const value = new Decimal(query.debtValue)
+				switch (query.debtType) {
+					case DebtTypeEnum.gt:
+						return s.debt.gt(value)
+					case DebtTypeEnum.lt:
+						return s.debt.lt(value)
+					case DebtTypeEnum.eq:
+						return s.debt.eq(value)
+				}
+			}
+			return true
+		})
+
+		const workbook = new ExcelJS.Workbook()
+		const worksheet = workbook.addWorksheet('Клиенты с долгом')
+
+		worksheet.columns = [
+			{ header: '№', key: 'no', width: 5 },
+			{ header: 'клиент', key: 'fullname', width: 40 },
+			{ header: 'телефон', key: 'phone', width: 20 },
+			{ header: 'долг', key: 'debt', width: 20 },
+			{ header: 'Время', key: 'lastSellingDate', width: 30 },
+		]
+
+		worksheet.getRow(1).eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.fill = {
+				type: 'pattern',
+				pattern: 'solid',
+				fgColor: { argb: 'FFB6D7A8' },
+			}
+			cell.border = this.allBorder()
+		})
+
+		filteredClients.forEach((client, index) => {
+			const row = worksheet.addRow({
+				no: index + 1,
+				fullname: client.fullname,
+				phone: client.phone,
+				debt: client.debt.toFixed(2),
+				lastSellingDate: client.lastSellingDate
+					? new Date(client.lastSellingDate).toLocaleString('ru-RU', {
+							year: 'numeric',
+							month: '2-digit',
+							day: '2-digit',
+							hour: '2-digit',
+							minute: '2-digit',
+						})
+					: '',
+			})
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = this.allBorder()
+			})
+		})
+
+		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+		res.setHeader('Content-Disposition', 'attachment; filename="client-debt-report.xlsx"')
+
+		await workbook.xlsx.write(res)
+		res.end()
+	}
+
+	async supplierDownloadMany(res: Response, query: ClientFindManyRequest) {
+		const suppliers = await this.prisma.userModel.findMany({
+			where: {
+				type: UserTypeEnum.supplier,
+				OR: [{ fullname: { contains: query.search, mode: 'insensitive' } }, { phone: { contains: query.search, mode: 'insensitive' } }],
+			},
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				arrivals: {
+					select: {
+						date: true,
+						payment: { select: { card: true, cash: true, other: true, transfer: true } },
+						products: { select: { cost: true, count: true, price: true } },
+					},
+					orderBy: { date: 'desc' },
+				},
+				payments: {
+					where: { type: ServiceTypeEnum.supplier },
+					select: { card: true, cash: true, other: true, transfer: true },
+				},
+				actions: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+			},
+		})
+
+		const mappedSuppliers = suppliers.map((s) => {
+			const payment = s.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
+
+			const arrivalPayment = s.arrivals.reduce((acc, arr) => {
+				const productsSum = arr.products.reduce((a, p) => {
+					return a.plus(p.cost.mul(p.count))
+				}, new Decimal(0))
+
+				const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
+
+				return acc.plus(productsSum).minus(totalPayment)
+			}, new Decimal(0))
+			return {
+				...s,
+				debt: payment.plus(arrivalPayment),
+				lastArrivalDate: s.arrivals?.length ? s.arrivals[0].date : null,
+			}
+		})
+
+		const filteredSuppliers = mappedSuppliers.filter((s) => {
+			if (query.debtType && query.debtValue !== undefined) {
+				const value = new Decimal(query.debtValue)
+				switch (query.debtType) {
+					case DebtTypeEnum.gt:
+						return s.debt.gt(value)
+					case DebtTypeEnum.lt:
+						return s.debt.lt(value)
+					case DebtTypeEnum.eq:
+						return s.debt.eq(value)
+					default:
+						return true
+				}
+			}
+			return true
+		})
+
+		const workbook = new ExcelJS.Workbook()
+		const worksheet = workbook.addWorksheet('Клиенты с долгом')
+
+		worksheet.columns = [
+			{ header: '№', key: 'no', width: 5 },
+			{ header: 'клиент', key: 'fullname', width: 40 },
+			{ header: 'телефон', key: 'phone', width: 20 },
+			{ header: 'долг', key: 'debt', width: 20 },
+			{ header: 'Время', key: 'lastSellingDate', width: 30 },
+		]
+
+		worksheet.getRow(1).eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.fill = {
+				type: 'pattern',
+				pattern: 'solid',
+				fgColor: { argb: 'FFB6D7A8' },
+			}
+			cell.border = this.allBorder()
+		})
+
+		filteredSuppliers.forEach((client, index) => {
+			const row = worksheet.addRow({
+				no: index + 1,
+				fullname: client.fullname,
+				phone: client.phone,
+				debt: client.debt.toFixed(2),
+				lastSellingDate: client.lastArrivalDate
+					? new Date(client.lastArrivalDate).toLocaleString('ru-RU', {
+							year: 'numeric',
+							month: '2-digit',
+							day: '2-digit',
+							hour: '2-digit',
+							minute: '2-digit',
+						})
+					: '',
+			})
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = this.allBorder()
+			})
+		})
+
+		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+		res.setHeader('Content-Disposition', 'attachment; filename="supplier-debt-report.xlsx"')
+
+		await workbook.xlsx.write(res)
+		res.end()
+	}
+
 	private formatDate(date: Date): string {
 		const dd = String(date.getDate()).padStart(2, '0')
 		const mm = String(date.getMonth() + 1).padStart(2, '0') // 0-based
@@ -1239,5 +1467,14 @@ export class ExcelService {
 		const min = String(date.getMinutes()).padStart(2, '0')
 
 		return `${dd}.${mm}.${yyyy} ${hh}:${min}`
+	}
+
+	allBorder(): Partial<ExcelJS.Borders> {
+		return {
+			top: { style: 'thin', color: { argb: 'FF000000' } },
+			left: { style: 'thin', color: { argb: 'FF000000' } },
+			bottom: { style: 'thin', color: { argb: 'FF000000' } },
+			right: { style: 'thin', color: { argb: 'FF000000' } },
+		}
 	}
 }

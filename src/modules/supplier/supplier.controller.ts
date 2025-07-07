@@ -30,6 +30,12 @@ export class SupplierController {
 		return this.supplierService.findMany({ ...query, isDeleted: false })
 	}
 
+	@Get('excel-download/many')
+	@ApiOperation({ summary: 'download many clients' })
+	async excelDownloadMany(@Res() res: Response, @Query() query: SupplierFindManyRequestDto) {
+		return this.supplierService.excelDownloadMany(res, query)
+	}
+
 	@Get('one')
 	@ApiOperation({ summary: 'find one supplier' })
 	@ApiOkResponse({ type: SupplierFindOneResponseDto })
