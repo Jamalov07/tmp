@@ -675,11 +675,7 @@ export class ExcelService {
 					...(startDate && { gte: startDate }),
 					...(endDate && { lte: endDate }),
 				},
-				AND: [
-					{
-						OR: [{ card: { not: 0 } }, { cash: { not: 0 } }, { transfer: { not: 0 } }, { other: { not: 0 } }, { description: { notIn: [''] } }],
-					},
-				],
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 			select: {
 				user: { select: { fullname: true } },
@@ -697,33 +693,53 @@ export class ExcelService {
 		const workbook = new ExcelJS.Workbook()
 		const worksheet = workbook.addWorksheet('Клиент оплаты')
 
+		// Ustunlar
 		worksheet.columns = [
 			{ header: '№', key: 'no', width: 5 },
 			{ header: 'Клиент', key: 'client', width: 30 },
-			{ header: 'Информация', key: 'info', width: 30 },
-			{ header: 'Оплата наличными', key: 'cash', width: 18 },
-			{ header: 'Оплата банковской', key: 'card', width: 18 },
-			{ header: 'Оплата перечислением', key: 'transfer', width: 20 },
-			{ header: 'Оплата другими способами', key: 'other', width: 25 },
-			{ header: 'Пользователь', key: 'staff', width: 20 },
-			{ header: 'Дата', key: 'date', width: 20 },
+			{ header: 'Информация', key: 'info', width: 35 },
+			{ header: 'Оплата наличными', key: 'cash', width: 30 },
+			{ header: 'Оплата банковской', key: 'card', width: 30 },
+			{ header: 'Оплата перечислением', key: 'transfer', width: 30 },
+			{ header: 'Оплата другими способами', key: 'other', width: 38 },
+			{ header: 'Пользователь', key: 'staff', width: 30 },
+			{ header: 'Дата', key: 'date', width: 30 },
 		]
 
+		// Header row styling
+		const headerRow = worksheet.getRow(1)
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = borderAll()
+		})
+
+		// Data rows
 		clientPayments.forEach((payment, index) => {
-			worksheet.addRow({
+			const row = worksheet.addRow({
 				no: index + 1,
 				client: payment.user.fullname,
 				info: payment.description || '',
-				cash: payment.cash || 0,
-				card: payment.card || 0,
-				transfer: payment.transfer || 0,
-				other: payment.other || 0,
+				cash: payment.cash.toNumber() || 0,
+				card: payment.card.toNumber() || 0,
+				transfer: payment.transfer.toNumber() || 0,
+				other: payment.other.toNumber() || 0,
 				staff: payment.staff.phone || '',
 				date: formatDate(payment.createdAt),
 			})
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
 		})
 
-		// Format date helper
+		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+		res.setHeader('Content-Disposition', 'attachment; filename="client-payments.xlsx"')
+		await workbook.xlsx.write(res)
+		res.end()
+
+		// Helperlar
 		function formatDate(date: Date): string {
 			const dd = String(date.getDate()).padStart(2, '0')
 			const mm = String(date.getMonth() + 1).padStart(2, '0')
@@ -733,12 +749,14 @@ export class ExcelService {
 			return `${dd}.${mm}.${yyyy} ${hh}:${min}`
 		}
 
-		// Response headers
-		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-		res.setHeader('Content-Disposition', 'attachment; filename="client-payments.xlsx"')
-
-		await workbook.xlsx.write(res)
-		res.end()
+		function borderAll(): Partial<ExcelJS.Borders> {
+			return {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		}
 	}
 
 	async supplierPaymentDownloadMany(res: Response, query: ClientPaymentFindManyRequest) {
@@ -754,11 +772,7 @@ export class ExcelService {
 					...(startDate && { gte: startDate }),
 					...(endDate && { lte: endDate }),
 				},
-				AND: [
-					{
-						OR: [{ card: { not: 0 } }, { cash: { not: 0 } }, { transfer: { not: 0 } }, { other: { not: 0 } }, { description: { notIn: [''] } }],
-					},
-				],
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 			select: {
 				user: { select: { fullname: true } },
@@ -774,29 +788,47 @@ export class ExcelService {
 		})
 
 		const workbook = new ExcelJS.Workbook()
-		const worksheet = workbook.addWorksheet('Клиент оплаты')
+		const worksheet = workbook.addWorksheet('Поставщик оплаты')
 
 		worksheet.columns = [
 			{ header: '№', key: 'no', width: 5 },
-			{ header: 'Поставшик', key: 'supplier', width: 30 },
+			{ header: 'Поставщик', key: 'supplier', width: 30 },
 			{ header: 'Сумма', key: 'sum', width: 25 },
-			{ header: 'dКем оприходан', key: 'staff', width: 20 },
+			{ header: 'Кем оприходан', key: 'staff', width: 20 },
 			{ header: 'Информация', key: 'info', width: 30 },
 			{ header: 'Дата', key: 'date', width: 20 },
 		]
 
+		const headerRow = worksheet.getRow(1)
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = borderAll()
+		})
+
 		clientPayments.forEach((payment, index) => {
-			worksheet.addRow({
+			const totalSum = payment.cash.plus(payment.card).plus(payment.transfer).plus(payment.other)
+
+			const row = worksheet.addRow({
 				no: index + 1,
 				supplier: payment.user.fullname,
-				sum: payment.cash.plus(payment.card).plus(payment.transfer).plus(payment.other),
+				sum: totalSum.toFixed(2),
 				staff: payment.staff.phone || '',
 				info: payment.description || '',
 				date: formatDate(payment.createdAt),
 			})
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
 		})
 
-		// Format date helper
+		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+		res.setHeader('Content-Disposition', 'attachment; filename="supplier-payments.xlsx"')
+		await workbook.xlsx.write(res)
+		res.end()
+
 		function formatDate(date: Date): string {
 			const dd = String(date.getDate()).padStart(2, '0')
 			const mm = String(date.getMonth() + 1).padStart(2, '0')
@@ -806,17 +838,19 @@ export class ExcelService {
 			return `${dd}.${mm}.${yyyy} ${hh}:${min}`
 		}
 
-		// Response headers
-		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-		res.setHeader('Content-Disposition', 'attachment; filename="supplier-payments.xlsx"')
-
-		await workbook.xlsx.write(res)
-		res.end()
+		function borderAll(): Partial<ExcelJS.Borders> {
+			return {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		}
 	}
 
 	async clientDeedDownloadOne(res: Response, query: ClientFindOneRequest) {
 		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
-		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(23, 59, 59, 999)) : undefined
 
 		const client = await this.prisma.userModel.findFirst({
 			where: { id: query.id },
@@ -856,76 +890,168 @@ export class ExcelService {
 			},
 		})
 
-		if (!client) {
-			throw new BadRequestException('client not found')
-		}
+		if (!client) throw new BadRequestException('client not found')
+
 		const deeds: ClientDeed[] = []
 		let totalDebit: Decimal = new Decimal(0)
 		let totalCredit: Decimal = new Decimal(0)
 
-		const payment = client.payments.reduce((acc, curr) => {
+		client.payments.forEach((curr) => {
 			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
 			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-
 			totalCredit = totalCredit.plus(totalPayment)
+		})
 
-			return acc.plus(totalPayment)
-		}, new Decimal(0))
-
-		const sellingPayment = client.sellings.reduce((acc, sel) => {
-			const productsSum = sel.products.reduce((a, p) => {
-				return a.plus(p.price.mul(p.count))
-			}, new Decimal(0))
-
+		client.sellings.forEach((sel) => {
+			const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
 			deeds.push({ type: 'debit', action: 'selling', value: productsSum, date: sel.date, description: '' })
 			totalDebit = totalDebit.plus(productsSum)
 
 			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-
 			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
 			totalCredit = totalCredit.plus(totalPayment)
+		})
 
-			return acc.plus(productsSum).minus(totalPayment)
-		}, new Decimal(0))
-
-		client.returnings.map((returning) => {
-			deeds.push({ type: 'credit', action: 'returning', value: returning.payment.fromBalance, date: returning.payment.createdAt, description: returning.payment.description })
+		client.returnings.forEach((returning) => {
+			deeds.push({
+				type: 'credit',
+				action: 'returning',
+				value: returning.payment.fromBalance,
+				date: returning.payment.createdAt,
+				description: returning.payment.description,
+			})
 			totalCredit = totalCredit.plus(returning.payment.fromBalance)
 		})
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-		const worksheetRows = filteredDeeds.map((deed, index) => {
-			return [index + 1, this.formatDate(deed.date), deed.action, deed.type === 'debit' ? deed.value : '', deed.type === 'credit' ? deed.value : '', deed.description]
+		///=====================
+		const clientAllInfos = await this.prisma.userModel.findFirst({
+			where: { id: query.id },
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				actions: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				payments: {
+					where: { type: ServiceTypeEnum.client },
+					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+				},
+				sellings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						date: true,
+						products: { select: { cost: true, count: true, price: true } },
+						payment: {
+							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+						},
+					},
+					orderBy: { date: 'desc' },
+				},
+				returnings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						payment: {
+							select: { fromBalance: true, createdAt: true, description: true },
+						},
+					},
+				},
+			},
 		})
+
+		let totalDebit2: Decimal = new Decimal(0)
+		let totalCredit2: Decimal = new Decimal(0)
+
+		clientAllInfos.payments.forEach((curr) => {
+			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			totalCredit2 = totalCredit2.plus(totalPayment)
+		})
+
+		clientAllInfos.sellings.forEach((sel) => {
+			const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			totalDebit2 = totalDebit2.plus(productsSum)
+
+			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
+			totalCredit2 = totalCredit2.plus(totalPayment)
+		})
+
+		clientAllInfos.returnings.forEach((returning) => {
+			totalCredit2 = totalCredit2.plus(returning.payment.fromBalance)
+		})
+		///=====================
 
 		const workbook = new ExcelJS.Workbook()
 		const worksheet = workbook.addWorksheet('Клиент')
 
-		worksheet.addRow([`Клиент: ${client.fullname}`, '', '', `Остаток: ${0}`, '', ''])
-		worksheet.mergeCells('A1:C1')
-		worksheet.mergeCells('D1:F1')
-		worksheet.mergeCells('A2:F2')
-		worksheet.addRow([`Акт сверки с ${this.formatDate(deedStartDate || filteredDeeds[0].date)} по${this.formatDate(deedEndDate || filteredDeeds[filteredDeeds.length - 1].date)}`])
+		const row1 = worksheet.addRow([`Клиент: ${client.fullname}`, '', '', `Остаток: ${totalDebit2.minus(totalCredit2).toNumber()}`, '', ''])
+		worksheet.mergeCells(`A${row1.number}:C${row1.number}`)
+		worksheet.mergeCells(`D${row1.number}:F${row1.number}`)
+		styleRow(row1)
+
+		const row2 = worksheet.addRow([
+			`Акт сверки с ${this.formatDate(deedStartDate || filteredDeeds[0].date)} по ${this.formatDate(deedEndDate || filteredDeeds[filteredDeeds.length - 1].date)}`,
+		])
+		worksheet.mergeCells(`A${row2.number}:F${row2.number}`)
+		styleRow(row2)
+
 		worksheet.addRow([])
-		worksheet.mergeCells('A4:C4')
-		worksheet.mergeCells('D4:F4')
-		worksheet.addRow([`Начальный остаток`, 0])
-		worksheet.addRow([])
 
-		worksheet.addRow(['№', 'Время', 'Операция', 'Дебит', 'Кредит', 'Описание'])
-		worksheet.addRows(worksheetRows)
+		const headerRow = worksheet.addRow(['№', 'Время', 'Операция', 'Дебит', 'Кредит', 'Описание'])
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = borderAll()
+		})
 
-		worksheet.addRow(['', '', 'Итого', totalDebit, totalCredit])
-		worksheet.addRow(['', '', 'Конечный остаток', '', '', 0])
-		worksheet.addRow(['', '', 'Остаток на конец', '', '', ''])
+		filteredDeeds.forEach((deed, index) => {
+			const row = worksheet.addRow([
+				index + 1,
+				this.formatDate(deed.date),
+				deed.action,
+				deed.type === 'debit' ? deed.value.toFixed(2) : '',
+				deed.type === 'credit' ? deed.value.toFixed(2) : '',
+				deed.description,
+			])
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
+		})
 
-		// Response headers
+		const totalRow = worksheet.addRow(['', '', 'Итого', totalDebit.toFixed(2), totalCredit.toFixed(2)])
+		styleRow(totalRow)
+
+		const remainder = totalDebit.minus(totalCredit)
+		const lastRow = worksheet.addRow(['', '', 'Конечный остаток', '', '', remainder.toFixed(2)])
+		styleRow(lastRow)
+
+		worksheet.columns = [{ width: 5 }, { width: 30 }, { width: 30 }, { width: 25 }, { width: 25 }, { width: 40 }]
+
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="client-deeds.xlsx"')
 
 		await workbook.xlsx.write(res)
 		res.end()
+
+		function styleRow(row: ExcelJS.Row) {
+			row.eachCell((cell) => {
+				cell.font = { bold: true }
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
+		}
+
+		function borderAll(): Partial<ExcelJS.Borders> {
+			return {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		}
 	}
 
 	async clientDeedWithProductDownloadOne(res: Response, query: ClientFindOneRequest) {
