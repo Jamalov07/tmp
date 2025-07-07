@@ -1257,7 +1257,7 @@ export class ExcelService {
 
 	async supplierDeedDownloadOne(res: Response, query: ClientFindOneRequest) {
 		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
-		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(23, 59, 59, 999)) : undefined
 
 		const supplier = await this.prisma.userModel.findFirst({
 			where: { id: query.id },
@@ -1288,70 +1288,142 @@ export class ExcelService {
 			},
 		})
 
-		if (!supplier) {
-			throw new BadRequestException('supplier not found')
-		}
-		const deeds: ClientDeed[] = []
-		let totalDebit: Decimal = new Decimal(0)
-		let totalCredit: Decimal = new Decimal(0)
+		if (!supplier) throw new BadRequestException('supplier not found')
 
-		const payment = supplier.payments.reduce((acc, curr) => {
+		const deeds: ClientDeed[] = []
+		let totalDebit = new Decimal(0)
+		let totalCredit = new Decimal(0)
+
+		supplier.payments.forEach((curr) => {
 			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
 			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-
 			totalCredit = totalCredit.plus(totalPayment)
+		})
 
-			return acc.plus(totalPayment)
-		}, new Decimal(0))
-
-		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
-			const productsSum = arr.products.reduce((a, p) => {
-				return a.plus(p.price.mul(p.count))
-			}, new Decimal(0))
-
+		supplier.arrivals.forEach((arr) => {
+			const productsSum = arr.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
 			deeds.push({ type: 'debit', action: 'arrival', value: productsSum, date: arr.date, description: '' })
 			totalDebit = totalDebit.plus(productsSum)
 
 			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-
 			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
 			totalCredit = totalCredit.plus(totalPayment)
-
-			return acc.plus(productsSum).minus(totalPayment)
-		}, new Decimal(0))
+		})
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-		const worksheetRows = filteredDeeds.map((deed, index) => {
-			return [index + 1, this.formatDate(deed.date), deed.action, deed.type === 'debit' ? deed.value : '', deed.type === 'credit' ? deed.value : '', deed.description]
+		///=====================
+		const supplierDeedInfos = await this.prisma.userModel.findFirst({
+			where: { id: query.id },
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				actions: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				payments: {
+					where: { type: ServiceTypeEnum.supplier },
+					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+				},
+				arrivals: {
+					select: {
+						date: true,
+						products: { select: { cost: true, count: true, price: true } },
+						payment: {
+							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+						},
+					},
+					orderBy: { date: 'desc' },
+				},
+			},
 		})
+
+		let totalDebit2: Decimal = new Decimal(0)
+		let totalCredit2: Decimal = new Decimal(0)
+		supplierDeedInfos.payments.forEach((curr) => {
+			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			totalCredit2 = totalCredit2.plus(totalPayment)
+		})
+
+		supplierDeedInfos.arrivals.forEach((arr) => {
+			const productsSum = arr.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			totalDebit2 = totalDebit2.plus(productsSum)
+
+			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
+			totalCredit2 = totalCredit2.plus(totalPayment)
+		})
+		///=====================
 
 		const workbook = new ExcelJS.Workbook()
 		const worksheet = workbook.addWorksheet('Поставшик')
 
-		worksheet.addRow([`Клиент: ${supplier.fullname}`, '', '', `Остаток: ${0}`, '', ''])
-		worksheet.mergeCells('A1:C1')
-		worksheet.mergeCells('D1:F1')
-		worksheet.mergeCells('A2:F2')
-		worksheet.addRow([`Акт сверки с ${this.formatDate(deedStartDate || filteredDeeds[0].date)} по${this.formatDate(deedEndDate || filteredDeeds[filteredDeeds.length - 1].date)}`])
+		const row1 = worksheet.addRow([`Поставшик: ${supplier.fullname}`, '', '', `Остаток: ${totalDebit2.minus(totalCredit2).toFixed(2)}`, '', ''])
+		worksheet.mergeCells(`A${row1.number}:C${row1.number}`)
+		worksheet.mergeCells(`D${row1.number}:F${row1.number}`)
+		styleRow(row1)
+
+		const row2 = worksheet.addRow([
+			`Акт сверки с ${this.formatDate(deedStartDate || filteredDeeds[0].date)} по ${this.formatDate(deedEndDate || filteredDeeds[filteredDeeds.length - 1].date)}`,
+		])
+		worksheet.mergeCells(`A${row2.number}:F${row2.number}`)
+		styleRow(row2)
+
 		worksheet.addRow([])
-		worksheet.mergeCells('A4:C4')
-		worksheet.mergeCells('D4:F4')
-		worksheet.addRow([`Начальный остаток`, 0])
-		worksheet.addRow([])
 
-		worksheet.addRow(['№', 'Время', 'Операция', 'Дебит', 'Кредит', 'Описание'])
-		worksheet.addRows(worksheetRows)
+		const headerRow = worksheet.addRow(['№', 'Время', 'Операция', 'Дебит', 'Кредит', 'Описание'])
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = borderAll()
+		})
 
-		worksheet.addRow(['', 'Всего', '', totalDebit, totalCredit, ''])
-		worksheet.addRow(['', 'Остаток на конец', '', 0, '', ''])
+		filteredDeeds.forEach((deed, index) => {
+			const row = worksheet.addRow([
+				index + 1,
+				this.formatDate(deed.date),
+				deed.action,
+				deed.type === 'debit' ? deed.value.toFixed(2) : '',
+				deed.type === 'credit' ? deed.value.toFixed(2) : '',
+				deed.description,
+			])
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
+		})
 
-		// Response headers
+		const totalRow = worksheet.addRow(['', '', 'Итого', totalDebit.toFixed(2), totalCredit.toFixed(2), ''])
+		styleRow(totalRow)
+
+		const remainderRow = worksheet.addRow(['', '', 'Конечный остаток', '', totalDebit.minus(totalCredit).toFixed(2), ''])
+		styleRow(remainderRow)
+
+		worksheet.columns = [{ width: 5 }, { width: 30 }, { width: 30 }, { width: 25 }, { width: 25 }, { width: 40 }]
+
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="supplier-deeds.xlsx"')
 
 		await workbook.xlsx.write(res)
 		res.end()
+
+		function styleRow(row: ExcelJS.Row) {
+			row.eachCell((cell) => {
+				cell.font = { bold: true }
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
+		}
+
+		function borderAll(): Partial<ExcelJS.Borders> {
+			return {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		}
 	}
 
 	async supplierDeedWithProductDownloadOne(res: Response, query: ClientFindOneRequest) {
@@ -1364,19 +1436,26 @@ export class ExcelService {
 				id: true,
 				fullname: true,
 				phone: true,
-				actions: true,
-				updatedAt: true,
-				createdAt: true,
-				deletedAt: true,
 				payments: {
-					where: { type: ServiceTypeEnum.supplier, createdAt: { gte: deedStartDate, lte: deedEndDate } },
+					where: {
+						type: ServiceTypeEnum.supplier,
+						createdAt: { gte: deedStartDate, lte: deedEndDate },
+					},
 					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				arrivals: {
 					where: { date: { gte: deedStartDate, lte: deedEndDate } },
 					select: {
 						date: true,
-						products: { select: { product: { select: { name: true } }, cost: true, count: true, price: true, createdAt: true } },
+						products: {
+							select: {
+								product: { select: { name: true } },
+								cost: true,
+								count: true,
+								price: true,
+								createdAt: true,
+							},
+						},
 						payment: {
 							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
 							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
@@ -1387,94 +1466,195 @@ export class ExcelService {
 			},
 		})
 
-		if (!supplier) {
-			throw new BadRequestException('client not found')
-		}
-		const deeds: (ClientDeed & { quantity: number; price: Decimal; cost: Decimal; name?: string })[] = []
-		let totalDebit: Decimal = new Decimal(0)
-		let totalCredit: Decimal = new Decimal(0)
+		if (!supplier) throw new BadRequestException('client not found')
 
-		const payment = supplier.payments.reduce((acc, curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+		const deeds: (ClientDeed & { quantity: number; price: Decimal; cost: Decimal; name?: string })[] = []
+		let totalDebit = new Decimal(0)
+		let totalCredit = new Decimal(0)
+
+		supplier.payments.forEach((curr) => {
+			const total = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
 			deeds.push({
 				type: 'credit',
 				action: 'payment',
-				value: totalPayment,
+				value: total,
 				date: curr.createdAt,
 				description: curr.description,
-				cost: totalPayment,
-				price: totalPayment,
+				cost: total,
+				price: total,
 				quantity: 1,
 			})
-			totalCredit = totalCredit.plus(totalPayment)
+			totalCredit = totalCredit.plus(total)
+		})
 
-			return acc.plus(totalPayment)
-		}, new Decimal(0))
+		supplier.arrivals.forEach((arr) => {
+			const sum = arr.products.reduce((acc, p) => {
+				const price = p.price.mul(p.count)
+				const cost = p.cost.mul(p.count)
 
-		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
-			const productsSum = arr.products.reduce((a, p) => {
 				deeds.push({
-					name: p.product.name,
+					type: 'debit',
 					action: 'arrival',
-					cost: p.cost.mul(p.count),
-					quantity: p.count,
-					price: p.price.mul(p.count),
+					value: price,
 					date: p.createdAt,
 					description: '',
-					type: 'debit',
-					value: p.price.mul(p.count),
+					name: p.product.name,
+					price,
+					cost,
+					quantity: p.count,
 				})
 
-				return a.plus(p.price.mul(p.count))
+				return acc.plus(price)
 			}, new Decimal(0))
 
-			totalDebit = totalDebit.plus(productsSum)
+			totalDebit = totalDebit.plus(sum)
+
+			const payment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
+			if (!payment.isZero()) {
+				deeds.push({
+					type: 'credit',
+					action: 'payment',
+					value: payment,
+					date: arr.payment.createdAt,
+					description: arr.payment.description,
+					price: payment,
+					cost: payment,
+					quantity: 1,
+				})
+				totalCredit = totalCredit.plus(payment)
+			}
+		})
+
+		const filteredDeeds = deeds.filter((d) => !d.value.isZero()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+		///=====================
+		const supplierDeedInfos = await this.prisma.userModel.findFirst({
+			where: { id: query.id },
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				actions: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				payments: {
+					where: { type: ServiceTypeEnum.supplier },
+					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+				},
+				arrivals: {
+					select: {
+						date: true,
+						products: { select: { cost: true, count: true, price: true } },
+						payment: {
+							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+						},
+					},
+					orderBy: { date: 'desc' },
+				},
+			},
+		})
+
+		let totalDebit2: Decimal = new Decimal(0)
+		let totalCredit2: Decimal = new Decimal(0)
+		supplierDeedInfos.payments.forEach((curr) => {
+			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			totalCredit2 = totalCredit2.plus(totalPayment)
+		})
+
+		supplierDeedInfos.arrivals.forEach((arr) => {
+			const productsSum = arr.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			totalDebit2 = totalDebit2.plus(productsSum)
 
 			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-
-			deeds.push({
-				type: 'credit',
-				action: 'payment',
-				value: totalPayment,
-				date: arr.payment.createdAt,
-				description: arr.payment.description,
-				cost: totalPayment,
-				price: totalPayment,
-				quantity: 1,
-			})
-			totalCredit = totalCredit.plus(totalPayment)
-
-			return acc.plus(productsSum).minus(totalPayment)
-		}, new Decimal(0))
-
-		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-		const worksheetRows = filteredDeeds.map((deed, index) => {
-			return [index + 1, deed.name || '', deed.quantity, deed.price, deed.cost, deed.action, this.formatDate(deed.date)]
+			totalCredit2 = totalCredit2.plus(totalPayment)
 		})
+		///=====================
 
 		const workbook = new ExcelJS.Workbook()
 		const worksheet = workbook.addWorksheet('Поставшик')
 
-		worksheet.addRow([`Клиент: ${supplier.fullname}`, '', '', `Остаток: ${0}`, '', ''])
+		worksheet.columns = [
+			{ key: 'no', width: 5 },
+			{ key: 'name', width: 25 },
+			{ key: 'quantity', width: 15 },
+			{ key: 'price', width: 15 },
+			{ key: 'cost', width: 15 },
+			{ key: 'action', width: 15 },
+			{ key: 'date', width: 20 },
+		]
+
+		// === 1-2 qator ===
+		const row1 = worksheet.addRow([`Клиент: ${supplier.fullname}`, '', '', `Остаток: ${totalDebit2.minus(totalCredit2).toFixed(2)}`, '', '', ''])
 		worksheet.mergeCells('A1:C1')
-		worksheet.mergeCells('D1:F1')
-		worksheet.mergeCells('A2:F2')
-		worksheet.addRow([`Акт сверки с ${this.formatDate(deedStartDate || filteredDeeds[0].date)} по${this.formatDate(deedEndDate || filteredDeeds[filteredDeeds.length - 1].date)}`])
-		worksheet.addRow([])
-		worksheet.mergeCells('A4:C4')
-		worksheet.mergeCells('D4:F4')
-		worksheet.addRow([`Начальный остаток`, 0])
+		worksheet.mergeCells('D1:G1')
+
+		const fromDate = this.formatDate(deedStartDate || filteredDeeds[0]?.date)
+		const toDate = this.formatDate(deedEndDate || filteredDeeds[filteredDeeds.length - 1]?.date)
+
+		const row2 = worksheet.addRow([`Акт сверки с ${fromDate} по ${toDate}`])
+		worksheet.mergeCells('A2:G2')
+		;[row1, row2].forEach((row) =>
+			row.eachCell((cell) => {
+				cell.font = { bold: true }
+				cell.alignment = { horizontal: 'center', vertical: 'middle' }
+				cell.border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				}
+			}),
+		)
+
 		worksheet.addRow([])
 
-		worksheet.addRow(['№', 'Товар', 'Количество', 'Цена', 'Стоимость', 'Операция', 'Время'])
-		worksheet.addRows(worksheetRows)
-		worksheet.addRow(['', 'Итого приходов:', '', '', totalDebit])
-		worksheet.addRow(['', 'Итого выплат:', '', '', totalCredit])
+		// === Header row ===
+		const headerRow = worksheet.addRow(['№', 'Товар', 'Количество', 'Цена', 'Стоимость', 'Операция', 'Время'])
+		headerRow.font = { bold: true }
+		headerRow.eachCell((cell) => {
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = {
+				top: { style: 'thin' },
+				left: { style: 'thin' },
+				bottom: { style: 'thin' },
+				right: { style: 'thin' },
+			}
+		})
 
-		// Response headers
+		// === Data rows ===
+		filteredDeeds.forEach((deed, index) => {
+			const row = worksheet.addRow([index + 1, deed.name || '', deed.quantity, deed.price.toNumber(), deed.cost.toNumber(), deed.action, this.formatDate(deed.date)])
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				}
+			})
+		})
+
+		// === Totals ===
+		const totalDebitRow = worksheet.addRow(['', 'Итого приходов:', '', '', totalDebit.toNumber(), '', ''])
+		const totalCreditRow = worksheet.addRow(['', 'Итого выплат:', '', '', totalCredit.toNumber(), '', ''])
+
+		;[totalDebitRow, totalCreditRow].forEach((row) =>
+			row.eachCell((cell) => {
+				cell.font = { bold: true }
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				}
+			}),
+		)
+
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="supplier-deeds-with-product.xlsx"')
-
 		await workbook.xlsx.write(res)
 		res.end()
 	}
