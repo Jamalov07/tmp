@@ -1056,18 +1056,12 @@ export class ExcelService {
 
 	async clientDeedWithProductDownloadOne(res: Response, query: ClientFindOneRequest) {
 		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
-		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(23, 59, 59, 999)) : undefined
 
 		const client = await this.prisma.userModel.findFirst({
 			where: { id: query.id },
 			select: {
-				id: true,
 				fullname: true,
-				phone: true,
-				actions: true,
-				updatedAt: true,
-				createdAt: true,
-				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, createdAt: { gte: deedStartDate, lte: deedEndDate } },
 					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
@@ -1082,7 +1076,6 @@ export class ExcelService {
 							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
-					orderBy: { date: 'desc' },
 				},
 				returnings: {
 					where: { status: SellingStatusEnum.accepted, createdAt: { gte: deedStartDate, lte: deedEndDate } },
@@ -1096,113 +1089,170 @@ export class ExcelService {
 			},
 		})
 
-		if (!client) {
-			throw new BadRequestException('client not found')
-		}
+		if (!client) throw new BadRequestException('client not found')
+
 		const deeds: (ClientDeed & { quantity: number; price: Decimal; cost: Decimal; name?: string })[] = []
-		let totalDebit: Decimal = new Decimal(0)
-		let totalCredit: Decimal = new Decimal(0)
+		let totalDebit = new Decimal(0)
+		let totalCredit = new Decimal(0)
 
-		const payment = client.payments.reduce((acc, curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			deeds.push({
-				type: 'credit',
-				action: 'payment',
-				value: totalPayment,
-				date: curr.createdAt,
-				description: curr.description,
-				cost: totalPayment,
-				price: totalPayment,
-				quantity: 1,
-			})
-			totalCredit = totalCredit.plus(totalPayment)
+		client.payments.forEach((curr) => {
+			const total = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			deeds.push({ type: 'credit', action: 'payment', value: total, date: curr.createdAt, description: curr.description, cost: total, price: total, quantity: 1 })
+			totalCredit = totalCredit.plus(total)
+		})
 
-			return acc.plus(totalPayment)
-		}, new Decimal(0))
-
-		const sellingPayment = client.sellings.reduce((acc, sel) => {
-			const productsSum = sel.products.reduce((a, p) => {
+		client.sellings.forEach((sel) => {
+			sel.products.forEach((p) => {
+				const price = p.price.mul(p.count)
 				deeds.push({
-					name: p.product.name,
+					type: 'debit',
 					action: 'selling',
-					cost: p.cost.mul(p.count),
-					quantity: p.count,
-					price: p.price.mul(p.count),
+					value: price,
 					date: p.createdAt,
 					description: '',
-					type: 'debit',
-					value: p.price.mul(p.count),
+					cost: p.cost.mul(p.count),
+					price,
+					quantity: p.count,
+					name: p.product.name,
 				})
+				totalDebit = totalDebit.plus(price)
+			})
 
-				return a.plus(p.price.mul(p.count))
-			}, new Decimal(0))
+			const pay = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
+			deeds.push({ type: 'credit', action: 'payment', value: pay, date: sel.payment.createdAt, description: sel.payment.description, cost: pay, price: pay, quantity: 1 })
+			totalCredit = totalCredit.plus(pay)
+		})
 
-			totalDebit = totalDebit.plus(productsSum)
+		client.returnings.forEach((r) => {
+			const bal = r.payment.fromBalance
+			deeds.push({ type: 'credit', action: 'returning', value: bal, date: r.payment.createdAt, description: r.payment.description, cost: bal, price: bal, quantity: 1 })
+			totalCredit = totalCredit.plus(bal)
+		})
+
+		const filtered = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => a.date.getTime() - b.date.getTime())
+		const rows = filtered.map((deed, i) => [i + 1, deed.name || '', deed.quantity, deed.price.toFixed(2), deed.cost.toFixed(2), deed.action, this.formatDate(deed.date)])
+
+		///=====================
+		const clientAllInfos = await this.prisma.userModel.findFirst({
+			where: { id: query.id },
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				actions: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				payments: {
+					where: { type: ServiceTypeEnum.client },
+					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+				},
+				sellings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						date: true,
+						products: { select: { cost: true, count: true, price: true } },
+						payment: {
+							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+						},
+					},
+					orderBy: { date: 'desc' },
+				},
+				returnings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						payment: {
+							select: { fromBalance: true, createdAt: true, description: true },
+						},
+					},
+				},
+			},
+		})
+
+		let totalDebit2: Decimal = new Decimal(0)
+		let totalCredit2: Decimal = new Decimal(0)
+
+		clientAllInfos.payments.forEach((curr) => {
+			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
+			totalCredit2 = totalCredit2.plus(totalPayment)
+		})
+
+		clientAllInfos.sellings.forEach((sel) => {
+			const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			totalDebit2 = totalDebit2.plus(productsSum)
 
 			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-
-			deeds.push({
-				type: 'credit',
-				action: 'payment',
-				value: totalPayment,
-				date: sel.payment.createdAt,
-				description: sel.payment.description,
-				cost: totalPayment,
-				price: totalPayment,
-				quantity: 1,
-			})
-			totalCredit = totalCredit.plus(totalPayment)
-
-			return acc.plus(productsSum).minus(totalPayment)
-		}, new Decimal(0))
-
-		client.returnings.map((returning) => {
-			deeds.push({
-				type: 'credit',
-				action: 'returning',
-				value: returning.payment.fromBalance,
-				date: returning.payment.createdAt,
-				description: returning.payment.description,
-				cost: returning.payment.fromBalance,
-				price: returning.payment.fromBalance,
-				quantity: 1,
-			})
-			totalCredit = totalCredit.plus(returning.payment.fromBalance)
+			totalCredit2 = totalCredit2.plus(totalPayment)
 		})
 
-		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-		const worksheetRows = filteredDeeds.map((deed, index) => {
-			return [index + 1, deed.name || '', deed.quantity, deed.price, deed.cost, deed.action, this.formatDate(deed.date)]
+		clientAllInfos.returnings.forEach((returning) => {
+			totalCredit2 = totalCredit2.plus(returning.payment.fromBalance)
+		})
+		///=====================
+
+		const wb = new ExcelJS.Workbook()
+		const ws = wb.addWorksheet('Клиент')
+
+		const row1 = ws.addRow([`Клиент: ${client.fullname}`, '', '', `Остаток: ${totalDebit2.minus(totalCredit2).toFixed(2)}`, '', '', ''])
+		ws.mergeCells(`A${row1.number}:C${row1.number}`)
+		ws.mergeCells(`D${row1.number}:G${row1.number}`)
+		styleRow(row1)
+
+		const row2 = ws.addRow([`Акт сверки с ${this.formatDate(deedStartDate || filtered[0]?.date)} по ${this.formatDate(deedEndDate || filtered[filtered.length - 1]?.date)}`])
+		ws.mergeCells(`A${row2.number}:G${row2.number}`)
+		styleRow(row2)
+
+		ws.addRow([])
+
+		const header = ws.addRow(['№', 'Товар', 'Количество', 'Цена', 'Стоимость', 'Операция', 'Время'])
+		header.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = borderAll()
 		})
 
-		const workbook = new ExcelJS.Workbook()
-		const worksheet = workbook.addWorksheet('Клиент')
+		rows.forEach((data) => {
+			const row = ws.addRow(data)
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
+		})
 
-		worksheet.addRow([`Клиент: ${client.fullname}`, '', '', `Остаток: ${0}`, '', ''])
-		worksheet.mergeCells('A1:C1')
-		worksheet.mergeCells('D1:F1')
-		worksheet.mergeCells('A2:F2')
-		worksheet.addRow([`Акт сверки с ${this.formatDate(deedStartDate || filteredDeeds[0].date)} по${this.formatDate(deedEndDate || filteredDeeds[filteredDeeds.length - 1].date)}`])
-		worksheet.addRow([])
-		worksheet.mergeCells('A4:C4')
-		worksheet.mergeCells('D4:F4')
-		worksheet.addRow([`Начальный остаток`, 0])
-		worksheet.addRow([])
+		const totalRow = ws.addRow(['', '', '', '', '', 'Итого', ''])
+		ws.mergeCells(`A${totalRow.number}:G${totalRow.number}`)
+		styleRow(totalRow)
 
-		worksheet.addRow(['№', 'Товар', 'Количество', 'Цена', 'Стоимость', 'Операция', 'Время'])
-		worksheet.addRows(worksheetRows)
+		const debitRow = ws.addRow(['', 'Продажи', '', '', totalDebit.toFixed(2), '', ''])
+		styleRow(debitRow)
 
-		const row = worksheet.addRow(['Итого'])
+		const creditRow = ws.addRow(['', 'Оплата', '', '', totalCredit.toFixed(2), '', ''])
+		styleRow(creditRow)
 
-		worksheet.addRow(['', 'Продажи:', '', '', totalDebit])
-		worksheet.addRow(['', 'Оплата:', '', '', totalCredit])
+		ws.columns = [{ width: 5 }, { width: 30 }, { width: 15 }, { width: 15 }, { width: 20 }, { width: 20 }, { width: 30 }]
 
-		// Response headers
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="client-deeds-with-product.xlsx"')
 
-		await workbook.xlsx.write(res)
+		await wb.xlsx.write(res)
 		res.end()
+
+		function styleRow(row: ExcelJS.Row) {
+			row.eachCell((cell) => {
+				cell.font = { bold: true }
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
+		}
+
+		function borderAll(): Partial<ExcelJS.Borders> {
+			return {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		}
 	}
 
 	async supplierDeedDownloadOne(res: Response, query: ClientFindOneRequest) {
