@@ -34,7 +34,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
 					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
 				},
-				AND: [{ card: { not: 0 } }, { cash: { not: 0 } }, { other: { not: 0 } }, { transfer: { not: 0 } }],
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 			select: {
 				id: true,
@@ -60,7 +60,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 			where: {
 				id: query.id,
 				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
-				AND: [{ card: { not: 0 } }, { cash: { not: 0 } }, { other: { not: 0 } }, { transfer: { not: 0 } }],
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 			select: {
 				id: true,
@@ -90,7 +90,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
 					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
 				},
-				AND: [{ card: { not: 0 } }, { cash: { not: 0 } }, { other: { not: 0 } }, { transfer: { not: 0 } }, { description: { notIn: [''] } }],
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 		})
 

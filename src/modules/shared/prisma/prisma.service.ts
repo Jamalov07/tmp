@@ -27,9 +27,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 						}
 					}
 				}
-				// if (!params.args.where.deletedAt) {
-				// 	params.args.where.deletedAt = null
-				// }
+				if (!params.args.where.deletedAt) {
+					params.args.where.deletedAt = null
+				}
 			}
 
 			return next(params)

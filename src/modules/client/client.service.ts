@@ -91,8 +91,7 @@ export class ClientService {
 		const payment = client.payments.reduce((acc, curr) => {
 			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
 			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-
-			totalDebit = totalDebit.plus(totalPayment)
+			totalCredit = totalCredit.plus(totalPayment)
 
 			return acc.plus(totalPayment)
 		}, new Decimal(0))
@@ -103,12 +102,12 @@ export class ClientService {
 			}, new Decimal(0))
 
 			deeds.push({ type: 'debit', action: 'selling', value: productsSum, date: sel.date, description: '' })
-			totalCredit = totalCredit.plus(productsSum)
+			totalDebit = totalDebit.plus(productsSum)
 
 			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
 
 			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
-			totalDebit = totalDebit.plus(totalPayment)
+			totalCredit = totalCredit.plus(totalPayment)
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))

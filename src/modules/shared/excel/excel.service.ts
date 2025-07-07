@@ -26,6 +26,7 @@ export class ExcelService {
 		const sellingList = await this.prisma.sellingModel.findMany({
 			where: {
 				deletedAt: null,
+				status: SellingStatusEnum.accepted,
 				date: { ...(startDate && { gte: startDate }), ...(endDate && { lte: endDate }) },
 			},
 			include: {
@@ -41,27 +42,51 @@ export class ExcelService {
 		const worksheet = workbook.addWorksheet('Sotuvlar')
 
 		worksheet.columns = [
-			{ header: '№', key: 'no', width: 5 },
-			{ header: 'Клиент', key: 'client', width: 25 },
-			{ header: 'Тел', key: 'phone', width: 15 },
-			{ header: 'Сумма', key: 'summa', width: 12 },
-			{ header: 'Продавец', key: 'staff', width: 20 },
-			{ header: 'Информация', key: 'info', width: 25 },
-			{ header: 'Долг', key: 'debt', width: 12 },
-			{ header: 'Дата продажи', key: 'date', width: 20 },
+			{ key: 'no', width: 5 },
+			{ key: 'client', width: 35 },
+			{ key: 'phone', width: 20 },
+			{ key: 'summa', width: 15 },
+			{ key: 'staff', width: 25 },
+			{ key: 'info', width: 40 },
+			{ key: 'debt', width: 15 },
+			{ key: 'date', width: 30 },
 		]
 
 		let total = 0
+		worksheet.insertRow(1, [`Общая сумма: 0`])
+		worksheet.mergeCells('A1:H1')
+		const cellA1 = worksheet.getCell('A1')
+		cellA1.font = { bold: true }
+		cellA1.border = {
+			top: { style: 'thin', color: { argb: 'FF000000' } },
+			left: { style: 'thin', color: { argb: 'FF000000' } },
+			bottom: { style: 'thin', color: { argb: 'FF000000' } },
+			right: { style: 'thin', color: { argb: 'FF000000' } },
+		}
+		worksheet.insertRow(2, [])
+
+		const headers = ['№', 'Клиент', 'Тел', 'Сумма', 'Продавец', 'Информация', 'Долг', 'Дата продажи']
+		worksheet.insertRow(3, headers)
+		worksheet.getRow(3).eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		})
+
 		sellingList.forEach((item, index) => {
 			const totalSum = item.products.reduce((sum, p) => sum + p.price.toNumber() * p.count, 0)
-
 			const paidSum =
 				(item.payment?.cash?.toNumber() ?? 0) + (item.payment?.card?.toNumber() ?? 0) + (item.payment?.transfer?.toNumber() ?? 0) + (item.payment?.other?.toNumber() ?? 0)
 
 			const debt = totalSum - paidSum
 			total += totalSum
 
-			worksheet.addRow({
+			const row = worksheet.addRow({
 				no: index + 1,
 				client: item.client.fullname,
 				phone: item.client.phone,
@@ -71,16 +96,22 @@ export class ExcelService {
 				debt: debt,
 				date: item.date.toLocaleString('ru-RU'),
 			})
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = {
+					top: { style: 'thin', color: { argb: 'FF000000' } },
+					left: { style: 'thin', color: { argb: 'FF000000' } },
+					bottom: { style: 'thin', color: { argb: 'FF000000' } },
+					right: { style: 'thin', color: { argb: 'FF000000' } },
+				}
+			})
 		})
 
-		worksheet.insertRow(1, [])
-		worksheet.insertRow(1, [`Общая сумма: ${total}`])
-		worksheet.mergeCells('A1:H1')
-		worksheet.getCell('A1').font = { bold: true }
+		cellA1.value = `Общая сумма: ${total}`
 
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="selling-report.xlsx"')
-
 		await workbook.xlsx.write(res)
 		res.end()
 	}
@@ -103,17 +134,42 @@ export class ExcelService {
 		const workbook = new ExcelJS.Workbook()
 		const worksheet = workbook.addWorksheet('Chek')
 
-		// 1-qator: Xaridor va Telefon
+		// A1: Xaridor
 		worksheet.mergeCells('A1:B1')
-		worksheet.getCell('A1').value = `Xaridor: ${selling.client.fullname}`
-		worksheet.getCell('A1').font = { bold: true }
+		const cellA1 = worksheet.getCell('A1')
+		cellA1.value = `Xaridor: ${selling.client.fullname}`
+		cellA1.font = { bold: true }
+		cellA1.border = {
+			top: { style: 'thin', color: { argb: 'FF000000' } },
+			left: { style: 'thin', color: { argb: 'FF000000' } },
+			bottom: { style: 'thin', color: { argb: 'FF000000' } },
+			right: { style: 'thin', color: { argb: 'FF000000' } },
+		}
 
+		// D1: Telefon
 		worksheet.mergeCells('D1:E1')
-		worksheet.getCell('D1').value = `Telefon: ${selling.client.phone}`
-		worksheet.getCell('D1').font = { bold: true }
+		const cellD1 = worksheet.getCell('D1')
+		cellD1.value = `Telefon: ${selling.client.phone}`
+		cellD1.font = { bold: true }
+		cellD1.border = {
+			top: { style: 'thin', color: { argb: 'FF000000' } },
+			left: { style: 'thin', color: { argb: 'FF000000' } },
+			bottom: { style: 'thin', color: { argb: 'FF000000' } },
+			right: { style: 'thin', color: { argb: 'FF000000' } },
+		}
 
 		// 2-qator: Sarlavhalar
-		worksheet.addRow(['№', 'Махсулот номи', '✓', 'Сони', 'Нархи', 'Суммаси']).font = { bold: true }
+		const headerRow = worksheet.addRow(['№', 'Махсулот номи', '√', 'Сони', 'Нархи', 'Суммаси'])
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		})
 
 		// Mahsulotlar
 		let totalSum = 0
@@ -123,13 +179,22 @@ export class ExcelService {
 			const sum = count * price
 			totalSum += sum
 
-			worksheet.addRow([index + 1, item.product.name, '✓', count, price, sum])
+			const row = worksheet.addRow([index + 1, item.product.name, '', count, price, sum])
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = {
+					top: { style: 'thin', color: { argb: 'FF000000' } },
+					left: { style: 'thin', color: { argb: 'FF000000' } },
+					bottom: { style: 'thin', color: { argb: 'FF000000' } },
+					right: { style: 'thin', color: { argb: 'FF000000' } },
+				}
+			})
 		})
 
 		// Bo'sh qator
 		worksheet.addRow([])
 
-		// Umumiy summa va to‘lov
+		// To‘lovlar
 		const paidSum =
 			(selling.payment?.cash?.toNumber() ?? 0) +
 			(selling.payment?.card?.toNumber() ?? 0) +
@@ -137,20 +202,35 @@ export class ExcelService {
 			(selling.payment?.other?.toNumber() ?? 0) +
 			(selling.payment?.fromBalance?.toNumber() ?? 0)
 
-		worksheet.addRow(['', '', '', '', 'Жами сумма:', totalSum])
-		worksheet.addRow(['', '', '', '', 'Тўлов қилинди:', paidSum])
+		const totalRow = worksheet.addRow(['', '', '', '', 'Жами сумма:', totalSum])
+		const paidRow = worksheet.addRow(['', '', '', '', 'Тўлов қилинди:', paidSum])
 
-		// Ustunlar eni (yaxshi ko‘rinishi uchun)
+		const totalAndPaid = [totalRow, paidRow]
+
+		totalAndPaid.forEach((row) => {
+			row.eachCell((cell) => {
+				cell.font = { bold: true }
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = {
+					top: { style: 'thin', color: { argb: 'FF000000' } },
+					left: { style: 'thin', color: { argb: 'FF000000' } },
+					bottom: { style: 'thin', color: { argb: 'FF000000' } },
+					right: { style: 'thin', color: { argb: 'FF000000' } },
+				}
+			})
+		})
+
+		// Ustun o‘lchamlari
 		worksheet.columns = [
 			{ key: 'no', width: 5 },
-			{ key: 'name', width: 30 },
-			{ key: 'check', width: 5 },
-			{ key: 'count', width: 8 },
-			{ key: 'price', width: 10 },
-			{ key: 'total', width: 12 },
+			{ key: 'name', width: 40 },
+			{ key: 'check', width: 10 },
+			{ key: 'count', width: 20 },
+			{ key: 'price', width: 25 },
+			{ key: 'total', width: 25 },
 		]
 
-		// Javobga yozish
+		// Javob
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', `attachment; filename="selling-${selling.id}.xlsx"`)
 
@@ -189,21 +269,51 @@ export class ExcelService {
 		const worksheet = workbook.addWorksheet('Приходы')
 
 		worksheet.columns = [
-			{ header: '№', key: 'no', width: 5 },
-			{ header: 'Поставщик', key: 'supplier', width: 25 },
-			{ header: 'Сумма', key: 'summa', width: 12 },
-			{ header: 'Кем оприходован', key: 'staff', width: 20 },
-			{ header: 'Информация', key: 'info', width: 25 },
-			{ header: 'Дата прихода', key: 'date', width: 20 },
+			{ key: 'no', width: 5 },
+			{ key: 'supplier', width: 35 },
+			{ key: 'summa', width: 15 },
+			{ key: 'staff', width: 25 },
+			{ key: 'info', width: 40 },
+			{ key: 'date', width: 30 },
 		]
 
 		let total = 0
 
+		// 1-qator: Общая сумма
+		worksheet.insertRow(1, [`Общая сумма: 0`])
+		worksheet.mergeCells('A1:F1')
+		const cellA1 = worksheet.getCell('A1')
+		cellA1.font = { bold: true }
+		cellA1.border = {
+			top: { style: 'thin', color: { argb: 'FF000000' } },
+			left: { style: 'thin', color: { argb: 'FF000000' } },
+			bottom: { style: 'thin', color: { argb: 'FF000000' } },
+			right: { style: 'thin', color: { argb: 'FF000000' } },
+		}
+
+		// 2-qator: bo'sh
+		worksheet.insertRow(2, [])
+
+		// 3-qator: Header
+		const headers = ['№', 'Поставщик', 'Сумма', 'Кем оприходован', 'Информация', 'Дата прихода']
+		worksheet.insertRow(3, headers)
+		worksheet.getRow(3).eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		})
+
+		// Ma'lumotlar
 		arrivalList.forEach((item, index) => {
 			const totalSum = item.products.reduce((sum, p) => sum + p.cost.toNumber() * p.count, 0)
 			total += totalSum
 
-			worksheet.addRow({
+			const row = worksheet.addRow({
 				no: index + 1,
 				supplier: item.supplier.fullname,
 				summa: totalSum,
@@ -211,15 +321,22 @@ export class ExcelService {
 				info: item.payment?.description || '',
 				date: item.createdAt.toLocaleString('ru-RU'),
 			})
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = {
+					top: { style: 'thin', color: { argb: 'FF000000' } },
+					left: { style: 'thin', color: { argb: 'FF000000' } },
+					bottom: { style: 'thin', color: { argb: 'FF000000' } },
+					right: { style: 'thin', color: { argb: 'FF000000' } },
+				}
+			})
 		})
 
-		// Общая сумма qatori + bo‘sh qator
-		worksheet.insertRow(1, [])
-		worksheet.insertRow(1, [`Общая сумма: ${total}`])
-		worksheet.mergeCells('A1:F1')
-		worksheet.getCell('A1').font = { bold: true }
+		// Общая сумма ni yangilash
+		cellA1.value = `Общая сумма: ${total}`
 
-		// Excel response
+		// Excelga yozish
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="arrival-report.xlsx"')
 
@@ -252,59 +369,76 @@ export class ExcelService {
 		const workbook = new ExcelJS.Workbook()
 		const worksheet = workbook.addWorksheet('Приходы')
 
-		// Define columns
-		const columns = [
-			{ header: '№', key: 'no', width: 5 },
-			{ header: 'Товар', key: 'product', width: 25 },
-			{ header: 'Количество', key: 'quantity', width: 12 },
-			{ header: 'Цена', key: 'price', width: 12 },
-			{ header: 'Стоимость', key: 'cost', width: 12 },
+		// Ustun o'lchamlari
+		worksheet.columns = [
+			{ key: 'no', width: 5 },
+			{ key: 'product', width: 35 },
+			{ key: 'quantity', width: 15 },
+			{ key: 'price', width: 15 },
+			{ key: 'cost', width: 15 },
 		]
 
-		// Calculate total cost
-		const totalCost = arrival.products.reduce((sum, p) => sum + p.cost.toNumber() * p.count, 0)
-
-		// Add "Приход от:" row
+		// 1-qator: Приход от
 		const arrivalDateRow = worksheet.addRow([`Приход от: ${arrival.createdAt.toLocaleString('ru-RU')}`])
-		// Merge cells from A1 to the last column (e.g., E1 if there are 5 columns)
-		worksheet.mergeCells(`A${arrivalDateRow.number}:${String.fromCharCode(64 + worksheet.columns.length)}${arrivalDateRow.number}`)
+		worksheet.mergeCells(`A${arrivalDateRow.number}:E${arrivalDateRow.number}`)
 		arrivalDateRow.getCell(1).font = { bold: true }
+		arrivalDateRow.getCell(1).border = borderAll()
 
-		// Add "Поставщик:" row
+		// 2-qator: Поставщик
 		const supplierRow = worksheet.addRow([`Поставщик: ${arrival.supplier.fullname}`])
-		// Merge cells from A2 to the last column (e.g., E2)
-		worksheet.mergeCells(`A${supplierRow.number}:${String.fromCharCode(64 + worksheet.columns.length)}${supplierRow.number}`)
+		worksheet.mergeCells(`A${supplierRow.number}:E${supplierRow.number}`)
 		supplierRow.getCell(1).font = { bold: true }
+		supplierRow.getCell(1).border = borderAll()
 
-		// Add an empty row for spacing as in the image
+		// 3-qator: bo'sh
 		worksheet.addRow([])
 
-		// Add the column headers (as defined in worksheet.columns)
-		const headerRow = worksheet.addRow(columns.map((col) => col.header))
-		headerRow.font = { bold: true }
-
-		// Add data rows for products
-		arrival.products.forEach((product, index) => {
-			worksheet.addRow([index + 1, product.product.name, product.count, product.price, product.cost.toNumber() * product.count])
+		// 4-qator: Header
+		const headerTitles = ['№', 'Товар', 'Количество', 'Цена', 'Стоимость']
+		const headerRow = worksheet.addRow(headerTitles)
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = borderAll()
 		})
 
-		// Add total row
-		// Find the row number for the 'Итого' row. It should be after all products.
-		const totalRow1 = worksheet.addRow([]) // 'Итого' in the 'Товар' column
-		const totalRow = worksheet.addRow(['', 'Итого', '', '', totalCost]) // 'Итого' in the 'Товар' column
-		totalRow.font = { bold: true }
-		totalRow.fill = {
-			type: 'pattern',
-			pattern: 'solid',
-			fgColor: { argb: 'FFFF00' }, // Yellow background
-		}
+		// Mahsulotlar
+		arrival.products.forEach((product, index) => {
+			const row = worksheet.addRow([index + 1, product.product.name, product.count, product.price.toNumber(), product.cost.toNumber() * product.count])
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = borderAll()
+			})
+		})
 
-		// Excel response
+		// Bo'sh qator
+		worksheet.addRow([])
+
+		// Итого qatori
+		const totalCost = arrival.products.reduce((sum, p) => sum + p.cost.toNumber() * p.count, 0)
+		const totalRow = worksheet.addRow(['', 'Итого', '', '', totalCost])
+		totalRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = borderAll()
+		})
+
+		// Excel javobi
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="arrival-report-one.xlsx"')
 
 		await workbook.xlsx.write(res)
 		res.end()
+
+		// Border helper funksiyasi
+		function borderAll(): Partial<ExcelJS.Borders> {
+			return {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		}
 	}
 
 	async returningDownloadMany(res: Response, query: ReturningFindManyRequest) {

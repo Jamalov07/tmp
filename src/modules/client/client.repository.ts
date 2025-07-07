@@ -41,7 +41,7 @@ export class ClientRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				payments: {
-					where: { type: ServiceTypeEnum.client },
+					where: { type: ServiceTypeEnum.client, deletedAt: null },
 					select: { card: true, cash: true, other: true, transfer: true },
 				},
 				sellings: {
@@ -75,7 +75,7 @@ export class ClientRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				payments: {
-					where: { type: ServiceTypeEnum.client, createdAt: { gte: deedStartDate, lte: deedEndDate } },
+					where: { type: ServiceTypeEnum.client, createdAt: { gte: deedStartDate, lte: deedEndDate }, deletedAt: null },
 					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
