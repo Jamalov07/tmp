@@ -12,6 +12,7 @@ import { ClientPaymentFindManyRequest } from '../../client-payment'
 import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import { ClientDeed, ClientFindManyRequest, ClientFindOneRequest } from '../../client'
 import { DebtTypeEnum } from '../../../common'
+import { StaffPaymentFindManyRequest } from '../../staff-payment'
 @Injectable()
 export class ExcelService {
 	private readonly prisma: PrismaService
@@ -1881,6 +1882,78 @@ export class ExcelService {
 
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="supplier-debt-report.xlsx"')
+
+		await workbook.xlsx.write(res)
+		res.end()
+	}
+
+	async staffPaymentDownloadMany(res: Response, query: StaffPaymentFindManyRequest) {
+		const staffPayments = await this.prisma.paymentModel.findMany({
+			where: {
+				staffId: query.staffId,
+				type: ServiceTypeEnum.staff,
+				createdAt: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
+			},
+			select: {
+				id: true,
+				user: { select: { id: true, fullname: true, phone: true } },
+				staff: { select: { id: true, fullname: true, phone: true } },
+				sum: true,
+				description: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+			},
+		})
+
+		const workbook = new ExcelJS.Workbook()
+		const worksheet = workbook.addWorksheet('Оплаты сотрудника')
+
+		// Ustun eni
+		worksheet.columns = [
+			{ key: 'no', width: 5 },
+			{ key: 'fullname', width: 30 },
+			{ key: 'phone', width: 20 },
+			{ key: 'amount', width: 20 },
+			{ key: 'description', width: 30 },
+			{ key: 'createdAt', width: 25 },
+		]
+
+		// Header rus tilida
+		const headerRow = worksheet.addRow(['№', 'ФИО', 'Телефон', 'Сумма оплаты', 'Примечание', 'Дата оплаты'])
+
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.border = {
+				top: { style: 'thin', color: { argb: 'FF000000' } },
+				left: { style: 'thin', color: { argb: 'FF000000' } },
+				bottom: { style: 'thin', color: { argb: 'FF000000' } },
+				right: { style: 'thin', color: { argb: 'FF000000' } },
+			}
+		})
+
+		// Ma'lumotlar
+		staffPayments.forEach((item, index) => {
+			const row = worksheet.addRow([index + 1, item.user.fullname, item.user.phone, item.sum.toNumber(), item.description || '', item.createdAt.toLocaleString('ru-RU')])
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = {
+					top: { style: 'thin', color: { argb: 'FF000000' } },
+					left: { style: 'thin', color: { argb: 'FF000000' } },
+					bottom: { style: 'thin', color: { argb: 'FF000000' } },
+					right: { style: 'thin', color: { argb: 'FF000000' } },
+				}
+			})
+		})
+
+		// Javobga yozish
+		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+		res.setHeader('Content-Disposition', 'attachment; filename="staff-payments.xlsx"')
 
 		await workbook.xlsx.write(res)
 		res.end()

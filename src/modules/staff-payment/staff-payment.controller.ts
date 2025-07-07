@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	StaffPaymentFindManyRequestDto,
@@ -13,6 +13,7 @@ import {
 } from './dtos'
 import { StaffPaymentService } from './staff-payment.service'
 import { AuthOptions, CRequest } from '../../common'
+import { Response } from 'express'
 
 @ApiTags('StaffPayment')
 @Controller('staff-payment')
@@ -28,6 +29,12 @@ export class StaffPaymentController {
 	@ApiOperation({ summary: 'get all staffPayments' })
 	async findMany(@Query() query: StaffPaymentFindManyRequestDto): Promise<StaffPaymentFindManyResponseDto> {
 		return this.staffPaymentService.findMany({ ...query, isDeleted: false })
+	}
+
+	@Get('excel-download/many')
+	@ApiOperation({ summary: 'download many supplier payments' })
+	async excelDownloadMany(@Res() res: Response, @Query() query: StaffPaymentFindManyRequestDto) {
+		return this.staffPaymentService.excelDownloadMany(res, query)
 	}
 
 	@Get('one')
