@@ -14,6 +14,7 @@ export class BotUpdate {
 
 	@Start()
 	async onStart(@Ctx() ctx: Context): Promise<Message.TextMessage> {
+		console.log(ctx, 'salom')
 		return this.botService.onStart(ctx)
 	}
 
