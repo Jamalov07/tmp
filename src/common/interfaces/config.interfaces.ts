@@ -11,3 +11,7 @@ export declare interface JwtConfigOptions {
 	accessToken: { key: string; time: string }
 	refreshToken: { key: string; time: string }
 }
+
+export declare interface BotConfigOptions {
+	token: string
+}

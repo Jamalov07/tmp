@@ -18,15 +18,16 @@ import {
 	ReturningModule,
 	ClientPaymentModule,
 	ProductMVModule,
+	BotModule,
 } from '@module'
-import { appConfig, databaseConfig, jwtConfig } from '@config'
+import { appConfig, botConfig, databaseConfig, jwtConfig } from '@config'
 import { AuthGuard, CheckPermissionGuard } from '@common'
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			load: [appConfig, databaseConfig, jwtConfig],
+			load: [appConfig, databaseConfig, jwtConfig, botConfig],
 		}),
 		PrismaModule,
 		ActionModule,
@@ -45,6 +46,7 @@ import { AuthGuard, CheckPermissionGuard } from '@common'
 		ProductModule,
 		CronModule,
 		ExcelModule,
+		BotModule,
 	],
 	controllers: [],
 	providers: [AuthGuard, CheckPermissionGuard],

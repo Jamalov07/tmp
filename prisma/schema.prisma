@@ -45,6 +45,11 @@ enum ServiceTypeEnum {
   @@map("service_type")
 }
 
+enum BotLanguageEnum {
+  uz
+  ru
+  en
+}
 
 model ActionModel {
   id            String            @map("id")             @db.Uuid       @default(dbgenerated("GEN_RANDOM_UUID()"))
@@ -92,6 +97,8 @@ model UserModel {
   updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
   deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
 
+  telegram  BotUserModel?
+
   actions          ActionModel[]
   productMVs       ProductMVModel[]
 
@@ -104,10 +111,23 @@ model UserModel {
   addedSellings    SellingModel[]    @relation(name: "addedfromme")
   addedArrivals    ArrivalModel[]    @relation(name: "addedfromme")
   addedReturnings  ReturningModel[]  @relation(name: "addedfromme")
-  
+
   @@id([ id ])
   @@index([ id ])
   @@map("user")
+}
+
+model BotUserModel {
+  id        String  @map("id")         @db.VarChar()  @unique
+  isActive  Boolean @map("is_active")  @db.Boolean    @default(true) 
+  userId    String? @map("user_id")    @db.Uuid       @unique
+  language  BotLanguageEnum @map("language")          @default(uz)               
+
+  user  UserModel?  @relation(fields: [ userId ], references: [ id ], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([ id ])
+  @@index([ id ])
+  @@map("bot_user")
 }
 
 model PaymentModel {
