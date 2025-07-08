@@ -46,7 +46,7 @@ import { AuthGuard, CheckPermissionGuard } from '@common'
 		ProductModule,
 		CronModule,
 		ExcelModule,
-		BotModule,
+		// BotModule,
 	],
 	controllers: [],
 	providers: [AuthGuard, CheckPermissionGuard],
