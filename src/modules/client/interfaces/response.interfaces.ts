@@ -23,6 +23,7 @@ export declare interface ClientFindOneData extends Pick<ClientRequired, 'id' | '
 	debt?: Decimal
 	lastArrivalDate?: Date
 	deedInfo?: ClientDeedInfo
+	telegram?: { id?: string; isActive?: boolean }
 }
 
 export declare interface ClientFindManyResponse extends GlobalResponse {

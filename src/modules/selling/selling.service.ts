@@ -18,6 +18,7 @@ import { ArrivalService } from '../arrival'
 import { ClientService } from '../client'
 import { ExcelService } from '../shared/excel'
 import { Response } from 'express'
+import { BotService } from '../bot'
 
 @Injectable()
 export class SellingService {
@@ -25,17 +26,20 @@ export class SellingService {
 	private readonly arrivalService: ArrivalService
 	private readonly clientService: ClientService
 	private readonly excelService: ExcelService
+	private readonly botService: BotService
 
 	constructor(
 		sellingRepository: SellingRepository,
 		@Inject(forwardRef(() => ArrivalService)) arrivalService: ArrivalService,
 		clientService: ClientService,
 		excelService: ExcelService,
+		botService: BotService,
 	) {
 		this.sellingRepository = sellingRepository
 		this.arrivalService = arrivalService
 		this.clientService = clientService
 		this.excelService = excelService
+		this.botService = botService
 	}
 
 	async findMany(query: SellingFindManyRequest) {
@@ -151,7 +155,7 @@ export class SellingService {
 	}
 
 	async createOne(request: CRequest, body: SellingCreateOneRequest) {
-		await this.clientService.findOne({ id: body.clientId })
+		const client = await this.clientService.findOne({ id: body.clientId })
 		let sended = false
 		if (body.send) {
 			sended = true
@@ -183,11 +187,25 @@ export class SellingService {
 
 		const selling = await this.sellingRepository.createOne({ ...body, staffId: request.user.id, sended: sended })
 
+		if (body.send) {
+			if (client.data.telegram?.id) {
+				await this.botService.sendSellingToClient(selling).catch(async (e) => {
+					await this.updateOne({ id: selling.id }, { sended: false })
+				})
+			} else {
+				await this.updateOne({ id: selling.id }, { sended: false })
+			}
+		}
+
 		return createResponse({ data: selling, success: { messages: ['create one success'] } })
 	}
 
 	async updateOne(query: SellingGetOneRequest, body: SellingUpdateOneRequest) {
 		const selling = await this.getOne(query)
+
+		if (selling.data.status === SellingStatusEnum.accepted) {
+			body.date = undefined
+		}
 
 		if (body.status !== SellingStatusEnum.accepted) {
 			if (body.payment) {

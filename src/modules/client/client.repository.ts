@@ -99,6 +99,7 @@ export class ClientRepository implements OnModuleInit {
 						},
 					},
 				},
+				telegram: true,
 			},
 		})
 

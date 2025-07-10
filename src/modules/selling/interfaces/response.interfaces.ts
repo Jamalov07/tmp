@@ -3,6 +3,7 @@ import { SellingRequired } from './fields.interfaces'
 import { ClientFindOneData } from '../../client'
 import { StaffFindOneData } from '../../staff'
 import { Decimal } from '@prisma/client/runtime/library'
+import { ProductMVFindOneData } from '../../product-mv'
 
 export declare interface SellingCalc {
 	totalPrice: Decimal
@@ -23,6 +24,7 @@ export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' |
 	debt?: Decimal
 	totalPayment?: Decimal
 	totalPrice?: Decimal
+	products?: ProductMVFindOneData[]
 }
 
 export declare interface SellingFindManyResponse extends GlobalResponse {

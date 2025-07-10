@@ -12,7 +12,7 @@ import {
 } from '../interfaces'
 import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { SellingOptionalDto, SellingRequiredDto } from './fields.dtos'
-import { ClientPaymentRequiredDto } from '../../client-payment'
+import { ClientPaymentOptionalDto, ClientPaymentRequiredDto } from '../../client-payment'
 import { ProductMVRequiredDto } from '../../product-mv'
 import { ArrayNotEmpty, IsArray, IsEnum, IsOptional, IsUUID, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
@@ -28,7 +28,9 @@ export class SellingFindManyRequestDto
 
 export class SellingFindOneRequestDto extends IntersectionType(PickType(SellingRequiredDto, ['id'])) implements SellingFindOneRequest {}
 
-export class SellingPaymentDto extends IntersectionType(PickType(ClientPaymentRequiredDto, ['card', 'cash', 'other', 'transfer', 'description'])) implements SellingPayment {}
+export class SellingPaymentDto
+	extends IntersectionType(PickType(ClientPaymentRequiredDto, ['card', 'cash', 'other', 'transfer']), PickType(ClientPaymentOptionalDto, ['description']))
+	implements SellingPayment {}
 
 export class SellingProductDto extends PickType(ProductMVRequiredDto, ['count', 'price', 'productId']) implements SellingProduct {}
 

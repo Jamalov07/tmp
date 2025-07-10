@@ -1,6 +1,6 @@
 import { PaginationRequest, RequestOtherFields } from '@common'
 import { SellingOptional, SellingRequired } from './fields.interfaces'
-import { ClientPaymentRequired } from '../../client-payment'
+import { ClientPaymentOptional, ClientPaymentRequired } from '../../client-payment'
 import { ProductMVRequired } from '../../product-mv'
 import { StatsTypeEnum } from '../enums'
 
@@ -15,7 +15,7 @@ export declare interface SellingGetManyRequest extends SellingOptional, Paginati
 
 export declare interface SellingGetOneRequest extends SellingOptional, Pick<RequestOtherFields, 'isDeleted'> {}
 
-export declare interface SellingPayment extends Pick<ClientPaymentRequired, 'card' | 'cash' | 'other' | 'transfer' | 'description'> {}
+export declare interface SellingPayment extends Pick<ClientPaymentRequired, 'card' | 'cash' | 'other' | 'transfer'>, Pick<ClientPaymentOptional, 'description'> {}
 
 export declare interface SellingProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId'> {}
 
@@ -24,7 +24,7 @@ export declare interface SellingCreateOneRequest extends Pick<SellingRequired, '
 	products?: SellingProduct[]
 }
 
-export declare interface SellingUpdateOneRequest extends Pick<SellingOptional, 'deletedAt' | 'clientId' | 'date' | 'status' | 'staffId'> {
+export declare interface SellingUpdateOneRequest extends Pick<SellingOptional, 'deletedAt' | 'clientId' | 'date' | 'status' | 'staffId' | 'sended'> {
 	payment?: SellingPayment
 	products?: SellingProduct[]
 	productIdsToRemove?: string[]

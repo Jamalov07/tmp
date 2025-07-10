@@ -1,14 +1,21 @@
-import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../shared'
-import { Context, Markup } from 'telegraf'
+import { Inject, Injectable } from '@nestjs/common'
+import { PdfService, PrismaService } from '../shared'
+import { Context, Markup, Telegraf } from 'telegraf'
 import { Message } from 'telegraf/typings/core/types/typegram'
 import { BotLanguageEnum } from '@prisma/client'
+import { SellingFindOneData } from '../selling'
 
 @Injectable()
 export class BotService {
 	private readonly prisma: PrismaService
-	constructor(prisma: PrismaService) {
+	private readonly pdfService: PdfService
+	constructor(
+		prisma: PrismaService,
+		pdfService: PdfService,
+		@Inject('TELEGRAM_BOT') private readonly bot: Telegraf<Context>,
+	) {
 		this.prisma = prisma
+		this.pdfService = pdfService
 	}
 
 	async onStart(context: Context): Promise<Message.TextMessage> {
@@ -95,6 +102,12 @@ export class BotService {
 					.resize(),
 			})
 		}
+	}
+
+	async sendSellingToClient(selling: SellingFindOneData) {
+		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer(selling)
+
+		await this.bot.telegram.sendDocument(selling.client.telegram.id, { source: bufferPdf, filename: 'harid.pdf' }, { caption: `🧾 Sizning haridingiz haqida hisobot tayyor.` })
 	}
 
 	private async findBotUserById(id: number | string) {

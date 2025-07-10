@@ -51,7 +51,10 @@ export class SellingRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
-				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, product: { select: { name: true } } } },
+				products: {
+					orderBy: [{ createdAt: 'desc' }],
+					select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } },
+				},
 			},
 			...paginationOptions,
 		})
@@ -74,7 +77,10 @@ export class SellingRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
-				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, product: { select: { name: true } } } },
+				products: {
+					orderBy: [{ createdAt: 'desc' }],
+					select: { createdAt: true, id: true, price: true, count: true, product: { select: { id: true, createdAt: true, name: true } } },
+				},
 			},
 		})
 
@@ -130,7 +136,7 @@ export class SellingRepository implements OnModuleInit {
 				},
 				staff: true,
 				payment: true,
-				products: { select: { id: true, price: true, count: true, product: { select: { name: true } } } },
+				products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
 			},
 			...paginationOptions,
 		})
@@ -197,7 +203,7 @@ export class SellingRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
-				products: { select: { id: true, price: true, count: true, product: { select: { name: true, id: true } } } },
+				products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
 			},
 		})
 
@@ -220,6 +226,7 @@ export class SellingRepository implements OnModuleInit {
 				status: body.status,
 				clientId: body.clientId,
 				deletedAt: body.deletedAt,
+				sended: body.sended,
 				payment: {
 					update: {
 						card: body.payment?.card,

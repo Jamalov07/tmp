@@ -41,7 +41,11 @@ export class ClientService {
 				return acc.plus(productsSum).minus(totalPayment)
 			}, new Decimal(0))
 			return {
-				...c,
+				id: c.id,
+				fullname: c.fullname,
+				actions: c.actions,
+				createdAt: c.createdAt,
+				phone: c.phone,
 				debt: sellingPayment.minus(payment),
 				lastSellingDate: c.sellings?.length ? c.sellings[0].date : null,
 			}
@@ -138,6 +142,7 @@ export class ClientService {
 					debt: totalDebit.minus(totalCredit),
 					deeds: filteredDeeds,
 				},
+				telegram: client.telegram,
 				lastArrivalDate: client.sellings?.length ? client.sellings[0].date : null,
 			},
 			success: { messages: ['find one success'] },
