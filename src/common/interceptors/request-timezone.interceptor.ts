@@ -5,6 +5,9 @@ import * as moment from 'moment-timezone'
 @Injectable()
 export class RequestQueryTimezoneInterceptor implements NestInterceptor {
 	intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+		if (context['contextType'] === 'telegraf') {
+			return next.handle()
+		}
 		const req = context.switchToHttp().getRequest()
 		const timezone = 'Asia/Tashkent'
 

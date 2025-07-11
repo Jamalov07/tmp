@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma'
 import { SellingFindOneData } from '../../selling'
-import * as puppeteer from 'puppeteer'
+import * as pdfMake from 'pdfmake/build/pdfmake'
+import vfsFonts from 'pdfmake/build/vfs_fonts'
+import { TDocumentDefinitions } from 'pdfmake/interfaces'
+import { logoBase64 } from './constants'
+;(pdfMake as any).vfs = vfsFonts
 
 @Injectable()
 export class PdfService {
@@ -11,91 +15,111 @@ export class PdfService {
 	}
 
 	async generateInvoicePdfBuffer(selling: SellingFindOneData): Promise<Buffer> {
-		const browser = await puppeteer.launch({
-			headless: true, // yoki 'new'
+		const docDefinition: TDocumentDefinitions = {
+			content: [
+				{
+					columns: [
+						{
+							width: '*',
+							stack: [
+								{ text: `Клиент: ${selling.client.fullname}`, fontSize: 12, margin: [0, 4, 0, 4] },
+								{ text: `Дата продажа: ${this.formatDate(selling.date)}`, fontSize: 12 },
+							],
+							margin: [0, 20, 0, 0], // **shu bilan balandlikni logo darajasiga tushiramiz**
+						},
+						{
+							image: 'logo',
+							width: 120,
+							alignment: 'right',
+						},
+					],
+					margin: [0, 0, 0, 10],
+				},
+				{
+					table: {
+						widths: ['auto', '*', 'auto', 'auto', 'auto'],
+						body: [
+							[
+								{ text: '№', bold: true },
+								{ text: 'Товар или услуга', bold: true },
+								{ text: 'Кол-во', bold: true },
+								{ text: 'Цена', bold: true },
+								{ text: 'Сумма', bold: true },
+							],
+							...selling.products.map((item, index) => [index + 1, item.product.name, item.count, item.price.toNumber(), item.price.mul(item.count).toNumber()]),
+						],
+					},
+					layout: {
+						hLineWidth: function (i, node) {
+							// **pastki border qalin, qolganlari yupqa**
+							return i === node.table.body.length ? 1.5 : 0.5
+						},
+						vLineWidth: function (i, node) {
+							// **o‘ng border qalin, qolganlari yupqa**
+							return i === node.table.widths.length ? 1.5 : 0.5
+						},
+						hLineColor: function (i, node) {
+							return i === node.table.body.length ? '#000' : '#aaa'
+						},
+						vLineColor: function (i, node) {
+							return i === node.table.widths.length ? '#000' : '#aaa'
+						},
+						paddingLeft: function () {
+							return 5
+						},
+						paddingRight: function () {
+							return 5
+						},
+						paddingTop: function () {
+							return 3
+						},
+						paddingBottom: function () {
+							return 3
+						},
+					},
+					margin: [0, 10, 0, 10],
+				},
+				{
+					text: `Итого: ${selling.totalPrice?.toNumber() || 0}`,
+					fontSize: 13,
+					bold: true,
+					color: 'red',
+					alignment: 'right',
+					margin: [0, 5, 0, 0],
+				},
+				{
+					text: `Остальный долг: ${selling.debt?.toNumber() || 0}`,
+					fontSize: 13,
+					bold: true,
+					color: 'red',
+					alignment: 'right',
+					margin: [0, 5, 0, 0],
+				},
+			],
+			images: {
+				logo: logoBase64,
+			},
+			defaultStyle: {
+				font: 'Roboto',
+			},
+		}
+
+		return new Promise((resolve, reject) => {
+			const pdfDocGenerator = pdfMake.createPdf(docDefinition)
+			pdfDocGenerator.getBuffer((buffer) => {
+				resolve(Buffer.from(buffer))
+			})
 		})
-		const page = await browser.newPage()
-
-		const html = this.getHtmlTemplate()
-
-		await page.setContent(html, { waitUntil: 'networkidle0' })
-		const pdfBuffer = await page.pdf({
-			format: 'A4',
-			printBackground: true,
-			margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' },
-		})
-
-		await browser.close()
-		return Buffer.from(pdfBuffer)
 	}
 
-	private getHtmlTemplate(): string {
-		return `
-      <html>
-      <head>
-        <style>
-          body {
-            font-family: sans-serif;
-            font-size: 12px;
-          }
-          h2 {
-            margin: 0;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-          }
-          th, td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: center;
-          }
-          th {
-            background-color: #f0f0f0;
-          }
-          .footer {
-            margin-top: 10px;
-            text-align: right;
-          }
-        </style>
-      </head>
-      <body>
-        <h2>SAS IDEAL</h2>
-        <p><strong>Дата продажа:</strong> 07.07.2025 16:50</p>
-        <p><strong>Харидор:</strong> AQUANT JAXONGIR AKA &nbsp;&nbsp;&nbsp;&nbsp; 97 719 80 88</p>
+	private formatDate(date: Date): string {
+		const dd = String(date.getDate()).padStart(2, '0')
+		const mm = String(date.getMonth() + 1).padStart(2, '0') // 0-based
+		const yyyy = date.getFullYear()
 
-        <table>
-          <thead>
-            <tr>
-              <th>№</th>
-              <th>Маҳсулот номи</th>
-              <th>Сони</th>
-              <th>Нархи</th>
-              <th>Суммаси</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td>GUSAK PLOSKIY 40 SM (200SHT)</td><td>5</td><td>1.3</td><td>6.5</td></tr>
-            <tr><td>2</td><td>KREPLENA UNITAZ</td><td>10</td><td>0.14</td><td>1.4</td></tr>
-            <tr><td>3</td><td>ID-80 LEKA TAXOROT ARZON 500SHT</td><td>5</td><td>0.7</td><td>3.5</td></tr>
-            <tr><td>4</td><td>DUSH SHLANG IDEAL 1.2M (50SHT)</td><td>5</td><td>1.3</td><td>6.5</td></tr>
-            <tr><td>5</td><td>805-12 PAPLOVOK NIJNIY PLASMAS XITOY (100SHT)</td><td>5</td><td>0.7</td><td>3.5</td></tr>
-            <tr><td>6</td><td>805-11 PAPLOVOK NIJNIY TEMIR (100SHT)</td><td>5</td><td>1.4</td><td>7</td></tr>
-            <tr><td>7</td><td>JOYSTIK KUK KATTA [500SHT]</td><td>5</td><td>0.45</td><td>2.25</td></tr>
-            <tr><td>8</td><td>KREPLENA RAKVINA XITOY 200 (SHT)</td><td>10</td><td>0.28</td><td>2.8</td></tr>
-            <tr><td>9</td><td>GUSAK PLOSKIY 35SM (200SHT)</td><td>5</td><td>1.3</td><td>6.5</td></tr>
-            <tr><td>10</td><td>805-8 MEXANIZM KICHIK NERSI KNOKA (40SHT)</td><td>5</td><td>2.2</td><td>11</td></tr>
-            <tr><td>11</td><td>GUSAK RANGLI LOLA XAR XIL</td><td>8</td><td>2.2</td><td>17.6</td></tr>
-          </tbody>
-        </table>
+		const hh = String(date.getHours()).padStart(2, '0')
+		const min = String(date.getMinutes()).padStart(2, '0')
 
-        <div class="footer">
-          <p><strong>Жами сумма:</strong> 68.55</p>
-          <p><strong>Тўлов қилинди:</strong> 0</p>
-        </div>
-      </body>
-      </html>
-    `
+		return `${dd}.${mm}.${yyyy} ${hh}:${min}`
 	}
 }

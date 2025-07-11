@@ -187,9 +187,16 @@ export class SellingService {
 
 		const selling = await this.sellingRepository.createOne({ ...body, staffId: request.user.id, sended: sended })
 
+		const totalPayment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
+
+		const totalPrice = selling.products.reduce((acc, product) => {
+			return acc.plus(new Decimal(product.count).mul(product.price))
+		}, new Decimal(0))
+
 		if (body.send) {
 			if (client.data.telegram?.id) {
-				await this.botService.sendSellingToClient(selling).catch(async (e) => {
+				await this.botService.sendSellingToClient({ ...selling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch(async (e) => {
+					console.log(e)
 					await this.updateOne({ id: selling.id }, { sended: false })
 				})
 			} else {

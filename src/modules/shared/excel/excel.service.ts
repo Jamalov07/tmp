@@ -25,8 +25,6 @@ export class ExcelService {
 		const startDate = query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined
 		const endDate = query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined
 
-		console.log(startDate, endDate)
-
 		const sellingList = await this.prisma.sellingModel.findMany({
 			where: {
 				deletedAt: null,

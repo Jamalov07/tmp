@@ -19,6 +19,10 @@ export class AuthGuard implements CanActivate {
 	) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
+		if (context['contextType'] === 'telegraf') {
+			return true
+		}
+
 		const authOptions = this.reflector.get<{ isAuthRequired: boolean; isStaffRequired: boolean }>('authOptions', context.getHandler())
 		const isAuthRequired = authOptions?.isAuthRequired
 		const isStaffRequired = authOptions?.isStaffRequired

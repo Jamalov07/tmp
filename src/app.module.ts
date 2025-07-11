@@ -19,6 +19,7 @@ import {
 	ClientPaymentModule,
 	ProductMVModule,
 	BotModule,
+	PdfModule,
 } from '@module'
 import { appConfig, botConfig, databaseConfig, jwtConfig } from '@config'
 import { AuthGuard, CheckPermissionGuard } from '@common'
@@ -46,6 +47,7 @@ import { AuthGuard, CheckPermissionGuard } from '@common'
 		ProductModule,
 		CronModule,
 		ExcelModule,
+		PdfModule,
 		BotModule,
 	],
 	controllers: [],
