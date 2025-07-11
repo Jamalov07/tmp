@@ -25,15 +25,18 @@ export class ProductRepository {
 			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }
 		}
 
-		const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
+		let nameFilter: any = {}
+		if (query.search) {
+			const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
 
-		const nameFilter = {
-			[searchWords.length > 1 ? 'AND' : 'OR']: searchWords.map((word) => ({
-				name: {
-					contains: word,
-					mode: 'insensitive',
-				},
-			})),
+			nameFilter = {
+				[searchWords.length > 1 ? 'AND' : 'OR']: searchWords.map((word) => ({
+					name: {
+						contains: word,
+						mode: 'insensitive',
+					},
+				})),
+			}
 		}
 
 		const products = await this.prisma.productModel.findMany({
@@ -85,15 +88,18 @@ export class ProductRepository {
 	}
 
 	async countFindMany(query: ProductFindManyRequest) {
-		const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
+		let nameFilter: any = {}
+		if (query.search) {
+			const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
 
-		const nameFilter = {
-			[searchWords.length > 1 ? 'AND' : 'OR']: searchWords.map((word) => ({
-				name: {
-					contains: word,
-					mode: 'insensitive',
-				},
-			})),
+			nameFilter = {
+				[searchWords.length > 1 ? 'AND' : 'OR']: searchWords.map((word) => ({
+					name: {
+						contains: word,
+						mode: 'insensitive',
+					},
+				})),
+			}
 		}
 
 		const productsCount = await this.prisma.productModel.count({
