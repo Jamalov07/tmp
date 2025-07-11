@@ -1,6 +1,6 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
 import { map } from 'rxjs/operators'
-import * as moment from 'moment-timezone'
+import moment from 'moment-timezone'
 
 @Injectable()
 export class TimezoneInterceptor implements NestInterceptor {

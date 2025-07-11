@@ -473,7 +473,7 @@ export class ExcelService {
 
 		worksheet.columns = [
 			{ key: 'no', width: 5 },
-			{ key: 'client', width: 40 },
+			{ key: 'client', width: 45 },
 			{ key: 'cash', width: 15 },
 			{ key: 'balance', width: 15 },
 			{ key: 'staff', width: 20 },
@@ -500,7 +500,7 @@ export class ExcelService {
 		worksheet.insertRow(2, [])
 
 		// 3-qator: sarlavhalar
-		const headers = ['№', 'Клиент', 'Сумма', 'Кем отправован', 'Информация', 'Дата прихода']
+		const headers = ['№', 'Клиент', 'Наличные', 'Из баланса', 'Кем отправован', 'Информация', 'Дата прихода']
 		worksheet.insertRow(3, headers)
 
 		worksheet.getRow(3).eachCell((cell) => {
@@ -521,15 +521,13 @@ export class ExcelService {
 
 			const row = worksheet.addRow({
 				no: index + 1,
-				client: `${item.client.fullname}\n${item.client.phone}`,
+				client: `${item.client.fullname} - ${item.client.phone}`,
 				cash: item.payment.cash.toFixed(2),
 				balance: item.payment.fromBalance.toFixed(2),
 				staff: item.staff?.phone || '',
 				info: item.payment?.description || '',
 				date: item.date.toLocaleString('ru-RU'),
 			})
-
-			row.height = 25
 
 			row.eachCell((cell) => {
 				cell.alignment = { vertical: 'middle', horizontal: 'center' }

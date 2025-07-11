@@ -4,7 +4,15 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { appConfig } from '@config'
 import { AppModule } from './app.module'
-import { RequestResponseInterceptor, AuthGuard, AllExceptionFilter, BigIntInterceptor, DecimalToNumberInterceptor } from '@common'
+import {
+	RequestResponseInterceptor,
+	AuthGuard,
+	AllExceptionFilter,
+	BigIntInterceptor,
+	DecimalToNumberInterceptor,
+	TimezoneInterceptor,
+	RequestQueryTimezoneInterceptor,
+} from '@common'
 
 async function bootstrap() {
 	const app = await NestFactory.create<INestApplication>(AppModule)
@@ -18,6 +26,8 @@ async function bootstrap() {
 	app.useGlobalGuards(app.get(AuthGuard))
 	app.useGlobalInterceptors(new BigIntInterceptor())
 	app.useGlobalInterceptors(new DecimalToNumberInterceptor())
+	app.useGlobalInterceptors(new RequestQueryTimezoneInterceptor())
+	app.useGlobalInterceptors(new TimezoneInterceptor())
 	app.useGlobalInterceptors(new RequestResponseInterceptor())
 
 	app.useGlobalFilters(new AllExceptionFilter())
