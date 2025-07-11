@@ -85,9 +85,20 @@ export class ProductRepository {
 	}
 
 	async countFindMany(query: ProductFindManyRequest) {
+		const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
+
+		const nameFilter = {
+			[searchWords.length > 1 ? 'AND' : 'OR']: searchWords.map((word) => ({
+				name: {
+					contains: word,
+					mode: 'insensitive',
+				},
+			})),
+		}
+
 		const productsCount = await this.prisma.productModel.count({
 			where: {
-				name: { contains: query.search, mode: 'insensitive' },
+				...nameFilter,
 			},
 		})
 
