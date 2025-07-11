@@ -53,6 +53,15 @@ export class ClientRepository implements OnModuleInit {
 					},
 					orderBy: { date: 'desc' },
 				},
+				returnings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						date: true,
+						payment: { select: { cash: true, fromBalance: true } },
+						products: { select: { count: true, price: true } },
+					},
+					orderBy: { date: 'desc' },
+				},
 			},
 			...paginationOptions,
 		})

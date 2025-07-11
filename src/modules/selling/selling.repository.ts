@@ -274,7 +274,12 @@ export class SellingRepository implements OnModuleInit {
 	async deleteOne(query: SellingDeleteOneRequest) {
 		const selling = await this.prisma.sellingModel.delete({
 			where: { id: query.id },
+			select: { products: { select: { product: true, count: true } } },
 		})
+
+		for (const product of selling.products) {
+			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { increment: product.count } } })
+		}
 
 		return selling
 	}

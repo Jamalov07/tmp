@@ -249,7 +249,7 @@ export class ArrivalRepository implements OnModuleInit {
 		})
 
 		for (const product of arrival.products) {
-			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } }).catch((undefined) => undefined)
+			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 		}
 
 		return arrival

@@ -229,7 +229,7 @@ export class SellingService {
 		if (query.method === DeleteMethodEnum.hard) {
 			await this.sellingRepository.deleteOne(query)
 		} else {
-			await this.sellingRepository.updateOne(query, { deletedAt: new Date() })
+			// await this.sellingRepository.updateOne(query, { deletedAt: new Date() })
 		}
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}

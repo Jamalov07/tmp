@@ -291,7 +291,20 @@ export class ProductMVRepository {
 	async deleteOne(query: ProductMVDeleteOneRequest) {
 		const product = await this.prisma.productMVModel.delete({
 			where: { id: query.id },
+			select: { type: true, product: true, count: true, selling: true, arrival: true, returning: true },
 		})
+
+		if (product.type === ServiceTypeEnum.selling) {
+			if (product.selling && product.selling.status === SellingStatusEnum.accepted) {
+				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { increment: product.count } } })
+			}
+		} else if (product.type === ServiceTypeEnum.arrival) {
+			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
+		} else if (product.type === ServiceTypeEnum.returning) {
+			if (product.returning && product.returning.status === SellingStatusEnum.accepted) {
+				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
+			}
+		}
 
 		return product
 	}
