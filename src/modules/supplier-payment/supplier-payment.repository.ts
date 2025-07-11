@@ -28,7 +28,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 		const supplierPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				staffId: query.staffId,
-				type: ServiceTypeEnum.supplier,
+				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
@@ -56,7 +56,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 
 	async findOne(query: SupplierPaymentFindOneRequest) {
 		const supplierPayment = await this.prisma.paymentModel.findFirst({
-			where: { id: query.id, type: ServiceTypeEnum.supplier },
+			where: { id: query.id, type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] } },
 			select: {
 				id: true,
 				user: { select: { id: true, fullname: true, phone: true } },
@@ -79,7 +79,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 		const supplierPaymentsCount = await this.prisma.paymentModel.count({
 			where: {
 				staffId: query.staffId,
-				type: ServiceTypeEnum.supplier,
+				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
@@ -100,7 +100,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 		const supplierPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				id: { in: query.ids },
-				type: ServiceTypeEnum.supplier,
+				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				staffId: query.staffId,
 			},
 			...paginationOptions,
@@ -122,7 +122,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 			where: {
 				id: { in: query.ids },
 				staffId: query.staffId,
-				type: ServiceTypeEnum.supplier,
+				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 			},
 		})
 

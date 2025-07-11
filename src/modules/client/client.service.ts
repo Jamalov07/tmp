@@ -87,6 +87,9 @@ export class ClientService {
 	}
 
 	async findOne(query: ClientFindOneRequest) {
+		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+
 		const client = await this.clientRepository.findOne(query)
 
 		if (!client) {
@@ -98,8 +101,11 @@ export class ClientService {
 
 		const payment = client.payments.reduce((acc, curr) => {
 			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-			totalCredit = totalCredit.plus(totalPayment)
+
+			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
+				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
+				totalCredit = totalCredit.plus(totalPayment)
+			}
 
 			return acc.plus(totalPayment)
 		}, new Decimal(0))
@@ -109,19 +115,26 @@ export class ClientService {
 				return a.plus(p.price.mul(p.count))
 			}, new Decimal(0))
 
-			deeds.push({ type: 'debit', action: 'selling', value: productsSum, date: sel.date, description: '' })
-			totalDebit = totalDebit.plus(productsSum)
+			if ((!deedStartDate || sel.date >= deedStartDate) && (!deedEndDate || sel.date <= deedEndDate)) {
+				deeds.push({ type: 'debit', action: 'selling', value: productsSum, date: sel.date, description: '' })
+				totalDebit = totalDebit.plus(productsSum)
+			}
 
 			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
 
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
-			totalCredit = totalCredit.plus(totalPayment)
+			if ((!deedStartDate || sel.payment.createdAt >= deedStartDate) && (!deedEndDate || sel.payment.createdAt <= deedEndDate)) {
+				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
+				totalCredit = totalCredit.plus(totalPayment)
+			}
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))
 
 		client.returnings.map((returning) => {
-			deeds.push({ type: 'credit', action: 'returning', value: returning.payment.fromBalance, date: returning.payment.createdAt, description: returning.payment.description })
+			if ((!deedStartDate || returning.payment.createdAt >= deedStartDate) && (!deedEndDate || returning.payment.createdAt <= deedEndDate)) {
+				deeds.push({ type: 'credit', action: 'returning', value: returning.payment.fromBalance, date: returning.payment.createdAt, description: returning.payment.description })
+				totalCredit = totalCredit.plus(returning.payment.fromBalance)
+			}
 		})
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

@@ -209,15 +209,27 @@ export class ReturningRepository implements OnModuleInit {
 					deleteMany: body.productIdsToRemove?.map((id) => ({ id: id })),
 				},
 			},
+			select: {
+				id: true,
+				status: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				date: true,
+				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				payment: { select: { id: true, cash: true, fromBalance: true } },
+				products: { select: { id: true, price: true, count: true, product: { select: { id: true, name: true } } } },
+			},
 		})
 
 		if (body.status === SellingStatusEnum.accepted && existReturning.status !== SellingStatusEnum.accepted) {
-			if (body.products) {
-				for (const product of body.products) {
-					const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
+			if (returning.products) {
+				for (const product of returning.products) {
+					const pr = await this.prisma.productModel.findFirst({ where: { id: product.product.id } })
 					if (pr) {
 						await this.prisma.productModel.update({
-							where: { id: product.productId },
+							where: { id: product.product.id },
 							data: { count: { increment: product.count } },
 						})
 					}

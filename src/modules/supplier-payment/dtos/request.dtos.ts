@@ -20,7 +20,7 @@ export class SupplierPaymentCreateOneRequestDto
 	implements SupplierPaymentCreateOneRequest {}
 
 export class SupplierPaymentUpdateOneRequestDto
-	extends IntersectionType(PickType(SupplierPaymentOptionalDto, ['deletedAt', 'card', 'description', 'cash', 'other', 'transfer']))
+	extends IntersectionType(PickType(SupplierPaymentOptionalDto, ['deletedAt', 'card', 'cash', 'other', 'transfer']), PickType(SupplierPaymentOptionalDto, ['description']))
 	implements SupplierPaymentUpdateOneRequest {}
 
 export class SupplierPaymentDeleteOneRequestDto

@@ -61,9 +61,6 @@ export class ClientRepository implements OnModuleInit {
 	}
 
 	async findOne(query: ClientFindOneRequest) {
-		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
-		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
-
 		const client = await this.prisma.userModel.findFirst({
 			where: { id: query.id, type: UserTypeEnum.client },
 			select: {
@@ -75,26 +72,24 @@ export class ClientRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				payments: {
-					where: { type: ServiceTypeEnum.client, createdAt: { gte: deedStartDate, lte: deedEndDate }, deletedAt: null },
+					where: { type: ServiceTypeEnum.client, deletedAt: null },
 					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
-					where: { status: SellingStatusEnum.accepted, date: { gte: deedStartDate, lte: deedEndDate } },
+					where: { status: SellingStatusEnum.accepted },
 					select: {
 						date: true,
 						products: { select: { cost: true, count: true, price: true } },
 						payment: {
-							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
 							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
 				},
 				returnings: {
-					where: { status: SellingStatusEnum.accepted, createdAt: { gte: deedStartDate, lte: deedEndDate } },
+					where: { status: SellingStatusEnum.accepted },
 					select: {
 						payment: {
-							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
 							select: { fromBalance: true, createdAt: true, description: true },
 						},
 					},

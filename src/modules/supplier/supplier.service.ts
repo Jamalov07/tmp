@@ -84,6 +84,9 @@ export class SupplierService {
 	}
 
 	async findOne(query: SupplierFindOneRequest) {
+		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+
 		const supplier = await this.supplierRepository.findOne(query)
 
 		if (!supplier) {
@@ -96,8 +99,11 @@ export class SupplierService {
 
 		const payment = supplier.payments.reduce((acc, curr) => {
 			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-			totalDebit = totalDebit.plus(totalPayment)
+
+			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
+				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
+				totalDebit = totalDebit.plus(totalPayment)
+			}
 
 			return acc.plus(totalPayment)
 		}, new Decimal(0))
@@ -107,13 +113,17 @@ export class SupplierService {
 				return a.plus(p.cost.mul(p.count))
 			}, new Decimal(0))
 
-			deeds.push({ type: 'debit', action: 'arrival', value: productsSum, date: arr.date, description: '' })
-			totalCredit = totalCredit.plus(productsSum)
+			if ((!deedStartDate || arr.date >= deedStartDate) && (!deedEndDate || arr.date <= deedEndDate)) {
+				deeds.push({ type: 'debit', action: 'arrival', value: productsSum, date: arr.date, description: '' })
+				totalCredit = totalCredit.plus(productsSum)
+			}
 
 			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
 
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
-			totalDebit = totalDebit.plus(totalPayment)
+			if ((!deedStartDate || arr.payment.createdAt >= deedStartDate) && (!deedEndDate || arr.payment.createdAt <= deedEndDate)) {
+				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
+				totalDebit = totalDebit.plus(totalPayment)
+			}
 
 			return acc.plus(productsSum).minus(totalPayment)
 		}, new Decimal(0))

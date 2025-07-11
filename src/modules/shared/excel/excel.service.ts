@@ -459,7 +459,7 @@ export class ExcelService {
 			},
 			select: {
 				date: true,
-				client: { select: { fullname: true } },
+				client: { select: { fullname: true, phone: true } },
 				staff: { select: { phone: true } },
 				payment: { select: { cash: true, fromBalance: true, description: true } },
 			},
@@ -471,8 +471,9 @@ export class ExcelService {
 
 		worksheet.columns = [
 			{ key: 'no', width: 5 },
-			{ key: 'client', width: 30 },
-			{ key: 'summa', width: 15 },
+			{ key: 'client', width: 40 },
+			{ key: 'cash', width: 15 },
+			{ key: 'balance', width: 15 },
 			{ key: 'staff', width: 20 },
 			{ key: 'info', width: 25 },
 			{ key: 'date', width: 20 },
@@ -518,12 +519,15 @@ export class ExcelService {
 
 			const row = worksheet.addRow({
 				no: index + 1,
-				client: item.client.fullname,
-				summa: sum.toFixed(2),
+				client: `${item.client.fullname}\n${item.client.phone}`,
+				cash: item.payment.cash.toFixed(2),
+				balance: item.payment.fromBalance.toFixed(2),
 				staff: item.staff?.phone || '',
 				info: item.payment?.description || '',
 				date: item.date.toLocaleString('ru-RU'),
 			})
+
+			row.height = 25
 
 			row.eachCell((cell) => {
 				cell.alignment = { vertical: 'middle', horizontal: 'center' }
@@ -667,6 +671,11 @@ export class ExcelService {
 		const startDate = query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined
 		const endDate = query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined
 
+		let paginationOptions = {}
+		if (query.pagination) {
+			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }
+		}
+
 		const clientPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				staffId: query.staffId,
@@ -688,6 +697,7 @@ export class ExcelService {
 				staff: { select: { phone: true } },
 				createdAt: true,
 			},
+			...paginationOptions,
 			orderBy: { createdAt: 'desc' },
 		})
 
@@ -1726,7 +1736,7 @@ export class ExcelService {
 			{ header: 'клиент', key: 'fullname', width: 40 },
 			{ header: 'телефон', key: 'phone', width: 20 },
 			{ header: 'долг', key: 'debt', width: 20 },
-			{ header: 'Время', key: 'lastSellingDate', width: 30 },
+			{ header: 'последняя дата продажи', key: 'lastSellingDate', width: 50 },
 		]
 
 		worksheet.getRow(1).eachCell((cell) => {
