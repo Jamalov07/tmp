@@ -25,9 +25,20 @@ export class ProductRepository {
 			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }
 		}
 
+		const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
+
+		const nameFilter = {
+			[searchWords.length > 1 ? 'AND' : 'OR']: searchWords.map((word) => ({
+				name: {
+					contains: word,
+					mode: 'insensitive',
+				},
+			})),
+		}
+
 		const products = await this.prisma.productModel.findMany({
 			where: {
-				name: { contains: query.search, mode: 'insensitive' },
+				...nameFilter,
 			},
 			select: {
 				id: true,
