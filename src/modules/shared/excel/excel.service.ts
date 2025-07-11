@@ -22,8 +22,10 @@ export class ExcelService {
 	}
 
 	async sellingDownloadMany(res: Response, query: SellingFindManyRequest) {
-		const startDate = query.startDate ? new Date(query.startDate) : undefined
-		const endDate = query.endDate ? new Date(query.endDate) : undefined
+		const startDate = query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined
+		const endDate = query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined
+
+		console.log(startDate, endDate)
 
 		const sellingList = await this.prisma.sellingModel.findMany({
 			where: {
@@ -241,8 +243,8 @@ export class ExcelService {
 	}
 
 	async arrivalDownloadMany(res: Response, query: ArrivalFindManyRequest) {
-		const startDate = query.startDate ? new Date(query.startDate) : undefined
-		const endDate = query.endDate ? new Date(query.endDate) : undefined
+		const startDate = query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined
+		const endDate = query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined
 
 		const arrivalList = await this.prisma.arrivalModel.findMany({
 			where: {
