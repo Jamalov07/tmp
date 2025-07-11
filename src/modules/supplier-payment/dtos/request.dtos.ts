@@ -16,7 +16,7 @@ export class SupplierPaymentFindManyRequestDto
 export class SupplierPaymentFindOneRequestDto extends IntersectionType(PickType(SupplierPaymentRequiredDto, ['id'])) implements SupplierPaymentFindOneRequest {}
 
 export class SupplierPaymentCreateOneRequestDto
-	extends IntersectionType(PickType(SupplierPaymentRequiredDto, ['userId', 'card', 'description', 'cash', 'other', 'transfer']))
+	extends IntersectionType(PickType(SupplierPaymentRequiredDto, ['userId', 'card', 'cash', 'other', 'transfer']), PickType(SupplierPaymentOptionalDto, ['description']))
 	implements SupplierPaymentCreateOneRequest {}
 
 export class SupplierPaymentUpdateOneRequestDto

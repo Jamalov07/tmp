@@ -174,7 +174,7 @@ export class ArrivalService {
 		if (query.method === DeleteMethodEnum.hard) {
 			await this.arrivalRepository.deleteOne(query)
 		} else {
-			await this.arrivalRepository.updateOne(query, { deletedAt: new Date() })
+			// await this.arrivalRepository.updateOne(query, { deletedAt: new Date() })
 		}
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}

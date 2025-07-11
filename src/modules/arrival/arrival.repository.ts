@@ -245,7 +245,12 @@ export class ArrivalRepository implements OnModuleInit {
 	async deleteOne(query: ArrivalDeleteOneRequest) {
 		const arrival = await this.prisma.arrivalModel.delete({
 			where: { id: query.id },
+			select: { products: { select: { product: true, count: true } } },
 		})
+
+		for (const product of arrival.products) {
+			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } }).catch((undefined) => undefined)
+		}
 
 		return arrival
 	}
