@@ -7,6 +7,7 @@ import { SellingFindOneData } from '../selling'
 import { InjectBot } from 'nestjs-telegraf'
 import { MyBotName } from './constants'
 import { ConfigService } from '@nestjs/config'
+import { BotSellingTitleEnum } from '../selling/enums'
 
 @Injectable()
 export class BotService {
@@ -121,7 +122,21 @@ export class BotService {
 		const chatInfo = await this.bot.telegram.getChat(channelId).catch((undefined) => undefined)
 		if (chatInfo) {
 			const bufferPdf = await this.pdfService.generateInvoicePdfBuffer2(selling)
-			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'harid.pdf' }, { caption: `🧾 Новая продажа` })
+			let info = {}
+			if (selling.title === BotSellingTitleEnum.new) {
+				info = {
+					caption: `🧾 Новая продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
+				}
+			} else if (selling.title === BotSellingTitleEnum.added) {
+				info = {
+					caption: `🧾 Товар добавлен\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
+				}
+			} else if (selling.title === BotSellingTitleEnum.updated) {
+				info = { caption: `🧾 Товар обновлено` }
+			} else if (selling.title === BotSellingTitleEnum.deleted) {
+				info = { caption: `🧾 Товар удалено` }
+			}
+			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'harid.pdf' }, info)
 		}
 	}
 

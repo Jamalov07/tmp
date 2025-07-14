@@ -5,6 +5,7 @@ import * as pdfMake from 'pdfmake/build/pdfmake'
 import vfsFonts from 'pdfmake/build/vfs_fonts'
 import { TDocumentDefinitions } from 'pdfmake/interfaces'
 import { logoBase64 } from './constants'
+import { BotSellingProductTitleEnum } from '../../selling/enums'
 ;(pdfMake as any).vfs = vfsFonts
 
 @Injectable()
@@ -230,10 +231,10 @@ export class PdfService {
 		return `${dd}.${mm}.${yyyy} ${hh}:${min}`
 	}
 
-	private getColor(status?: 'new' | 'updated' | 'deleted'): string | undefined {
-		if (status === 'new') return '#d4edda' // light green
-		if (status === 'deleted') return '#f8d7da' // light red
-		if (status === 'updated') return '#fff3cd' // light yellow
+	private getColor(status?: BotSellingProductTitleEnum): string | undefined {
+		if (status === BotSellingProductTitleEnum.new) return '#d4edda' // light green
+		if (status === BotSellingProductTitleEnum.deleted) return '#f8d7da' // light red
+		if (status === BotSellingProductTitleEnum.updated) return '#fff3cd' // light yellow
 		return undefined // default (white)
 	}
 }

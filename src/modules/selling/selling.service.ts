@@ -156,7 +156,7 @@ export class SellingService {
 	}
 
 	async createOne(request: CRequest, body: SellingCreateOneRequest) {
-		const client = await this.clientService.findOne({ id: body.clientId })
+		let client = await this.clientService.findOne({ id: body.clientId })
 		let sended = false
 		if (body.send) {
 			sended = true
@@ -196,8 +196,10 @@ export class SellingService {
 
 		if (body.send) {
 			if (selling.status === SellingStatusEnum.accepted) {
+				client = await this.clientService.findOne({ id: body.clientId })
 				const sellingInfo = {
 					...selling,
+					client: client.data,
 					title: BotSellingTitleEnum.new,
 					totalPayment: totalPayment,
 					totalPrice: totalPrice,
@@ -213,7 +215,6 @@ export class SellingService {
 				} else {
 					await this.updateOne({ id: selling.id }, { sended: false })
 				}
-
 				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
 					console.log('channel', e)
 				})
@@ -255,8 +256,10 @@ export class SellingService {
 
 		if (updatedSelling.send) {
 			if (shouldSend) {
+				const client = await this.clientService.findOne({ id: body.clientId })
 				const sellingInfo = {
 					...updatedSelling,
+					client: client.data,
 					title: BotSellingTitleEnum.new,
 					totalPayment: totalPayment,
 					totalPrice: totalPrice,

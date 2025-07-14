@@ -1,5 +1,5 @@
 import { GlobalResponse, PaginationResponse } from '@common'
-import { SellingRequired } from './fields.interfaces'
+import { SellingOptional, SellingRequired } from './fields.interfaces'
 import { ClientFindOneData } from '../../client'
 import { StaffFindOneData } from '../../staff'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -19,7 +19,7 @@ export declare interface SellingFindManyData extends PaginationResponse<SellingF
 	calc: SellingCalc
 }
 
-export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' | 'status' | 'createdAt' | 'date' | 'send' | 'sended'> {
+export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' | 'status' | 'createdAt' | 'date' | 'send' | 'sended'>, Pick<SellingOptional, 'publicId'> {
 	client?: ClientFindOneData
 	staff?: StaffFindOneData
 	debt?: Decimal

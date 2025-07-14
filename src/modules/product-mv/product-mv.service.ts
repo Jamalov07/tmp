@@ -14,12 +14,24 @@ import {
 	SellingProductMVUpdateOneRequest,
 } from './interfaces'
 import { createResponse } from '../../common'
+import { BotService } from '../bot'
+import { SellingStatusEnum } from '@prisma/client'
+import { ClientService } from '../client'
+import { BotSellingProductTitleEnum, BotSellingTitleEnum } from '../selling/enums'
+import { Decimal } from '@prisma/client/runtime/library'
+import { SellingService } from '../selling'
 
 @Injectable()
 export class ProductMVService {
 	private readonly productMVRepository: ProductMVRepository
-	constructor(productMVRepository: ProductMVRepository) {
+	private readonly botService: BotService
+	private readonly clientService: ClientService
+	private readonly sellingService: SellingService
+	constructor(productMVRepository: ProductMVRepository, botService: BotService, clientService: ClientService, sellingService: SellingService) {
 		this.productMVRepository = productMVRepository
+		this.clientService = clientService
+		this.botService = botService
+		this.sellingService = sellingService
 	}
 
 	async findMany(query: ProductMVFindManyRequest) {
@@ -77,7 +89,50 @@ export class ProductMVService {
 	}
 
 	async createOneSelling(request: CRequest, body: SellingProductMVCreateOneRequest) {
-		await this.productMVRepository.createOneSelling({ ...body, staffId: request.user.id })
+		const sellingProduct = await this.productMVRepository.createOneSelling({ ...body, staffId: request.user.id })
+
+		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
+			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
+			const sellingProducts = sellingProduct.selling.products.map((pro) => {
+				let status: BotSellingProductTitleEnum = undefined
+				if (pro.id === sellingProduct.id) {
+					status = BotSellingProductTitleEnum.new
+				}
+				return { ...pro, status: status }
+			})
+
+			const totalPayment = sellingProduct.selling.payment.card
+				.plus(sellingProduct.selling.payment.cash)
+				.plus(sellingProduct.selling.payment.other)
+				.plus(sellingProduct.selling.payment.transfer)
+
+			const totalPrice = sellingProduct.selling.products.reduce((acc, product) => {
+				return acc.plus(new Decimal(product.count).mul(product.price))
+			}, new Decimal(0))
+
+			const sellingInfo = {
+				...sellingProduct.selling,
+				client: client.data,
+				title: BotSellingTitleEnum.added,
+				totalPayment: totalPayment,
+				totalPrice: totalPrice,
+				debt: totalPrice.minus(totalPayment),
+				products: sellingProducts,
+			}
+
+			if (client.data.telegram?.id) {
+				await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
+					console.log('user', e)
+					await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { sended: false })
+				})
+			} else {
+				await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { sended: false })
+			}
+
+			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+				console.log('channel', e)
+			})
+		}
 
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
 	}
