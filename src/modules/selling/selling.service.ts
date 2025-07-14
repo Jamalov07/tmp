@@ -200,13 +200,13 @@ export class SellingService {
 						console.log('user', e)
 						await this.updateOne({ id: selling.id }, { sended: false })
 					})
-
-					await this.botService.sendSellingToChannel({ ...selling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch((e) => {
-						console.log('channel', e)
-					})
 				} else {
 					await this.updateOne({ id: selling.id }, { sended: false })
 				}
+
+				await this.botService.sendSellingToChannel({ ...selling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch((e) => {
+					console.log('channel', e)
+				})
 			}
 		}
 
