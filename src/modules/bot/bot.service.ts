@@ -7,7 +7,7 @@ import { SellingFindOneData } from '../selling'
 import { InjectBot } from 'nestjs-telegraf'
 import { MyBotName } from './constants'
 import { ConfigService } from '@nestjs/config'
-import { BotSellingTitleEnum } from '../selling/enums'
+import { BotSellingProductTitleEnum, BotSellingTitleEnum } from '../selling/enums'
 
 @Injectable()
 export class BotService {
@@ -131,16 +131,31 @@ export class BotService {
 					caption: `🧾 Новая продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
 				}
 			} else if (selling.title === BotSellingTitleEnum.added) {
+				const newProduct = selling.products.find((prod) => prod.status === BotSellingProductTitleEnum.new)
+				let productInfo = ''
+				if (newProduct) {
+					productInfo = `🧾 Товар добавлено\nпродукт: ${newProduct.product.name}\nцена: ${newProduct.price.toNumber()}\nкол-во: ${newProduct.count}`
+				}
 				info = {
-					caption: `🧾 Товар добавлен\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
+					caption: `🧾  Продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\n${productInfo}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
 				}
 			} else if (selling.title === BotSellingTitleEnum.updated) {
+				const newProduct = selling.products.find((prod) => prod.status === BotSellingProductTitleEnum.updated)
+				let productInfo = ''
+				if (newProduct) {
+					productInfo = `🧾 Товар обновлено\nпродукт: ${newProduct.product.name}\nцена: ${newProduct.price.toNumber()}\nкол-во: ${newProduct.count}`
+				}
 				info = {
-					caption: `🧾 Товар обновлено\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
+					caption: `🧾 Продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\n${productInfo}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
 				}
 			} else if (selling.title === BotSellingTitleEnum.deleted) {
+				const newProduct = selling.products.find((prod) => prod.status === BotSellingProductTitleEnum.deleted)
+				let productInfo = ''
+				if (newProduct) {
+					productInfo = `🧾 Товар удалено\nпродукт: ${newProduct.product.name}\nцена: ${newProduct.price.toNumber()}\nкол-во: ${newProduct.count}`
+				}
 				info = {
-					caption: `🧾 Товар удалено\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
+					caption: `🧾 Продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\n${productInfo}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
 				}
 			}
 			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'sotuv.pdf' }, info)

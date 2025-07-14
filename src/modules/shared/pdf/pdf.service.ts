@@ -145,17 +145,19 @@ export class PdfService {
 								{ text: 'Цена', bold: true },
 								{ text: 'Сумма', bold: true },
 							],
-							...selling.products.map((item, index) => {
-								const decoration = item.status === BotSellingProductTitleEnum.deleted ? 'lineThrough' : undefined
-								const row = [
-									{ text: index + 1, fillColor: this.getColor(item.status), decoration: decoration },
-									{ text: item.product.name, fillColor: this.getColor(item.status), decoration: decoration },
-									{ text: item.count.toString(), fillColor: this.getColor(item.status), decoration: decoration },
-									{ text: item.price.toNumber().toString(), fillColor: this.getColor(item.status), decoration: decoration },
-									{ text: item.price.mul(item.count).toNumber().toString(), fillColor: this.getColor(item.status), decoration: decoration },
-								]
-								return row
-							}),
+							...selling.products
+								.filter((pro) => pro.status !== BotSellingProductTitleEnum.deleted)
+								.map((item, index) => {
+									const decoration = item.status === BotSellingProductTitleEnum.deleted ? 'lineThrough' : undefined
+									const row = [
+										{ text: index + 1 /* fillColor: this.getColor(item.status), decoration: decoration */ },
+										{ text: item.product.name /* fillColor: this.getColor(item.status), decoration: decoration */ },
+										{ text: item.count.toString() /* fillColor: this.getColor(item.status), decoration: decoration */ },
+										{ text: item.price.toNumber().toString() /* fillColor: this.getColor(item.status), decoration: decoration */ },
+										{ text: item.price.mul(item.count).toNumber().toString() /* fillColor: this.getColor(item.status), decoration: decoration */ },
+									]
+									return row
+								}),
 						],
 					},
 					layout: {
