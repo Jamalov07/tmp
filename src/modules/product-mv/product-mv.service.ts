@@ -253,7 +253,7 @@ export class ProductMVService {
 			}
 
 			if (client.data.telegram?.id) {
-				await this.botService.sendSellingToClient(sellingInfo, true).catch(async (e) => {
+				await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }, true).catch(async (e) => {
 					console.log('user', e)
 					await this.updateSellingSendStatus(sellingProduct.selling.id, false)
 				})
