@@ -326,7 +326,32 @@ export class ProductMVRepository {
 	async deleteOne(query: ProductMVDeleteOneRequest) {
 		const product = await this.prisma.productMVModel.delete({
 			where: { id: query.id },
-			select: { type: true, product: true, count: true, selling: true, arrival: true, returning: true },
+			select: {
+				id: true,
+				type: true,
+				returning: true,
+				selling: {
+					select: {
+						id: true,
+						status: true,
+						publicId: true,
+						updatedAt: true,
+						createdAt: true,
+						deletedAt: true,
+						date: true,
+						send: true,
+						sended: true,
+						client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
+						staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+						payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+						products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
+					},
+				},
+				cost: true,
+				count: true,
+				price: true,
+				product: true,
+			},
 		})
 
 		if (product.type === ServiceTypeEnum.selling) {

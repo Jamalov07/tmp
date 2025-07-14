@@ -143,7 +143,7 @@ export class BotService {
 					caption: `🧾 Товар удалено\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
 				}
 			}
-			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'harid.pdf' }, info)
+			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'sotuv.pdf' }, info)
 		}
 	}
 
