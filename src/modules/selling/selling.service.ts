@@ -194,13 +194,15 @@ export class SellingService {
 		}, new Decimal(0))
 
 		if (body.send) {
-			if (client.data.telegram?.id) {
-				await this.botService.sendSellingToClient({ ...selling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch(async (e) => {
-					console.log(e)
+			if (selling.status === SellingStatusEnum.accepted) {
+				if (client.data.telegram?.id) {
+					await this.botService.sendSellingToClient({ ...selling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch(async (e) => {
+						console.log(e)
+						await this.updateOne({ id: selling.id }, { sended: false })
+					})
+				} else {
 					await this.updateOne({ id: selling.id }, { sended: false })
-				})
-			} else {
-				await this.updateOne({ id: selling.id }, { sended: false })
+				}
 			}
 		}
 
@@ -222,11 +224,31 @@ export class SellingService {
 				}
 			}
 		}
+
+		let shouldSend = false
 		if (body.status === SellingStatusEnum.accepted) {
 			body.date = new Date()
+			shouldSend = true
 		}
 
-		await this.sellingRepository.updateOne(query, { ...body, status: body.status, staffId: selling.data.staffId })
+		const updatedSelling = await this.sellingRepository.updateOne(query, { ...body, status: body.status, staffId: selling.data.staffId })
+
+		const totalPayment = updatedSelling.payment.card.plus(updatedSelling.payment.cash).plus(updatedSelling.payment.other).plus(updatedSelling.payment.transfer)
+
+		const totalPrice = updatedSelling.products.reduce((acc, product) => {
+			return acc.plus(new Decimal(product.count).mul(product.price))
+		}, new Decimal(0))
+
+		if (updatedSelling.send) {
+			if (shouldSend) {
+				await this.botService
+					.sendSellingToClient({ ...updatedSelling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) })
+					.catch(async (e) => {
+						console.log(e)
+						await this.updateOne({ id: updatedSelling.id }, { sended: false })
+					})
+			}
+		}
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}

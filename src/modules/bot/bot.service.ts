@@ -6,18 +6,22 @@ import { BotLanguageEnum } from '@prisma/client'
 import { SellingFindOneData } from '../selling'
 import { InjectBot } from 'nestjs-telegraf'
 import { MyBotName } from './constants'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class BotService {
 	private readonly prisma: PrismaService
 	private readonly pdfService: PdfService
+	private readonly configService: ConfigService
 	constructor(
 		prisma: PrismaService,
 		pdfService: PdfService,
+		configService: ConfigService,
 		@InjectBot(MyBotName) private readonly bot: Telegraf<Context>,
 	) {
 		this.prisma = prisma
 		this.pdfService = pdfService
+		this.configService = configService
 	}
 
 	async onStart(context: Context) {
@@ -110,6 +114,16 @@ export class BotService {
 		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer(selling)
 
 		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: 'harid.pdf' }, { caption: `🧾 Sizning haridingiz haqida hisobot tayyor.` })
+	}
+
+	async sendSellingToChannel(selling: SellingFindOneData) {
+		const channelId = this.configService.getOrThrow<string>('bot.sellingChannelId')
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch((undefined) => undefined)
+
+		if (chatInfo) {
+			const bufferPdf = await this.pdfService.generateInvoicePdfBuffer2(selling)
+			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'sotuv.pdf' }, { caption: `🧾 Yangi sotuv` })
+		}
 	}
 
 	private async findBotUserById(id: number | string) {

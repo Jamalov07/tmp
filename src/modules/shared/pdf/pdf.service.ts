@@ -112,6 +112,104 @@ export class PdfService {
 		})
 	}
 
+	async generateInvoicePdfBuffer2(selling: SellingFindOneData): Promise<Buffer> {
+		const docDefinition: TDocumentDefinitions = {
+			content: [
+				{
+					columns: [
+						{
+							width: '*',
+							stack: [
+								{ text: `Клиент: ${selling.client.fullname}`, fontSize: 12, margin: [0, 4, 0, 4] },
+								{ text: `Дата продажа: ${this.formatDate(selling.date)}`, fontSize: 12 },
+							],
+							margin: [0, 20, 0, 0],
+						},
+						{
+							image: 'logo',
+							width: 120,
+							alignment: 'right',
+						},
+					],
+					margin: [0, 0, 0, 10],
+				},
+				{
+					table: {
+						widths: ['auto', '*', 'auto', 'auto', 'auto'],
+						body: [
+							[
+								{ text: '№', bold: true },
+								{ text: 'Товар или услуга', bold: true },
+								{ text: 'Кол-во', bold: true },
+								{ text: 'Цена', bold: true },
+								{ text: 'Сумма', bold: true },
+							],
+							...selling.products.map((item, index) => [index + 1, item.product.name, item.count, item.price.toNumber(), item.price.mul(item.count).toNumber()]),
+						],
+					},
+					layout: {
+						hLineWidth: function (i, node) {
+							// **pastki border qalin, qolganlari yupqa**
+							return i === node.table.body.length ? 1.5 : 0.5
+						},
+						vLineWidth: function (i, node) {
+							// **o‘ng border qalin, qolganlari yupqa**
+							return i === node.table.widths.length ? 1.5 : 0.5
+						},
+						hLineColor: function (i, node) {
+							return i === node.table.body.length ? '#000' : '#aaa'
+						},
+						vLineColor: function (i, node) {
+							return i === node.table.widths.length ? '#000' : '#aaa'
+						},
+						paddingLeft: function () {
+							return 5
+						},
+						paddingRight: function () {
+							return 5
+						},
+						paddingTop: function () {
+							return 3
+						},
+						paddingBottom: function () {
+							return 3
+						},
+					},
+					margin: [0, 10, 0, 10],
+				},
+				{
+					text: `Итого: ${selling.totalPrice?.toNumber() || 0}`,
+					fontSize: 13,
+					bold: true,
+					color: 'red',
+					alignment: 'right',
+					margin: [0, 5, 0, 0],
+				},
+				{
+					text: `Остальный долг: ${selling.debt?.toNumber() || 0}`,
+					fontSize: 13,
+					bold: true,
+					color: 'red',
+					alignment: 'right',
+					margin: [0, 5, 0, 0],
+				},
+			],
+			images: {
+				logo: logoBase64,
+			},
+			defaultStyle: {
+				font: 'Roboto',
+			},
+		}
+
+		return new Promise((resolve, reject) => {
+			const pdfDocGenerator = pdfMake.createPdf(docDefinition)
+			pdfDocGenerator.getBuffer((buffer) => {
+				resolve(Buffer.from(buffer))
+			})
+		})
+	}
+
 	private formatDate(date: Date): string {
 		const dd = String(date.getDate()).padStart(2, '0')
 		const mm = String(date.getMonth() + 1).padStart(2, '0') // 0-based
