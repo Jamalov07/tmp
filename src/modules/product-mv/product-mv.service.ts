@@ -235,7 +235,11 @@ export class ProductMVService {
 				.plus(sellingProduct.selling.payment.transfer)
 
 			const totalPrice = sellingProduct.selling.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.price))
+				if (product.id === sellingProduct.id) {
+					return acc.plus(new Decimal(0))
+				} else {
+					return acc.plus(new Decimal(product.count).mul(product.price))
+				}
 			}, new Decimal(0))
 
 			const sellingInfo = {
