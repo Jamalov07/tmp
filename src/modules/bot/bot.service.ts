@@ -111,10 +111,13 @@ export class BotService {
 		}
 	}
 
-	async sendSellingToClient(selling: SellingFindOneData) {
+	async sendSellingToClient(selling: SellingFindOneData, isUpdated: boolean = false) {
 		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer(selling)
-
-		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: 'harid.pdf' }, { caption: `🧾 Sizning haridingiz haqida hisobot tayyor.` })
+		let info = { caption: `🧾 Sizning haridingiz haqida hisobot tayyor.` }
+		if (isUpdated) {
+			info = { caption: `🧾 Sizning haridingiz muvaffaqiyatli yangilandi.` }
+		}
+		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: 'harid.pdf' }, info)
 	}
 
 	async sendSellingToChannel(selling: SellingFindOneData) {
@@ -132,9 +135,13 @@ export class BotService {
 					caption: `🧾 Товар добавлен\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
 				}
 			} else if (selling.title === BotSellingTitleEnum.updated) {
-				info = { caption: `🧾 Товар обновлено` }
+				info = {
+					caption: `🧾 Товар обновлено\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
+				}
 			} else if (selling.title === BotSellingTitleEnum.deleted) {
-				info = { caption: `🧾 Товар удалено` }
+				info = {
+					caption: `🧾 Товар удалено\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
+				}
 			}
 			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'harid.pdf' }, info)
 		}

@@ -135,6 +135,7 @@ export class ProductMVRepository {
 					select: {
 						id: true,
 						status: true,
+						publicId: true,
 						updatedAt: true,
 						createdAt: true,
 						deletedAt: true,
@@ -224,10 +225,28 @@ export class ProductMVRepository {
 				sellingId: body.sellingId,
 			},
 			select: {
-				selling: true,
-				product: true,
-				price: true,
+				id: true,
+				selling: {
+					select: {
+						id: true,
+						status: true,
+						publicId: true,
+						updatedAt: true,
+						createdAt: true,
+						deletedAt: true,
+						date: true,
+						send: true,
+						sended: true,
+						client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
+						staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+						payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+						products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
+					},
+				},
+				cost: true,
 				count: true,
+				price: true,
+				product: true,
 			},
 		})
 

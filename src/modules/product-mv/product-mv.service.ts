@@ -119,7 +119,7 @@ export class ProductMVService {
 			}
 
 			if (client.data.telegram?.id) {
-				await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
+				await this.botService.sendSellingToClient(sellingInfo, true).catch(async (e) => {
 					console.log('user', e)
 					await this.updateSellingSendStatus(sellingProduct.selling.id, false)
 				})
@@ -150,7 +150,50 @@ export class ProductMVService {
 	async updateOneSelling(query: ProductMVGetOneRequest, body: SellingProductMVUpdateOneRequest) {
 		await this.getOne(query)
 
-		await this.productMVRepository.updateOneSelling(query, { ...body })
+		const sellingProduct = await this.productMVRepository.updateOneSelling(query, { ...body })
+
+		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
+			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
+			const sellingProducts = sellingProduct.selling.products.map((pro) => {
+				let status: BotSellingProductTitleEnum = undefined
+				if (pro.id === sellingProduct.id) {
+					status = BotSellingProductTitleEnum.updated
+				}
+				return { ...pro, status: status }
+			})
+
+			const totalPayment = sellingProduct.selling.payment.card
+				.plus(sellingProduct.selling.payment.cash)
+				.plus(sellingProduct.selling.payment.other)
+				.plus(sellingProduct.selling.payment.transfer)
+
+			const totalPrice = sellingProduct.selling.products.reduce((acc, product) => {
+				return acc.plus(new Decimal(product.count).mul(product.price))
+			}, new Decimal(0))
+
+			const sellingInfo = {
+				...sellingProduct.selling,
+				client: client.data,
+				title: BotSellingTitleEnum.updated,
+				totalPayment: totalPayment,
+				totalPrice: totalPrice,
+				debt: totalPrice.minus(totalPayment),
+				products: sellingProducts,
+			}
+
+			if (client.data.telegram?.id) {
+				await this.botService.sendSellingToClient(sellingInfo, true).catch(async (e) => {
+					console.log('user', e)
+					await this.updateSellingSendStatus(sellingProduct.selling.id, false)
+				})
+			} else {
+				await this.updateSellingSendStatus(sellingProduct.selling.id, false)
+			}
+
+			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+				console.log('channel', e)
+			})
+		}
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}

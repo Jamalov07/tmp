@@ -208,7 +208,7 @@ export class SellingService {
 				}
 
 				if (client.data.telegram?.id) {
-					await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
+					await this.botService.sendSellingToClient(sellingInfo, false).catch(async (e) => {
 						console.log('user', e)
 						await this.updateOne({ id: selling.id }, { sended: false })
 					})
@@ -274,7 +274,7 @@ export class SellingService {
 					})
 				}
 
-				await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
+				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
 					console.log(e)
 				})
 			}
