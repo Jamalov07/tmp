@@ -26,12 +26,10 @@ export class ProductMVService {
 	private readonly productMVRepository: ProductMVRepository
 	private readonly botService: BotService
 	private readonly clientService: ClientService
-	private readonly sellingService: SellingService
-	constructor(productMVRepository: ProductMVRepository, botService: BotService, clientService: ClientService, sellingService: SellingService) {
+	constructor(productMVRepository: ProductMVRepository, botService: BotService, clientService: ClientService) {
 		this.productMVRepository = productMVRepository
 		this.clientService = clientService
 		this.botService = botService
-		this.sellingService = sellingService
 	}
 
 	async findMany(query: ProductMVFindManyRequest) {
@@ -123,10 +121,10 @@ export class ProductMVService {
 			if (client.data.telegram?.id) {
 				await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
 					console.log('user', e)
-					await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { sended: false })
+					await this.updateSellingSendStatus(sellingProduct.selling.id, false)
 				})
 			} else {
-				await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { sended: false })
+				await this.updateSellingSendStatus(sellingProduct.selling.id, false)
 			}
 
 			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
@@ -179,5 +177,9 @@ export class ProductMVService {
 		await this.productMVRepository.deleteOne(query)
 
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
+	}
+
+	async updateSellingSendStatus(id: string, sended: boolean) {
+		await this.productMVRepository.updateSellingSendStatus(id, sended)
 	}
 }

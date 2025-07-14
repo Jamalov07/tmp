@@ -328,4 +328,8 @@ export class ProductMVRepository {
 	async onModuleInit() {
 		await this.prisma.createActionMethods(ProductMVController)
 	}
+
+	async updateSellingSendStatus(id: string, sended: boolean) {
+		await this.prisma.sellingModel.update({ where: { id: id }, data: { sended: sended } })
+	}
 }
