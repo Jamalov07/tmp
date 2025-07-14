@@ -19,6 +19,7 @@ import { ClientService } from '../client'
 import { ExcelService } from '../shared/excel'
 import { Response } from 'express'
 import { BotService } from '../bot'
+import { BotSellingProductTitleEnum, BotSellingTitleEnum } from './enums'
 
 @Injectable()
 export class SellingService {
@@ -195,8 +196,17 @@ export class SellingService {
 
 		if (body.send) {
 			if (selling.status === SellingStatusEnum.accepted) {
+				const sellingInfo = {
+					...selling,
+					title: BotSellingTitleEnum.new,
+					totalPayment: totalPayment,
+					totalPrice: totalPrice,
+					debt: totalPrice.minus(totalPayment),
+					products: selling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
+				}
+
 				if (client.data.telegram?.id) {
-					await this.botService.sendSellingToClient({ ...selling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch(async (e) => {
+					await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
 						console.log('user', e)
 						await this.updateOne({ id: selling.id }, { sended: false })
 					})
@@ -204,7 +214,7 @@ export class SellingService {
 					await this.updateOne({ id: selling.id }, { sended: false })
 				}
 
-				await this.botService.sendSellingToChannel({ ...selling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch((e) => {
+				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
 					console.log('channel', e)
 				})
 			}
@@ -245,16 +255,23 @@ export class SellingService {
 
 		if (updatedSelling.send) {
 			if (shouldSend) {
-				if (updatedSelling.client?.telegram?.id) {
-					await this.botService
-						.sendSellingToClient({ ...updatedSelling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) })
-						.catch(async (e) => {
-							console.log(e)
-							await this.updateOne({ id: updatedSelling.id }, { sended: false })
-						})
+				const sellingInfo = {
+					...updatedSelling,
+					title: BotSellingTitleEnum.new,
+					totalPayment: totalPayment,
+					totalPrice: totalPrice,
+					debt: totalPrice.minus(totalPayment),
+					products: updatedSelling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
 				}
 
-				await this.botService.sendSellingToClient({ ...updatedSelling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch((e) => {
+				if (updatedSelling.client?.telegram?.id) {
+					await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
+						console.log(e)
+						await this.updateOne({ id: updatedSelling.id }, { sended: false })
+					})
+				}
+
+				await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
 					console.log(e)
 				})
 			}

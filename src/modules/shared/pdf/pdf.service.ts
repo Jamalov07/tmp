@@ -144,7 +144,16 @@ export class PdfService {
 								{ text: 'Цена', bold: true },
 								{ text: 'Сумма', bold: true },
 							],
-							...selling.products.map((item, index) => [index + 1, item.product.name, item.count, item.price.toNumber(), item.price.mul(item.count).toNumber()]),
+							...selling.products.map((item, index) => {
+								const row = [
+									{ text: index + 1, fillColor: this.getColor(item.status) },
+									{ text: item.product.name, fillColor: this.getColor(item.status) },
+									{ text: item.count.toString(), fillColor: this.getColor(item.status) },
+									{ text: item.price.toNumber().toString(), fillColor: this.getColor(item.status) },
+									{ text: item.price.mul(item.count).toNumber().toString(), fillColor: this.getColor(item.status) },
+								]
+								return row
+							}),
 						],
 					},
 					layout: {
@@ -219,5 +228,12 @@ export class PdfService {
 		const min = String(date.getMinutes()).padStart(2, '0')
 
 		return `${dd}.${mm}.${yyyy} ${hh}:${min}`
+	}
+
+	private getColor(status?: 'new' | 'updated' | 'deleted'): string | undefined {
+		if (status === 'new') return '#d4edda' // light green
+		if (status === 'deleted') return '#f8d7da' // light red
+		if (status === 'updated') return '#fff3cd' // light yellow
+		return undefined // default (white)
 	}
 }

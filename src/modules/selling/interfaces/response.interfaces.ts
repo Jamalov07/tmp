@@ -4,6 +4,7 @@ import { ClientFindOneData } from '../../client'
 import { StaffFindOneData } from '../../staff'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ProductMVFindOneData } from '../../product-mv'
+import { BotSellingTitleEnum } from '../enums'
 
 export declare interface SellingCalc {
 	totalPrice: Decimal
@@ -25,6 +26,7 @@ export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' |
 	totalPayment?: Decimal
 	totalPrice?: Decimal
 	products?: ProductMVFindOneData[]
+	title?: BotSellingTitleEnum
 }
 
 export declare interface SellingFindManyResponse extends GlobalResponse {

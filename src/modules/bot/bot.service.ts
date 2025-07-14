@@ -119,10 +119,9 @@ export class BotService {
 	async sendSellingToChannel(selling: SellingFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.sellingChannelId')
 		const chatInfo = await this.bot.telegram.getChat(channelId).catch((undefined) => undefined)
-		console.log('chatinfo', chatInfo)
 		if (chatInfo) {
 			const bufferPdf = await this.pdfService.generateInvoicePdfBuffer2(selling)
-			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'sotuv.pdf' }, { caption: `🧾 Yangi sotuv` })
+			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'harid.pdf' }, { caption: `🧾 Новая продажа` })
 		}
 	}
 
