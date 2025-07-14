@@ -146,12 +146,13 @@ export class PdfService {
 								{ text: 'Сумма', bold: true },
 							],
 							...selling.products.map((item, index) => {
+								const decoration = item.status === BotSellingProductTitleEnum.deleted ? 'lineThrough' : undefined
 								const row = [
-									{ text: index + 1, fillColor: this.getColor(item.status) },
-									{ text: item.product.name, fillColor: this.getColor(item.status) },
-									{ text: item.count.toString(), fillColor: this.getColor(item.status) },
-									{ text: item.price.toNumber().toString(), fillColor: this.getColor(item.status) },
-									{ text: item.price.mul(item.count).toNumber().toString(), fillColor: this.getColor(item.status) },
+									{ text: index + 1, fillColor: this.getColor(item.status), decoration: decoration },
+									{ text: item.product.name, fillColor: this.getColor(item.status), decoration: decoration },
+									{ text: item.count.toString(), fillColor: this.getColor(item.status), decoration: decoration },
+									{ text: item.price.toNumber().toString(), fillColor: this.getColor(item.status), decoration: decoration },
+									{ text: item.price.mul(item.count).toNumber().toString(), fillColor: this.getColor(item.status), decoration: decoration },
 								]
 								return row
 							}),
