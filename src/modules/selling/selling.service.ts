@@ -245,12 +245,14 @@ export class SellingService {
 
 		if (updatedSelling.send) {
 			if (shouldSend) {
-				await this.botService
-					.sendSellingToClient({ ...updatedSelling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) })
-					.catch(async (e) => {
-						console.log(e)
-						await this.updateOne({ id: updatedSelling.id }, { sended: false })
-					})
+				if (updatedSelling.client?.telegram?.id) {
+					await this.botService
+						.sendSellingToClient({ ...updatedSelling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) })
+						.catch(async (e) => {
+							console.log(e)
+							await this.updateOne({ id: updatedSelling.id }, { sended: false })
+						})
+				}
 
 				await this.botService.sendSellingToClient({ ...updatedSelling, totalPayment: totalPayment, totalPrice: totalPrice, debt: totalPrice.minus(totalPayment) }).catch((e) => {
 					console.log(e)
