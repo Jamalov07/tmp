@@ -114,70 +114,100 @@ export class BotService {
 
 	async sendSellingToClient(selling: SellingFindOneData, isUpdated: boolean = false) {
 		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer(selling)
-		let info = { caption: `🧾 Sizning haridingiz haqida hisobot tayyor.` }
-		if (isUpdated) {
-			info = { caption: `🧾 Sizning haridingiz muvaffaqiyatli yangilandi.` }
+
+		const info = {
+			caption: isUpdated ? '🧾 Haridingiz yangilandi. Hisobot ilova qilindi.' : '🧾 Haridingiz bo‘yicha hisobot tayyorlandi.',
 		}
+
 		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: 'harid.pdf' }, info)
 	}
 
 	async sendSellingToChannel(selling: SellingFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.sellingChannelId')
-		const chatInfo = await this.bot.telegram.getChat(channelId).catch((undefined) => undefined)
-		if (chatInfo) {
-			const bufferPdf = await this.pdfService.generateInvoicePdfBuffer2(selling)
-			let info = {}
-			if (selling.title === BotSellingTitleEnum.new) {
-				info = {
-					caption: `🧾 Новая продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
-				}
-			} else if (selling.title === BotSellingTitleEnum.added) {
-				const newProduct = selling.products.find((prod) => prod.status === BotSellingProductTitleEnum.new)
-				let productInfo = ''
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+		if (!chatInfo) return
+
+		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer2(selling)
+
+		let caption = ''
+		const baseInfo = `🧾 Продажа\n\n` + `🆔 Заказ: ${selling.publicId}\n` + `💰 Сумма: ${selling.totalPrice.toNumber()}\n` + `💸 Долг: ${selling.debt.toNumber()}\n`
+
+		const clientInfo = `👤 Клиент: ${selling.client.fullname}\n` + `📊 Общий долг: ${selling.client.debt.toNumber()}`
+
+		let productInfo = ''
+
+		const findProductByStatus = (status: BotSellingProductTitleEnum) => selling.products.find((prod) => prod.status === status)
+
+		switch (selling.title) {
+			case BotSellingTitleEnum.new:
+				caption = `🧾 Новая продажа\n\n${baseInfo}\n${clientInfo}`
+				break
+
+			case BotSellingTitleEnum.added: {
+				const newProduct = findProductByStatus(BotSellingProductTitleEnum.new)
 				if (newProduct) {
-					productInfo = `🧾 Товар добавлено\nпродукт: ${newProduct.product.name}\nцена: ${newProduct.price.toNumber()}\nкол-во: ${newProduct.count}`
+					productInfo = `\n📦 Товар добавлен\n` + `• Название: ${newProduct.product.name}\n` + `• Цена: ${newProduct.price.toNumber()}\n` + `• Кол-во: ${newProduct.count}`
 				}
-				info = {
-					caption: `🧾  Продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\n${productInfo}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
-				}
-			} else if (selling.title === BotSellingTitleEnum.updated) {
-				const newProduct = selling.products.find((prod) => prod.status === BotSellingProductTitleEnum.updated)
-				let productInfo = ''
-				if (newProduct) {
-					productInfo = `🧾 Товар обновлено\nпродукт: ${newProduct.product.name}\nцена: ${newProduct.price.toNumber()}\nкол-во: ${newProduct.count}`
-				}
-				info = {
-					caption: `🧾 Продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\n${productInfo}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
-				}
-			} else if (selling.title === BotSellingTitleEnum.deleted) {
-				const newProduct = selling.products.find((prod) => prod.status === BotSellingProductTitleEnum.deleted)
-				let productInfo = ''
-				if (newProduct) {
-					productInfo = `🧾 Товар удалено\nпродукт: ${newProduct.product.name}\nцена: ${newProduct.price.toNumber()}\nкол-во: ${newProduct.count}`
-				}
-				info = {
-					caption: `🧾 Продажа\n\nид заказа: ${selling.publicId}\n\nсумма: ${selling.totalPrice.toNumber()}\n\nдолг: ${selling.debt.toNumber()}\n\n${productInfo}\n\nклиент: ${selling.client.fullname}\n\nобщий долг: ${selling.client.debt.toNumber()}`,
-				}
+				caption = `${baseInfo}${productInfo}\n\n${clientInfo}`
+				break
 			}
-			await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'sotuv.pdf' }, info)
+
+			case BotSellingTitleEnum.updated: {
+				const updatedProduct = findProductByStatus(BotSellingProductTitleEnum.updated)
+				if (updatedProduct) {
+					productInfo =
+						`\n♻️ Товар обновлён\n` + `• Название: ${updatedProduct.product.name}\n` + `• Цена: ${updatedProduct.price.toNumber()}\n` + `• Кол-во: ${updatedProduct.count}`
+				}
+				caption = `${baseInfo}${productInfo}\n\n${clientInfo}`
+				break
+			}
+
+			case BotSellingTitleEnum.deleted: {
+				const deletedProduct = findProductByStatus(BotSellingProductTitleEnum.deleted)
+				if (deletedProduct) {
+					productInfo =
+						`\n🗑️ Товар удалён\n` + `• Название: ${deletedProduct.product.name}\n` + `• Цена: ${deletedProduct.price.toNumber()}\n` + `• Кол-во: ${deletedProduct.count}`
+				}
+				caption = `${baseInfo}${productInfo}\n\n${clientInfo}`
+				break
+			}
+
+			default:
+				caption = `${baseInfo}\n${clientInfo}`
+				break
 		}
+
+		await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'sotuv.pdf' }, { caption })
 	}
 
 	async sendPaymentToChannel(payment: Partial<PaymentModel>, isModified: boolean = false, client: ClientFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.paymentChannelId')
-		const chatInfo = await this.bot.telegram.getChat(channelId).catch((undefined) => undefined)
-		if (chatInfo) {
-			const paymentType = {
-				client: 'для клиента',
-				selling: 'для продажи',
-			}
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
 
-			const totalPayment = payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
+		if (!chatInfo) return
 
-			const title = `${isModified ? 'Обновлено\n\n' : ''}тип: ${paymentType[payment.type]}\nКлиент: ${client.fullname}\n\nСумма: ${totalPayment.toNumber()}\n\nНаличными: ${payment.cash.toNumber()}\nКарты: ${payment.card.toNumber()}\nПеречислением: ${payment.transfer.toNumber()}\nДругие: ${payment.other.toNumber()}\nДата: ${this.formatDate(payment.createdAt)}\nИнфо: ${payment.description}\nОбщий долг: ${client.debt.toNumber()}\nid: ${payment.id}`
-
-			await this.bot.telegram.sendMessage(channelId, title)
+		const paymentType: Record<string, string> = {
+			client: 'для клиента',
+			selling: 'для продажи',
 		}
+
+		const totalPayment = payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
+
+		const title =
+			`${isModified ? '♻️ Обновлено\n\n' : ''}` +
+			`📌 Тип: ${paymentType[payment.type] ?? 'неизвестно'}\n` +
+			`👤 Клиент: ${client.fullname}\n` +
+			`📞 Телефон: ${client.phone}\n` +
+			`💰 Сумма: ${totalPayment.toNumber()}\n\n` +
+			`💵 Наличными: ${payment.cash.toNumber()}\n` +
+			`💳 Картой: ${payment.card.toNumber()}\n` +
+			`🏦 Переводом: ${payment.transfer.toNumber()}\n` +
+			`📦 Другое: ${payment.other.toNumber()}\n` +
+			`📅 Дата: ${this.formatDate(payment.createdAt)}\n` +
+			`📝 Описание: ${payment.description ?? '-'}\n` +
+			`📊 Общий долг: ${client.debt.toNumber()}`
+
+		await this.bot.telegram.sendMessage(channelId, title)
 	}
 
 	private async findBotUserById(id: number | string) {
