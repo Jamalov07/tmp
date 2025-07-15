@@ -88,7 +88,9 @@ export class BotService {
 				const usr = await this.findUserByPhone(context.message.contact.phone_number)
 				if (usr) {
 					await this.updateBotUserWithId(context.from.id, { userId: usr.id })
-					await context.reply("Tabriklaymiz. Muvaffaqiyatli ro'yhatdan o'tdingiz!")
+					await context.reply("Tabriklaymiz. Muvaffaqiyatli ro'yhatdan o'tdingiz!", {
+						reply_markup: { remove_keyboard: true },
+					})
 				} else {
 					await context.reply("Bizda sizning ma'lumotlar topilmadi.")
 				}
@@ -112,14 +114,58 @@ export class BotService {
 		}
 	}
 
-	async sendSellingToClient(selling: SellingFindOneData, isUpdated: boolean = false) {
+	async sendSellingToClient(selling: SellingFindOneData) {
 		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer(selling)
 
-		const info = {
-			caption: isUpdated ? '🧾 Haridingiz yangilandi. Hisobot ilova qilindi.' : '🧾 Haridingiz bo‘yicha hisobot tayyorlandi.',
+		let caption = ''
+		const baseInfo = `🧾 Продажа\n\n` + `🆔 Заказ: ${selling.publicId}\n` + `💰 Сумма: ${selling.totalPrice.toNumber()}\n` + `💸 Долг: ${selling.debt.toNumber()}\n`
+
+		const clientInfo = `👤 Клиент: ${selling.client.fullname}\n` + `📊 Общий долг: ${selling.client.debt.toNumber()}`
+
+		let productInfo = ''
+
+		const findProductByStatus = (status: BotSellingProductTitleEnum) => selling.products.find((prod) => prod.status === status)
+
+		switch (selling.title) {
+			case BotSellingTitleEnum.new:
+				caption = `🧾 Новая продажа\n\n${baseInfo}\n${clientInfo}`
+				break
+
+			case BotSellingTitleEnum.added: {
+				const newProduct = findProductByStatus(BotSellingProductTitleEnum.new)
+				if (newProduct) {
+					productInfo = `\n📦 Товар добавлен\n` + `• Название: ${newProduct.product.name}\n` + `• Цена: ${newProduct.price.toNumber()}\n` + `• Кол-во: ${newProduct.count}`
+				}
+				caption = `${baseInfo}${productInfo}\n\n${clientInfo}`
+				break
+			}
+
+			case BotSellingTitleEnum.updated: {
+				const updatedProduct = findProductByStatus(BotSellingProductTitleEnum.updated)
+				if (updatedProduct) {
+					productInfo =
+						`\n♻️ Товар обновлён\n` + `• Название: ${updatedProduct.product.name}\n` + `• Цена: ${updatedProduct.price.toNumber()}\n` + `• Кол-во: ${updatedProduct.count}`
+				}
+				caption = `${baseInfo}${productInfo}\n\n${clientInfo}`
+				break
+			}
+
+			case BotSellingTitleEnum.deleted: {
+				const deletedProduct = findProductByStatus(BotSellingProductTitleEnum.deleted)
+				if (deletedProduct) {
+					productInfo =
+						`\n🗑️ Товар удалён\n` + `• Название: ${deletedProduct.product.name}\n` + `• Цена: ${deletedProduct.price.toNumber()}\n` + `• Кол-во: ${deletedProduct.count}`
+				}
+				caption = `${baseInfo}${productInfo}\n\n${clientInfo}`
+				break
+			}
+
+			default:
+				caption = `${baseInfo}\n${clientInfo}`
+				break
 		}
 
-		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: 'harid.pdf' }, info)
+		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: `${selling.client.fullname}.pdf` }, { caption })
 	}
 
 	async sendSellingToChannel(selling: SellingFindOneData) {
@@ -177,7 +223,7 @@ export class BotService {
 				break
 		}
 
-		await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: 'sotuv.pdf' }, { caption })
+		await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: `${selling.client.fullname}.pdf` }, { caption })
 	}
 
 	async sendPaymentToChannel(payment: Partial<PaymentModel>, isModified: boolean = false, client: ClientFindOneData) {

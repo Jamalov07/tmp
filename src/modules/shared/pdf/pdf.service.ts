@@ -136,56 +136,53 @@ export class PdfService {
 				},
 				{
 					table: {
-						widths: ['auto', '*', 'auto', 'auto', 'auto'],
+						headerRows: 1,
+						widths: ['auto', '*', 50, 70, 80],
 						body: [
 							[
-								{ text: '№', bold: true },
-								{ text: 'Товар или услуга', bold: true },
-								{ text: 'Кол-во', bold: true },
-								{ text: 'Цена', bold: true },
-								{ text: 'Сумма', bold: true },
+								{ text: '№', bold: true, alignment: 'center', fillColor: '#f2f2f2', fontSize: 13 },
+								{ text: 'Товар или услуга', bold: true, alignment: 'center', fillColor: '#f2f2f2', fontSize: 13 },
+								{ text: 'Кол-во', bold: true, alignment: 'center', fillColor: '#f2f2f2', fontSize: 13 },
+								{ text: 'Цена', bold: true, alignment: 'center', fillColor: '#f2f2f2', fontSize: 13 },
+								{ text: 'Сумма', bold: true, alignment: 'center', fillColor: '#f2f2f2', fontSize: 13 },
 							],
 							...selling.products
 								.filter((pro) => pro.status !== BotSellingProductTitleEnum.deleted)
 								.map((item, index) => {
-									const decoration = item.status === BotSellingProductTitleEnum.deleted ? 'lineThrough' : undefined
-									const row = [
-										{ text: index + 1 /* fillColor: this.getColor(item.status), decoration: decoration */ },
-										{ text: item.product.name /* fillColor: this.getColor(item.status), decoration: decoration */ },
-										{ text: item.count.toString() /* fillColor: this.getColor(item.status), decoration: decoration */ },
-										{ text: item.price.toNumber().toString() /* fillColor: this.getColor(item.status), decoration: decoration */ },
-										{ text: item.price.mul(item.count).toNumber().toString() /* fillColor: this.getColor(item.status), decoration: decoration */ },
+									return [
+										{ text: index + 1, fontSize: 12, alignment: 'center' },
+										{ text: item.product.name, fontSize: 12, alignment: 'left' },
+										{ text: item.count.toString(), fontSize: 12, alignment: 'center' },
+										{ text: item.price.toNumber().toString(), fontSize: 12, alignment: 'right' },
+										{ text: item.price.mul(item.count).toNumber().toString(), fontSize: 12, alignment: 'right' },
 									]
-									return row
 								}),
 						],
 					},
 					layout: {
-						hLineWidth: function (i, node) {
-							// **pastki border qalin, qolganlari yupqa**
-							return i === node.table.body.length ? 1.5 : 0.5
+						hLineWidth: function () {
+							return 0.8
 						},
-						vLineWidth: function (i, node) {
-							// **o‘ng border qalin, qolganlari yupqa**
-							return i === node.table.widths.length ? 1.5 : 0.5
+						vLineWidth: function () {
+							return 0.8
 						},
-						hLineColor: function (i, node) {
-							return i === node.table.body.length ? '#000' : '#aaa'
+						hLineColor: function () {
+							return '#666'
 						},
-						vLineColor: function (i, node) {
-							return i === node.table.widths.length ? '#000' : '#aaa'
+						vLineColor: function () {
+							return '#666'
 						},
 						paddingLeft: function () {
-							return 5
+							return 6
 						},
 						paddingRight: function () {
-							return 5
+							return 6
 						},
 						paddingTop: function () {
-							return 3
+							return 6
 						},
 						paddingBottom: function () {
-							return 3
+							return 6
 						},
 					},
 					margin: [0, 10, 0, 10],
