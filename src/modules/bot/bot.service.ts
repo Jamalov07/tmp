@@ -115,7 +115,7 @@ export class BotService {
 	}
 
 	async sendSellingToClient(selling: SellingFindOneData) {
-		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer(selling)
+		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer2(selling)
 
 		let caption = ''
 		const baseInfo = `🧾 Продажа\n\n` + `🆔 Заказ: ${selling.publicId}\n` + `💰 Сумма: ${selling.totalPrice.toNumber()}\n` + `💸 Долг: ${selling.debt.toNumber()}\n`
