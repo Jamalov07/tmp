@@ -168,8 +168,8 @@ export class BotService {
 		const chatInfo = await this.bot.telegram.getChat(channelId).catch((undefined) => undefined)
 		if (chatInfo) {
 			const paymentType = {
-				client: 'для продажи',
-				selling: 'для клиента',
+				client: 'для клиента',
+				selling: 'для продажи',
 			}
 
 			const totalPayment = payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
