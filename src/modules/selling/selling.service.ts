@@ -218,6 +218,10 @@ export class SellingService {
 				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
 					console.log('channel', e)
 				})
+
+				if (totalPayment.toNumber()) {
+					await this.botService.sendPaymentToChannel(sellingInfo.payment, false, client.data)
+				}
 			}
 		}
 
@@ -277,6 +281,10 @@ export class SellingService {
 				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
 					console.log(e)
 				})
+
+				if (totalPayment.toNumber()) {
+					await this.botService.sendPaymentToChannel(sellingInfo.payment, true, client.data)
+				}
 			}
 		}
 

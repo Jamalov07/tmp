@@ -154,6 +154,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 				card: true,
 				cash: true,
 				description: true,
+				type: true,
 				other: true,
 				transfer: true,
 				updatedAt: true,
@@ -174,6 +175,20 @@ export class ClientPaymentRepository implements OnModuleInit {
 				transfer: body.transfer,
 				userId: body.userId,
 				description: body.description,
+			},
+			select: {
+				id: true,
+				staff: { select: { id: true, fullname: true, phone: true } },
+				user: { select: { id: true, fullname: true, phone: true } },
+				card: true,
+				cash: true,
+				description: true,
+				type: true,
+				other: true,
+				transfer: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
 			},
 		})
 

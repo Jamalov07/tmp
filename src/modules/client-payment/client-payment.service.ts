@@ -15,22 +15,25 @@ import { Decimal } from '@prisma/client/runtime/library'
 import { ServiceTypeEnum } from '@prisma/client'
 import { ExcelService } from '../shared'
 import { Response } from 'express'
+import { BotService } from '../bot'
 
 @Injectable()
 export class ClientPaymentService {
 	private readonly clientPaymentRepository: ClientPaymentRepository
 	private readonly clientService: ClientService
 	private readonly excelService: ExcelService
+	private readonly botService: BotService
 
 	constructor(
 		clientPaymentRepository: ClientPaymentRepository,
-		@Inject(forwardRef(() => ClientService))
-		clientService: ClientService,
+		@Inject(forwardRef(() => ClientService)) clientService: ClientService,
 		excelService: ExcelService,
+		botService: BotService,
 	) {
 		this.clientPaymentRepository = clientPaymentRepository
 		this.clientService = clientService
 		this.excelService = excelService
+		this.botService = botService
 	}
 
 	async findMany(query: ClientPaymentFindManyRequest) {
@@ -108,13 +111,21 @@ export class ClientPaymentService {
 
 		const clientPayment = await this.clientPaymentRepository.createOne({ ...body, staffId: request.user.id })
 
+		const client = await this.clientService.findOne({ id: clientPayment.user.id })
+
+		await this.botService.sendPaymentToChannel(clientPayment, false, client.data)
+
 		return createResponse({ data: clientPayment, success: { messages: ['create one success'] } })
 	}
 
 	async updateOne(query: ClientPaymentGetOneRequest, body: ClientPaymentUpdateOneRequest) {
 		await this.getOne(query)
 
-		await this.clientPaymentRepository.updateOne(query, { ...body })
+		const clientPayment = await this.clientPaymentRepository.updateOne(query, { ...body })
+
+		const client = await this.clientService.findOne({ id: clientPayment.user.id })
+
+		await this.botService.sendPaymentToChannel(clientPayment, true, client.data)
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}

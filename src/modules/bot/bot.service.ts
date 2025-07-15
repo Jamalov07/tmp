@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common'
 import { PdfService, PrismaService } from '../shared'
 import { Context, Markup, Telegraf } from 'telegraf'
 import { Message } from 'telegraf/typings/core/types/typegram'
-import { BotLanguageEnum } from '@prisma/client'
+import { BotLanguageEnum, PaymentModel, ServiceTypeEnum } from '@prisma/client'
 import { SellingFindOneData } from '../selling'
 import { InjectBot } from 'nestjs-telegraf'
 import { MyBotName } from './constants'
 import { ConfigService } from '@nestjs/config'
 import { BotSellingProductTitleEnum, BotSellingTitleEnum } from '../selling/enums'
+import { ClientFindOneData } from '../client'
 
 @Injectable()
 export class BotService {
@@ -162,6 +163,23 @@ export class BotService {
 		}
 	}
 
+	async sendPaymentToChannel(payment: Partial<PaymentModel>, isModified: boolean = false, client: ClientFindOneData) {
+		const channelId = this.configService.getOrThrow<string>('bot.paymentChannelId')
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch((undefined) => undefined)
+		if (chatInfo) {
+			const paymentType = {
+				client: 'для продажи',
+				selling: 'для клиента',
+			}
+
+			const totalPayment = payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
+
+			const title = `${isModified ? 'Обновлено\n\n' : ''}тип: ${paymentType[payment.type]}\nКлиент: ${client.fullname}\n\nСумма: ${totalPayment.toNumber()}\n\nНаличными: ${payment.cash.toNumber()}\nКарты: ${payment.card.toNumber()}\nПеречислением: ${payment.transfer.toNumber()}\nДругие: ${payment.other.toNumber()}\nДата: ${this.formatDate(payment.createdAt)}\nИнфо: ${payment.description}\nОбщий долг: ${client.debt.toNumber()}\nid: ${payment.id}`
+
+			await this.bot.telegram.sendMessage(channelId, title)
+		}
+	}
+
 	private async findBotUserById(id: number | string) {
 		const user = await this.prisma.botUserModel.findFirst({ where: { id: String(id) }, select: { id: true, language: true, isActive: true, userId: true, user: true } })
 		return user
@@ -180,5 +198,15 @@ export class BotService {
 	private async findUserByPhone(phone: string) {
 		const user = await this.prisma.userModel.findFirst({ where: { phone: phone } })
 		return user
+	}
+	private formatDate(date: Date): string {
+		const dd = String(date.getDate()).padStart(2, '0')
+		const mm = String(date.getMonth() + 1).padStart(2, '0') // 0-based
+		const yyyy = date.getFullYear()
+
+		const hh = String(date.getHours()).padStart(2, '0')
+		const min = String(date.getMinutes()).padStart(2, '0')
+
+		return `${dd}.${mm}.${yyyy} ${hh}:${min}`
 	}
 }
