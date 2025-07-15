@@ -165,7 +165,7 @@ export class BotService {
 				break
 		}
 
-		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: `${selling.client.fullname}.pdf` }, { caption })
+		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: `xarid.pdf` }, { caption })
 	}
 
 	async sendSellingToChannel(selling: SellingFindOneData) {
@@ -223,7 +223,7 @@ export class BotService {
 				break
 		}
 
-		await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: `${selling.client.fullname}.pdf` }, { caption })
+		await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: `${selling.client.phone}.pdf` }, { caption })
 	}
 
 	async sendPaymentToChannel(payment: Partial<PaymentModel>, isModified: boolean = false, client: ClientFindOneData) {
