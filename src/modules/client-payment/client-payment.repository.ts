@@ -34,6 +34,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
 					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
 				},
+				userId: query.userId,
 				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 			select: {
@@ -90,6 +91,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
 					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
 				},
+				userId: query.userId,
 				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 		})

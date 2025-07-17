@@ -33,6 +33,7 @@ export class SellingRepository implements OnModuleInit {
 			where: {
 				status: query.status,
 				staffId: query.staffId,
+				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				date: {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
@@ -92,6 +93,7 @@ export class SellingRepository implements OnModuleInit {
 			where: {
 				status: query.status,
 				staffId: query.staffId,
+				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				date: {
 					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
