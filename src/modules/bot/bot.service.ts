@@ -86,7 +86,6 @@ export class BotService {
 		if (user && 'contact' in context.message) {
 			if (user.language) {
 				const usr = await this.findUserByPhone(context.message.contact.phone_number)
-				console.log(context)
 				if (usr) {
 					await this.updateBotUserWithId(context.from.id, { userId: usr.id })
 					await context.reply("Tabriklaymiz. Muvaffaqiyatli ro'yhatdan o'tdingiz!", {
@@ -273,10 +272,11 @@ export class BotService {
 	}
 
 	private async findUserByPhone(phone: string) {
-		const user = await this.prisma.userModel.findFirst({ where: { phone: phone } })
-		console.log(phone, user)
+		const cleanedPhone = phone.replace(/^\+/, '')
+		const user = await this.prisma.userModel.findFirst({ where: { phone: cleanedPhone } })
 		return user
 	}
+
 	private formatDate(date: Date): string {
 		const dd = String(date.getDate()).padStart(2, '0')
 		const mm = String(date.getMonth() + 1).padStart(2, '0') // 0-based
