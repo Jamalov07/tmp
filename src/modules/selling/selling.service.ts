@@ -258,27 +258,27 @@ export class SellingService {
 			return acc.plus(new Decimal(product.count).mul(product.price))
 		}, new Decimal(0))
 
+		const client = await this.clientService.findOne({ id: body.clientId })
+		const sellingInfo = {
+			...updatedSelling,
+			client: client.data,
+			title: BotSellingTitleEnum.new,
+			totalPayment: totalPayment,
+			totalPrice: totalPrice,
+			debt: totalPrice.minus(totalPayment),
+			products: updatedSelling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
+		}
+
+		if (updatedSelling.send || body.send) {
+			if (updatedSelling.client?.telegram?.id) {
+				await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
+					console.log(e)
+					await this.updateOne({ id: updatedSelling.id }, { sended: false })
+				})
+			}
+		}
+
 		if (shouldSend) {
-			const client = await this.clientService.findOne({ id: body.clientId })
-			const sellingInfo = {
-				...updatedSelling,
-				client: client.data,
-				title: BotSellingTitleEnum.new,
-				totalPayment: totalPayment,
-				totalPrice: totalPrice,
-				debt: totalPrice.minus(totalPayment),
-				products: updatedSelling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
-			}
-
-			if (updatedSelling.send) {
-				if (updatedSelling.client?.telegram?.id) {
-					await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
-						console.log(e)
-						await this.updateOne({ id: updatedSelling.id }, { sended: false })
-					})
-				}
-			}
-
 			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
 				console.log(e)
 			})
