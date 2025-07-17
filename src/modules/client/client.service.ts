@@ -48,6 +48,7 @@ export class ClientService {
 			return {
 				id: c.id,
 				fullname: c.fullname,
+				telegram: c.telegram,
 				actions: c.actions,
 				createdAt: c.createdAt,
 				phone: c.phone,

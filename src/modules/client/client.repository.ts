@@ -40,6 +40,7 @@ export class ClientRepository implements OnModuleInit {
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				telegram: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, deletedAt: null },
 					select: { card: true, cash: true, other: true, transfer: true },
