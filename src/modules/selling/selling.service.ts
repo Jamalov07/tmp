@@ -245,7 +245,7 @@ export class SellingService {
 		}
 
 		let shouldSend = false
-		if (body.status === SellingStatusEnum.accepted) {
+		if (body.status === SellingStatusEnum.accepted && selling.data.status !== SellingStatusEnum.accepted) {
 			body.date = new Date()
 			shouldSend = true
 		}
