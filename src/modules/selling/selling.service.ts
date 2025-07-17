@@ -258,33 +258,33 @@ export class SellingService {
 			return acc.plus(new Decimal(product.count).mul(product.price))
 		}, new Decimal(0))
 
-		if (updatedSelling.send) {
-			if (shouldSend) {
-				const client = await this.clientService.findOne({ id: body.clientId })
-				const sellingInfo = {
-					...updatedSelling,
-					client: client.data,
-					title: BotSellingTitleEnum.new,
-					totalPayment: totalPayment,
-					totalPrice: totalPrice,
-					debt: totalPrice.minus(totalPayment),
-					products: updatedSelling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
-				}
+		if (shouldSend) {
+			const client = await this.clientService.findOne({ id: body.clientId })
+			const sellingInfo = {
+				...updatedSelling,
+				client: client.data,
+				title: BotSellingTitleEnum.new,
+				totalPayment: totalPayment,
+				totalPrice: totalPrice,
+				debt: totalPrice.minus(totalPayment),
+				products: updatedSelling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
+			}
 
+			if (updatedSelling.send) {
 				if (updatedSelling.client?.telegram?.id) {
 					await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
 						console.log(e)
 						await this.updateOne({ id: updatedSelling.id }, { sended: false })
 					})
 				}
+			}
 
-				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
-					console.log(e)
-				})
+			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+				console.log(e)
+			})
 
-				if (totalPayment.toNumber()) {
-					await this.botService.sendPaymentToChannel(sellingInfo.payment, true, client.data)
-				}
+			if (totalPayment.toNumber()) {
+				await this.botService.sendPaymentToChannel(sellingInfo.payment, true, client.data)
 			}
 		}
 

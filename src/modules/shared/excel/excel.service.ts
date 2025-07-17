@@ -1437,7 +1437,7 @@ export class ExcelService {
 
 	async supplierDeedWithProductDownloadOne(res: Response, query: ClientFindOneRequest) {
 		const deedStartDate = query.deedStartDate ? new Date(new Date(query.deedStartDate).setHours(0, 0, 0, 0)) : undefined
-		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(0, 0, 0, 0)) : undefined
+		const deedEndDate = query.deedEndDate ? new Date(new Date(query.deedEndDate).setHours(23, 59, 59, 999)) : undefined
 
 		const supplier = await this.prisma.userModel.findFirst({
 			where: { id: query.id },
