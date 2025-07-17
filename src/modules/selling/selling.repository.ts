@@ -113,6 +113,10 @@ export class SellingRepository implements OnModuleInit {
 			where: {
 				id: { in: query.ids },
 				status: query.status,
+				date: {
+					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
+					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
+				},
 			},
 			select: {
 				id: true,
