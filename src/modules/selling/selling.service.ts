@@ -245,7 +245,11 @@ export class SellingService {
 		}
 
 		let shouldSend = false
-		if (body.status === SellingStatusEnum.accepted && selling.data.status !== SellingStatusEnum.accepted) {
+		let isFirstSend = true
+		if (body.status === SellingStatusEnum.accepted) {
+			if (selling.data.status !== SellingStatusEnum.accepted) {
+				isFirstSend = true
+			}
 			body.date = new Date()
 			shouldSend = true
 		}
@@ -262,7 +266,7 @@ export class SellingService {
 		const sellingInfo = {
 			...updatedSelling,
 			client: client.data,
-			title: BotSellingTitleEnum.new,
+			title: isFirstSend ? BotSellingTitleEnum.new : undefined,
 			totalPayment: totalPayment,
 			totalPrice: totalPrice,
 			debt: totalPrice.minus(totalPayment),
@@ -284,7 +288,7 @@ export class SellingService {
 			})
 
 			if (totalPayment.toNumber()) {
-				await this.botService.sendPaymentToChannel(sellingInfo.payment, true, client.data)
+				await this.botService.sendPaymentToChannel(sellingInfo.payment, !isFirstSend, client.data)
 			}
 		}
 
