@@ -325,7 +325,7 @@ export class SellingService {
 		const [daily, weekly, monthly, yearly] = await Promise.all(
 			(['daily', 'weekly', 'monthly', 'yearly'] as const).map(async (type) => {
 				const { startDate, endDate } = getDateRange(type)
-				const sellings = await this.sellingRepository.getMany({ pagination: false, startDate, endDate })
+				const sellings = await this.sellingRepository.getMany({ pagination: false, startDate, endDate, status: SellingStatusEnum.accepted })
 
 				return sellings.reduce((acc, selling) => {
 					const totalPrice = selling.products.reduce((acc, product) => {
@@ -337,7 +337,7 @@ export class SellingService {
 			}),
 		)
 
-		const allSellings = await this.sellingRepository.getMany({ pagination: false })
+		const allSellings = await this.sellingRepository.getMany({ pagination: false, status: SellingStatusEnum.accepted })
 
 		const ourDebt = allSellings.reduce((acc, selling) => {
 			const payment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
