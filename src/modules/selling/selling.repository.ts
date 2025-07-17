@@ -234,6 +234,7 @@ export class SellingRepository implements OnModuleInit {
 				clientId: body.clientId,
 				deletedAt: body.deletedAt,
 				sended: body.sended,
+				send: body.send,
 				payment: {
 					update: {
 						card: body.payment?.card,

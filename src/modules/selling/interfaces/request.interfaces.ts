@@ -24,7 +24,7 @@ export declare interface SellingCreateOneRequest extends Pick<SellingRequired, '
 	products?: SellingProduct[]
 }
 
-export declare interface SellingUpdateOneRequest extends Pick<SellingOptional, 'deletedAt' | 'clientId' | 'date' | 'status' | 'staffId' | 'sended'> {
+export declare interface SellingUpdateOneRequest extends Pick<SellingOptional, 'deletedAt' | 'clientId' | 'date' | 'status' | 'staffId' | 'sended' | 'send'> {
 	payment?: SellingPayment
 	products?: SellingProduct[]
 	productIdsToRemove?: string[]

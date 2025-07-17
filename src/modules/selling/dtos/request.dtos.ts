@@ -53,7 +53,10 @@ export class SellingCreateOneRequestDto
 	products?: SellingProduct[]
 }
 
-export class SellingUpdateOneRequestDto extends IntersectionType(PickType(SellingOptionalDto, ['deletedAt', 'clientId', 'date', 'status'])) implements SellingUpdateOneRequest {
+export class SellingUpdateOneRequestDto
+	extends IntersectionType(PickType(SellingOptionalDto, ['deletedAt', 'clientId', 'date', 'status', 'send']))
+	implements SellingUpdateOneRequest
+{
 	@ApiPropertyOptional({ type: SellingPaymentDto })
 	@IsOptional()
 	@ValidateNested()
