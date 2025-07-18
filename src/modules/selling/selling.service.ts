@@ -254,7 +254,7 @@ export class SellingService {
 			shouldSend = true
 		}
 
-		const updatedSelling = await this.sellingRepository.updateOne(query, { ...body, status: body.status, staffId: selling.data.staffId })
+		const updatedSelling = await this.sellingRepository.updateOne(query, { ...body, status: body.status, staffId: selling.data.staff.id })
 
 		const totalPayment = updatedSelling.payment.card.plus(updatedSelling.payment.cash).plus(updatedSelling.payment.other).plus(updatedSelling.payment.transfer)
 
@@ -296,9 +296,14 @@ export class SellingService {
 	}
 
 	async deleteOne(query: SellingDeleteOneRequest) {
-		await this.getOne(query)
+		const selling = await this.getOne(query)
 		if (query.method === DeleteMethodEnum.hard) {
 			await this.sellingRepository.deleteOne(query)
+			await this.botService.sendDeletedSellingToChannel(selling.data)
+			const totalPayment = selling.data.payment.card.plus(selling.data.payment.cash).plus(selling.data.payment.other).plus(selling.data.payment.transfer)
+			if (totalPayment.toNumber()) {
+				await this.botService.sendDeletedPaymentToChannel(selling.data.payment, selling.data.client)
+			}
 		} else {
 			// await this.sellingRepository.updateOne(query, { deletedAt: new Date() })
 		}

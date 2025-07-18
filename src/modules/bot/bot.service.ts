@@ -168,6 +168,21 @@ export class BotService {
 		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: `xarid.pdf` }, { caption })
 	}
 
+	async sendDeletedSellingToChannel(selling: SellingFindOneData) {
+		const channelId = this.configService.getOrThrow<string>('bot.sellingChannelId')
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+		if (!chatInfo) return
+
+		let caption = ''
+		const baseInfo = `🧾 Продажа\n\n` + `🆔 Заказ: ${selling.publicId}\n` + `💰 Сумма: ${selling.totalPrice.toNumber()}\n` + `💸 Долг: ${selling.debt.toNumber()}\n`
+
+		const clientInfo = `👤 Клиент: ${selling.client.fullname}\n` + `📊 Общий долг: ${selling.client.debt.toNumber()}`
+
+		caption = `🗑️ Продажа удалено\n\n${baseInfo}\n\n${clientInfo}`
+
+		await this.bot.telegram.sendMessage(channelId, caption)
+	}
+
 	async sendSellingToChannel(selling: SellingFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.sellingChannelId')
 		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
@@ -241,6 +256,36 @@ export class BotService {
 
 		const title =
 			`${isModified ? '♻️ Обновлено\n\n' : ''}` +
+			`📌 Тип: ${paymentType[payment.type] ?? 'неизвестно'}\n` +
+			`👤 Клиент: ${client.fullname}\n` +
+			`📞 Телефон: ${client.phone}\n` +
+			`💰 Сумма: ${totalPayment.toNumber()}\n\n` +
+			`💵 Наличными: ${payment.cash.toNumber()}\n` +
+			`💳 Картой: ${payment.card.toNumber()}\n` +
+			`🏦 Переводом: ${payment.transfer.toNumber()}\n` +
+			`📦 Другое: ${payment.other.toNumber()}\n` +
+			`📅 Дата: ${this.formatDate(payment.createdAt)}\n` +
+			`📝 Описание: ${payment.description ?? '-'}\n` +
+			`📊 Общий долг: ${client.debt.toNumber()}`
+
+		await this.bot.telegram.sendMessage(channelId, title)
+	}
+
+	async sendDeletedPaymentToChannel(payment: Partial<PaymentModel>, client: ClientFindOneData) {
+		const channelId = this.configService.getOrThrow<string>('bot.paymentChannelId')
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+
+		if (!chatInfo) return
+
+		const paymentType: Record<string, string> = {
+			client: 'для клиента',
+			selling: 'для продажи',
+		}
+
+		const totalPayment = payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
+
+		const title =
+			`'🗑️ Удалено\n\n` +
 			`📌 Тип: ${paymentType[payment.type] ?? 'неизвестно'}\n` +
 			`👤 Клиент: ${client.fullname}\n` +
 			`📞 Телефон: ${client.phone}\n` +

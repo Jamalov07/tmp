@@ -153,6 +153,23 @@ export class SellingRepository implements OnModuleInit {
 	async getOne(query: SellingGetOneRequest) {
 		const selling = await this.prisma.sellingModel.findFirst({
 			where: { id: query.id, status: query.status, staffId: query.staffId },
+			select: {
+				id: true,
+				status: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				date: true,
+				send: true,
+				sended: true,
+				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
+				products: {
+					orderBy: [{ createdAt: 'desc' }],
+					select: { createdAt: true, id: true, price: true, count: true, product: { select: { id: true, createdAt: true, name: true } } },
+				},
+			},
 		})
 
 		return selling
@@ -283,11 +300,13 @@ export class SellingRepository implements OnModuleInit {
 	async deleteOne(query: SellingDeleteOneRequest) {
 		const selling = await this.prisma.sellingModel.delete({
 			where: { id: query.id },
-			select: { products: { select: { product: true, count: true } } },
+			select: { products: { select: { product: true, count: true } }, status: true },
 		})
 
-		for (const product of selling.products) {
-			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { increment: product.count } } })
+		if (selling.status === SellingStatusEnum.accepted) {
+			for (const product of selling.products) {
+				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { increment: product.count } } })
+			}
 		}
 
 		return selling

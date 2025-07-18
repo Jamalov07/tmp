@@ -171,7 +171,7 @@ export class ReturningService {
 		if (query.method === DeleteMethodEnum.hard) {
 			await this.returningRepository.deleteOne(query)
 		} else {
-			await this.returningRepository.updateOne(query, { deletedAt: new Date() })
+			// await this.returningRepository.updateOne(query, { deletedAt: new Date() })
 		}
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}

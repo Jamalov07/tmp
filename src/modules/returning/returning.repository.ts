@@ -243,7 +243,15 @@ export class ReturningRepository implements OnModuleInit {
 	async deleteOne(query: ReturningDeleteOneRequest) {
 		const returning = await this.prisma.returningModel.delete({
 			where: { id: query.id },
+			select: { products: { select: { product: true, count: true } }, status: true },
 		})
+
+		if (returning.status === SellingStatusEnum.accepted) {
+			for (const product of returning.products) {
+				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
+			}
+		}
+		s
 
 		return returning
 	}
