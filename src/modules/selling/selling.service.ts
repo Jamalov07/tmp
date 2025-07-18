@@ -296,13 +296,12 @@ export class SellingService {
 	}
 
 	async deleteOne(query: SellingDeleteOneRequest) {
-		const selling = await this.getOne(query)
+		const selling = await this.findOne(query)
 		if (query.method === DeleteMethodEnum.hard) {
 			await this.sellingRepository.deleteOne(query)
 			await this.botService.sendDeletedSellingToChannel(selling.data)
 			const totalPayment = selling.data.payment.card.plus(selling.data.payment.cash).plus(selling.data.payment.other).plus(selling.data.payment.transfer)
-			console.log(selling.data, 'butotal', totalPayment)
-			if (totalPayment?.toNumber()) {
+			if (totalPayment.toNumber()) {
 				await this.botService.sendDeletedPaymentToChannel(selling.data.payment, selling.data.client)
 			}
 		} else {
