@@ -301,7 +301,8 @@ export class SellingService {
 			await this.sellingRepository.deleteOne(query)
 			await this.botService.sendDeletedSellingToChannel(selling.data)
 			const totalPayment = selling.data.payment.card.plus(selling.data.payment.cash).plus(selling.data.payment.other).plus(selling.data.payment.transfer)
-			if (totalPayment.toNumber()) {
+			console.log(selling.data, 'butotal', totalPayment)
+			if (totalPayment?.toNumber()) {
 				await this.botService.sendDeletedPaymentToChannel(selling.data.payment, selling.data.client)
 			}
 		} else {
