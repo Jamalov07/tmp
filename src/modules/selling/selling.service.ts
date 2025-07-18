@@ -299,10 +299,15 @@ export class SellingService {
 		const selling = await this.findOne(query)
 		if (query.method === DeleteMethodEnum.hard) {
 			await this.sellingRepository.deleteOne(query)
-			await this.botService.sendDeletedSellingToChannel(selling.data)
+			const client = await this.clientService.findOne({ id: selling.data.client.id })
+			const sellingInfo = {
+				...selling.data,
+				client: client.data,
+			}
+			await this.botService.sendDeletedSellingToChannel(sellingInfo)
 			const totalPayment = selling.data.payment.card.plus(selling.data.payment.cash).plus(selling.data.payment.other).plus(selling.data.payment.transfer)
 			if (totalPayment.toNumber()) {
-				await this.botService.sendDeletedPaymentToChannel(selling.data.payment, selling.data.client)
+				await this.botService.sendDeletedPaymentToChannel(selling.data.payment, client.data)
 			}
 		} else {
 			// await this.sellingRepository.updateOne(query, { deletedAt: new Date() })
