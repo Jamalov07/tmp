@@ -69,6 +69,7 @@ export class SellingRepository implements OnModuleInit {
 			select: {
 				id: true,
 				status: true,
+				publicId: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,

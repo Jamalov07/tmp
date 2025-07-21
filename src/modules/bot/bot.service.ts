@@ -285,7 +285,7 @@ export class BotService {
 		const totalPayment = payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
 
 		const title =
-			`'🗑️ Удалено\n\n` +
+			`🗑️ Удалено\n\n` +
 			`📌 Тип: ${paymentType[payment.type] ?? 'неизвестно'}\n` +
 			`👤 Клиент: ${client.fullname}\n` +
 			`📞 Телефон: ${client.phone}\n` +

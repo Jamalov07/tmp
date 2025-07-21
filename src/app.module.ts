@@ -20,15 +20,17 @@ import {
 	ProductMVModule,
 	BotModule,
 	PdfModule,
+	CommonModule,
+	SyncronizeModule,
 } from '@module'
-import { appConfig, botConfig, databaseConfig, jwtConfig } from '@config'
+import { appConfig, botConfig, databaseConfig, jwtConfig, oldServiceConfig } from '@config'
 import { AuthGuard, CheckPermissionGuard } from '@common'
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			load: [appConfig, databaseConfig, jwtConfig, botConfig],
+			load: [appConfig, databaseConfig, jwtConfig, botConfig, oldServiceConfig],
 		}),
 		PrismaModule,
 		ActionModule,
@@ -39,16 +41,18 @@ import { AuthGuard, CheckPermissionGuard } from '@common'
 		SupplierModule,
 		StaffPaymentModule,
 		SupplierPaymentModule,
-		ClientPaymentModule,
-		SellingModule,
+		// ClientPaymentModule,
+		// SellingModule,
 		ArrivalModule,
 		ReturningModule,
-		ProductMVModule,
+		// ProductMVModule,
 		ProductModule,
 		CronModule,
 		ExcelModule,
 		PdfModule,
-		BotModule,
+		// BotModule,
+		CommonModule,
+		SyncronizeModule,
 	],
 	controllers: [],
 	providers: [AuthGuard, CheckPermissionGuard],

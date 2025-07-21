@@ -17,3 +17,9 @@ export declare interface BotConfigOptions {
 	sellingChannelId: string
 	paymentChannelId: string
 }
+
+export declare interface OldServiceConfigOptions {
+	baseUrl: string
+	user: string
+	password: string
+}

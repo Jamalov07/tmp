@@ -251,7 +251,6 @@ export class ReturningRepository implements OnModuleInit {
 				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 			}
 		}
-		s
 
 		return returning
 	}

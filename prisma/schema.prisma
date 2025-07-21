@@ -87,7 +87,7 @@ model PermissionModel {
 
 model UserModel {
   id        String   @map("id")        @db.Uuid       @default(dbgenerated("GEN_RANDOM_UUID()"))
-  phone     String   @map("phone")     @db.VarChar()  @unique 
+  phone     String   @map("phone")     @db.VarChar()    
   fullname  String   @map("fullname")  @db.VarChar()
   password  String   @map("password")  @db.VarChar()  
   token     String?  @map("token")     @db.VarChar()  
@@ -276,7 +276,6 @@ model ProductModel {
 
   @@id([ id ])
   @@index([ id ])
-  @@unique([ name ])
   @@map("product")
 }
 
