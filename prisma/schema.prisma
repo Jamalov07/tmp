@@ -84,7 +84,6 @@ model PermissionModel {
   @@map("permission")
 }
 
-
 model UserModel {
   id        String   @map("id")        @db.Uuid       @default(dbgenerated("GEN_RANDOM_UUID()"))
   phone     String   @map("phone")     @db.VarChar()    
@@ -114,6 +113,9 @@ model UserModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ phone ])
+  @@index([ type ])
+  @@index([ createdAt ])
   @@map("user")
 }
 
@@ -127,6 +129,7 @@ model BotUserModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ userId ])
   @@map("bot_user")
 }
 
@@ -159,9 +162,13 @@ model PaymentModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ userId ])
+  @@index([ type ])
+  @@index([ sellingId ])
+  @@index([ returningId ])
+  @@index([ arrivalId ])
   @@map("payment")
 }
-
 
 model SellingModel {
   id        String            @map("id")         @db.Uuid           @default(dbgenerated("GEN_RANDOM_UUID()"))
@@ -185,6 +192,10 @@ model SellingModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ date ])
+  @@index([ createdAt ])
+  @@index([ status ])
+  @@index([ clientId ])
   @@map("selling")
 }
 
@@ -207,6 +218,9 @@ model ArrivalModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ date ])
+  @@index([ createdAt ])
+  @@index([ supplierId ])
   @@map("arrival")
 }
 
@@ -229,6 +243,10 @@ model ReturningModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ createdAt ])
+  @@index([ date ])
+  @@index([ clientId ])
+  @@index([ status ])
   @@map("returning")
 }
 
@@ -257,6 +275,11 @@ model ProductMVModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ sellingId ])
+  @@index([ returningId ])
+  @@index([ arrivalId ])
+  @@index([ type ])
+  @@index([ createdAt ])
   @@map("product_mv")
 }
 
@@ -276,6 +299,8 @@ model ProductModel {
 
   @@id([ id ])
   @@index([ id ])
+  @@index([ name ])
+  @@index([ createdAt ])
   @@map("product")
 }
 
