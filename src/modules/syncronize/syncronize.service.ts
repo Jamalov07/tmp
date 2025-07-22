@@ -599,9 +599,15 @@ export class SyncronizeService {
 
 	async syncronizeAll() {
 		console.log('synchronization started')
-		await this.prisma.productMVModel.deleteMany({})
+		await this.prisma.arrivalModel.deleteMany({})
+		await this.prisma.botUserModel.deleteMany({})
 		await this.prisma.paymentModel.deleteMany({})
 		await this.prisma.productModel.deleteMany({})
+		await this.prisma.productMVModel.deleteMany({})
+		await this.prisma.returningModel.deleteMany({})
+		await this.prisma.sellingModel.deleteMany({})
+		await this.prisma.userModel.deleteMany({})
+
 		await this.staff()
 		await this.supplier()
 		await this.client()
@@ -619,7 +625,7 @@ export class SyncronizeService {
 
 	async syncronize() {
 		await this.signIn()
-		await this.syncronizeAll()
+		return await this.syncronizeAll()
 	}
 
 	async findAllStaffs() {

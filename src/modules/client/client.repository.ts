@@ -37,9 +37,7 @@ export class ClientRepository implements OnModuleInit {
 				fullname: true,
 				phone: true,
 				actions: true,
-				updatedAt: true,
 				createdAt: true,
-				deletedAt: true,
 				telegram: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, deletedAt: null },
@@ -57,9 +55,7 @@ export class ClientRepository implements OnModuleInit {
 				returnings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
-						date: true,
-						payment: { select: { cash: true, fromBalance: true } },
-						products: { select: { count: true, price: true } },
+						payment: { select: { fromBalance: true } },
 					},
 					orderBy: { date: 'desc' },
 				},

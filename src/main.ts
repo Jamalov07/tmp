@@ -24,7 +24,7 @@ async function bootstrap() {
 	app.useGlobalPipes(new ValidationPipe({ whitelist: true }))
 
 	app.useGlobalGuards(app.get(AuthGuard))
-	app.useGlobalInterceptors(new BigIntInterceptor())
+	// app.useGlobalInterceptors(new BigIntInterceptor())
 	app.useGlobalInterceptors(new DecimalToNumberInterceptor())
 	app.useGlobalInterceptors(new RequestQueryTimezoneInterceptor())
 	app.useGlobalInterceptors(new TimezoneInterceptor())
