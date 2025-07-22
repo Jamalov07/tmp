@@ -336,52 +336,61 @@ export class SellingService {
 			return { startDate: start, endDate: end }
 		}
 
-		const [daily, weekly, monthly, yearly] = await Promise.all(
-			(['daily', 'weekly', 'monthly', 'yearly'] as const).map(async (type) => {
-				const { startDate, endDate } = getDateRange(type)
-				const sellings = await this.sellingRepository.getMany({ pagination: false, startDate, endDate, status: SellingStatusEnum.accepted })
+		// Parallel hisoblash uchun barcha stats so'rovlarni yig'amiz
+		const statTypes = ['daily', 'weekly', 'monthly', 'yearly'] as const
 
-				return sellings.reduce((acc, selling) => {
-					const totalPrice = selling.products.reduce((acc, product) => {
-						return acc.plus(new Decimal(product.count).mul(product.price))
-					}, new Decimal(0))
+		const statsPromises = statTypes.map(async (type) => {
+			const { startDate, endDate } = getDateRange(type)
+			const sellings = await this.sellingRepository.getMany({
+				pagination: false,
+				startDate,
+				endDate,
+				status: SellingStatusEnum.accepted,
+			})
 
-					return acc.plus(totalPrice)
-				}, new Decimal(0))
-			}),
-		)
+			return sellings.reduce((sum, selling) => {
+				const total = selling.products.reduce((pSum, p) => pSum.plus(new Decimal(p.count).mul(p.price)), new Decimal(0))
+				return sum.plus(total)
+			}, new Decimal(0))
+		})
 
-		const allSellings = await this.sellingRepository.getMany({ pagination: false, status: SellingStatusEnum.accepted })
+		const allSellingsPromise = this.sellingRepository.getMany({
+			pagination: false,
+			status: SellingStatusEnum.accepted,
+		})
 
-		const ourDebt = allSellings.reduce((acc, selling) => {
+		const supplierDebtPromise = this.getSupplierStatsInArrival()
+
+		const [daily, weekly, monthly, yearly, allSellings, supplierDebt] = await Promise.all([
+			statsPromises[0],
+			statsPromises[1],
+			statsPromises[2],
+			statsPromises[3],
+			allSellingsPromise,
+			supplierDebtPromise,
+		])
+
+		// Client Stats
+		let ourDebt = new Decimal(0)
+		let theirDebt = new Decimal(0)
+		let totalBalance = new Decimal(0)
+
+		for (const selling of allSellings) {
 			const payment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
 
-			const totalPrice = selling.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.price))
-			}, new Decimal(0))
-			const debt = payment.minus(totalPrice)
-			return acc.plus(debt)
-		}, new Decimal(0))
+			const totalPrice = selling.products.reduce((sum, p) => sum.plus(new Decimal(p.count).mul(p.price)), new Decimal(0))
 
-		const theirDebt = allSellings.reduce((acc, selling) => {
-			const payment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
+			const diff = payment.minus(totalPrice)
+			const clientBalance = selling.client?.payments?.reduce((sum, p) => sum.plus(p.card.plus(p.cash).plus(p.other).plus(p.transfer)), new Decimal(0)) ?? new Decimal(0)
 
-			const totalPrice = selling.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.price))
-			}, new Decimal(0))
+			totalBalance = totalBalance.plus(clientBalance)
+			ourDebt = ourDebt.plus(diff)
+			theirDebt = theirDebt.plus(totalPrice.minus(payment))
+		}
 
-			const debt = totalPrice.minus(payment)
-			return acc.plus(debt)
-		}, new Decimal(0))
-
-		const totalBalance = allSellings.reduce((acc, selling) => {
-			const totalPayment = selling.client.payments.reduce((ac, payment) => {
-				return ac.plus(payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer))
-			}, new Decimal(0))
-			return acc.plus(totalPayment)
-		}, new Decimal(0))
-
-		const supplierDebt = await this.getSupplierStatsInArrival()
+		// Hisoblashni yakunlash
+		const finalOurDebt = ourDebt.minus(totalBalance).lt(0) ? new Decimal(0) : ourDebt
+		const finalTheirDebt = theirDebt.plus(totalBalance).lt(0) ? new Decimal(0) : theirDebt
 
 		return createResponse({
 			data: {
@@ -390,8 +399,8 @@ export class SellingService {
 				monthly,
 				yearly,
 				client: {
-					ourDebt: ourDebt.minus(totalBalance) < new Decimal(0) ? new Decimal(0) : ourDebt,
-					theirDebt: theirDebt.plus(totalBalance) < new Decimal(0) ? new Decimal(0) : theirDebt,
+					ourDebt: finalOurDebt,
+					theirDebt: finalTheirDebt,
 				},
 				supplier: supplierDebt,
 			},
@@ -401,38 +410,29 @@ export class SellingService {
 
 	async getSupplierStatsInArrival() {
 		const arrivals = await this.arrivalService.getMany({ pagination: false })
+		const list = arrivals.data.data
 
-		const ourDebt = arrivals.data.data.reduce((acc, arrival) => {
+		let ourDebt = new Decimal(0)
+		let theirDebt = new Decimal(0)
+		let totalBalance = new Decimal(0)
+
+		for (const arrival of list) {
 			const payment = arrival.payment.card.plus(arrival.payment.cash).plus(arrival.payment.other).plus(arrival.payment.transfer)
 
-			const totalCost = arrival.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.cost))
-			}, new Decimal(0))
-			const debt = payment.minus(totalCost)
-			return acc.plus(debt)
-		}, new Decimal(0))
+			const totalCost = arrival.products.reduce((sum, p) => sum.plus(new Decimal(p.count).mul(p.cost)), new Decimal(0))
 
-		const theirDebt = arrivals.data.data.reduce((acc, arrival) => {
-			const payment = arrival.payment.card.plus(arrival.payment.cash).plus(arrival.payment.other).plus(arrival.payment.transfer)
+			const diff = payment.minus(totalCost)
+			ourDebt = ourDebt.plus(diff)
+			theirDebt = theirDebt.plus(totalCost.minus(payment))
 
-			const totalCost = arrival.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.cost))
-			}, new Decimal(0))
+			const supplierBalance = arrival.supplier?.payments?.reduce((sum, p) => sum.plus(p.card.plus(p.cash).plus(p.other).plus(p.transfer)), new Decimal(0)) ?? new Decimal(0)
 
-			const debt = totalCost.minus(payment)
-			return acc.plus(debt)
-		}, new Decimal(0))
-
-		const totalBalance = arrivals.data.data.reduce((acc, arrival) => {
-			const totalPayment = arrival.supplier.payments.reduce((ac, payment) => {
-				return ac.plus(payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer))
-			}, new Decimal(0))
-			return acc.plus(totalPayment)
-		}, new Decimal(0))
+			totalBalance = totalBalance.plus(supplierBalance)
+		}
 
 		return {
-			ourDebt: ourDebt.minus(totalBalance) < new Decimal(0) ? new Decimal(0) : ourDebt,
-			theirDebt: theirDebt.plus(totalBalance) < new Decimal(0) ? new Decimal(0) : theirDebt,
+			ourDebt: ourDebt.minus(totalBalance).lt(0) ? new Decimal(0) : ourDebt,
+			theirDebt: theirDebt.plus(totalBalance).lt(0) ? new Decimal(0) : theirDebt,
 		}
 	}
 
