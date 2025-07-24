@@ -142,6 +142,7 @@ export class StaffRepository implements OnModuleInit {
 				password: body.password,
 				phone: body.phone,
 				token: body.token,
+				balance: body.balance,
 				deletedAt: body.deletedAt,
 				actions: {
 					connect: (body.actionsToConnect ?? []).map((r) => ({ id: r })),

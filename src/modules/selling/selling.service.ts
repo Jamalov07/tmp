@@ -23,25 +23,13 @@ import { BotSellingProductTitleEnum, BotSellingTitleEnum } from './enums'
 
 @Injectable()
 export class SellingService {
-	private readonly sellingRepository: SellingRepository
-	private readonly arrivalService: ArrivalService
-	private readonly clientService: ClientService
-	private readonly excelService: ExcelService
-	private readonly botService: BotService
-
 	constructor(
-		sellingRepository: SellingRepository,
-		@Inject(forwardRef(() => ArrivalService)) arrivalService: ArrivalService,
-		clientService: ClientService,
-		excelService: ExcelService,
-		botService: BotService,
-	) {
-		this.sellingRepository = sellingRepository
-		this.arrivalService = arrivalService
-		this.clientService = clientService
-		this.excelService = excelService
-		this.botService = botService
-	}
+		private readonly sellingRepository: SellingRepository,
+		@Inject(forwardRef(() => ArrivalService)) private readonly arrivalService: ArrivalService,
+		private readonly clientService: ClientService,
+		private readonly excelService: ExcelService,
+		private readonly botService: BotService,
+	) {}
 
 	async findMany(query: SellingFindManyRequest) {
 		const sellings = await this.sellingRepository.findMany(query)
@@ -58,35 +46,20 @@ export class SellingService {
 		}
 
 		const mappedSellings = sellings.map((selling) => {
-			const totalPayment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
-
-			const totalPrice = selling.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.price))
-			}, new Decimal(0))
-
-			calc.totalPrice = calc.totalPrice.plus(totalPrice)
-			calc.totalPayment = calc.totalPayment.plus(totalPayment)
-			calc.totalDebt = calc.totalDebt.plus(totalPrice.minus(totalPayment))
+			calc.totalPrice = calc.totalPrice.plus(selling.totalPrice)
+			calc.totalPayment = calc.totalPayment.plus(selling.payment.total)
+			calc.totalDebt = calc.totalDebt.plus(selling.totalPrice.minus(selling.payment.total))
 			calc.totalCardPayment = calc.totalCardPayment.plus(selling.payment.card)
 			calc.totalCashPayment = calc.totalCashPayment.plus(selling.payment.cash)
 			calc.totalOtherPayment = calc.totalOtherPayment.plus(selling.payment.other)
 			calc.totalTransferPayment = calc.totalTransferPayment.plus(selling.payment.transfer)
 
-			const p = selling.payment
-
-			const hasMeaningfulPayment =
-				(p.card && !p.card.equals(0)) ||
-				(p.cash && !p.cash.equals(0)) ||
-				(p.other && !p.other.equals(0)) ||
-				(p.transfer && !p.transfer.equals(0)) ||
-				(p.description && p.description.trim() !== '')
-
 			return {
 				...selling,
-				payment: hasMeaningfulPayment ? p : null,
-				debt: totalPrice.minus(totalPayment),
-				totalPayment: totalPayment,
-				totalPrice: totalPrice,
+				payment: selling.payment.total.toNumber() ? selling.payment : null,
+				debt: selling.totalPrice.minus(selling.payment.total),
+				totalPayment: selling.payment.total,
+				totalPrice: selling.totalPrice,
 			}
 		})
 
@@ -114,14 +87,12 @@ export class SellingService {
 			throw new BadRequestException('selling not found')
 		}
 
-		const totalPayment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
-
 		const totalPrice = selling.products.reduce((acc, product) => {
 			return acc.plus(new Decimal(product.count).mul(product.price))
 		}, new Decimal(0))
 
 		return createResponse({
-			data: { ...selling, debt: totalPrice.minus(totalPayment), totalPayment: totalPayment, totalPrice: totalPrice },
+			data: { ...selling, debt: totalPrice.minus(selling.payment.total), totalPayment: selling.payment.total, totalPrice: totalPrice },
 			success: { messages: ['find one success'] },
 		})
 	}
@@ -157,11 +128,8 @@ export class SellingService {
 
 	async createOne(request: CRequest, body: SellingCreateOneRequest) {
 		let client = await this.clientService.findOne({ id: body.clientId })
-		let sended = false
-		if (body.send) {
-			sended = true
-		}
 
+		let total = new Decimal(0)
 		if (body.payment) {
 			if (Object.values(body.payment).some((value) => value !== 0)) {
 				body.status = SellingStatusEnum.accepted
@@ -180,19 +148,34 @@ export class SellingService {
 					body.date = new Date()
 				}
 			}
+			const decimalZero = new Decimal(0)
+
+			total = (body.payment.card ?? decimalZero)
+				.plus(body.payment.cash ?? decimalZero)
+				.plus(body.payment.other ?? decimalZero)
+				.plus(body.payment.transfer ?? decimalZero)
 		}
 
 		if (body.status === SellingStatusEnum.accepted) {
 			body.date = new Date()
 		}
 
-		const selling = await this.sellingRepository.createOne({ ...body, staffId: request.user.id, sended: sended })
+		body = {
+			...body,
+			staffId: request.user.id,
+			payment: { ...body.payment, total: total },
+			products: body.products.map((product) => {
+				const totalPrice = product.price.mul(product.count)
+				body.totalPrice = body.totalPrice.plus(totalPrice)
 
-		const totalPayment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
+				return {
+					...product,
+					totalPrice: totalPrice,
+				}
+			}),
+		}
 
-		const totalPrice = selling.products.reduce((acc, product) => {
-			return acc.plus(new Decimal(product.count).mul(product.price))
-		}, new Decimal(0))
+		const selling = await this.sellingRepository.createOne(body)
 
 		if (body.send) {
 			if (selling.status === SellingStatusEnum.accepted) {
@@ -201,25 +184,22 @@ export class SellingService {
 					...selling,
 					client: client.data,
 					title: BotSellingTitleEnum.new,
-					totalPayment: totalPayment,
-					totalPrice: totalPrice,
-					debt: totalPrice.minus(totalPayment),
+					totalPayment: total,
+					totalPrice: body.totalPrice,
+					debt: body.totalPrice.minus(total),
 					products: selling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
 				}
 
 				if (client.data.telegram?.id) {
-					await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
+					await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
 						console.log('user', e)
-						await this.updateOne({ id: selling.id }, { sended: false })
 					})
-				} else {
-					await this.updateOne({ id: selling.id }, { sended: false })
 				}
 				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
 					console.log('channel', e)
 				})
 
-				if (totalPayment.toNumber()) {
+				if (!total.isZero()) {
 					await this.botService.sendPaymentToChannel(sellingInfo.payment, false, client.data)
 				}
 			}
@@ -231,63 +211,86 @@ export class SellingService {
 	async updateOne(query: SellingGetOneRequest, body: SellingUpdateOneRequest) {
 		const selling = await this.getOne(query)
 
+		// accepted bo‘lsa, date o‘zgartirilmaydi
 		if (selling.data.status === SellingStatusEnum.accepted) {
 			body.date = undefined
 		}
 
-		if (body.status !== SellingStatusEnum.accepted) {
-			if (body.payment) {
-				if (Object.values(body.payment).some((value) => value !== 0)) {
-					body.status = SellingStatusEnum.accepted
-					body.date = new Date()
-				}
-			}
-		}
-
+		let total = new Decimal(0)
 		let shouldSend = false
-		let isFirstSend = true
-		if (body.status === SellingStatusEnum.accepted) {
+		let isFirstSend = false
+
+		// Faqat status accepted bo‘lmagan bo‘lsa va paymentda haqiqiy qiymatlar bo‘lsa
+		const hasValidPayment = body.payment && ['card', 'cash', 'other', 'transfer'].some((key) => !!body.payment?.[key] && +body.payment[key] !== 0)
+
+		if (body.status !== SellingStatusEnum.accepted) {
+			if (hasValidPayment) {
+				body.status = SellingStatusEnum.accepted
+				body.date = new Date()
+				// total hisoblash
+				total = new Decimal(body.payment?.card ?? 0)
+					.plus(body.payment?.cash ?? 0)
+					.plus(body.payment?.other ?? 0)
+					.plus(body.payment?.transfer ?? 0)
+			}
+		} else {
+			// status accepted deb kelyapti
 			if (selling.data.status !== SellingStatusEnum.accepted) {
 				isFirstSend = true
 			}
 			body.date = new Date()
 			shouldSend = true
+
+			// total hisoblash (agar bor bo‘lsa)
+			total = new Decimal(body.payment?.card ?? 0)
+				.plus(body.payment?.cash ?? 0)
+				.plus(body.payment?.other ?? 0)
+				.plus(body.payment?.transfer ?? 0)
 		}
 
-		const updatedSelling = await this.sellingRepository.updateOne(query, { ...body, status: body.status, staffId: selling.data.staff.id })
+		// body ni tozalab, safe qilib joylashtiramiz
+		body = {
+			...body,
+			status: body.status,
+			staffId: selling.data.staff.id,
+			payment: hasValidPayment
+				? {
+						...body.payment,
+						total: total,
+					}
+				: selling.data.payment, // agar payment yo‘q bo‘lsa, eskisini saqlaymiz
+		}
 
-		const totalPayment = updatedSelling.payment.card.plus(updatedSelling.payment.cash).plus(updatedSelling.payment.other).plus(updatedSelling.payment.transfer)
+		const updatedSelling = await this.sellingRepository.updateOne(query, body)
 
-		const totalPrice = updatedSelling.products.reduce((acc, product) => {
-			return acc.plus(new Decimal(product.count).mul(product.price))
-		}, new Decimal(0))
-
+		// Clientni yangilaymiz
 		const client = await this.clientService.findOne({ id: body.clientId })
+
 		const sellingInfo = {
 			...updatedSelling,
 			client: client.data,
 			title: isFirstSend ? BotSellingTitleEnum.new : undefined,
-			totalPayment: totalPayment,
-			totalPrice: totalPrice,
-			debt: totalPrice.minus(totalPayment),
-			products: updatedSelling.products.map((p) => ({ ...p, status: BotSellingProductTitleEnum.new })),
+			totalPayment: total,
+			totalPrice: updatedSelling.totalPrice,
+			debt: updatedSelling.totalPrice.minus(total),
+			products: updatedSelling.products.map((p) => ({
+				...p,
+				status: BotSellingProductTitleEnum.new,
+			})),
 		}
 
-		if (updatedSelling.send || body.send) {
+		// clientga yuborish
+		if (body.send) {
 			if (updatedSelling.client?.telegram?.id) {
-				await this.botService.sendSellingToClient(sellingInfo).catch(async (e) => {
-					console.log(e)
-					await this.updateOne({ id: updatedSelling.id }, { sended: false })
-				})
+				await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
 			}
 		}
 
+		// channelga yuborish
 		if (shouldSend) {
-			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
-				console.log(e)
-			})
+			await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
 
-			if (totalPayment.toNumber()) {
+			if (!total.isZero()) {
 				await this.botService.sendPaymentToChannel(sellingInfo.payment, !isFirstSend, client.data)
 			}
 		}
@@ -349,8 +352,7 @@ export class SellingService {
 			})
 
 			return sellings.reduce((sum, selling) => {
-				const total = selling.products.reduce((pSum, p) => pSum.plus(new Decimal(p.count).mul(p.price)), new Decimal(0))
-				return sum.plus(total)
+				return sum.plus(selling.totalPrice)
 			}, new Decimal(0))
 		})
 
@@ -376,16 +378,12 @@ export class SellingService {
 		let totalBalance = new Decimal(0)
 
 		for (const selling of allSellings) {
-			const payment = selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer)
-
-			const totalPrice = selling.products.reduce((sum, p) => sum.plus(new Decimal(p.count).mul(p.price)), new Decimal(0))
-
-			const diff = payment.minus(totalPrice)
-			const clientBalance = selling.client?.payments?.reduce((sum, p) => sum.plus(p.card.plus(p.cash).plus(p.other).plus(p.transfer)), new Decimal(0)) ?? new Decimal(0)
+			const diff = selling.payment.total.minus(selling.totalPrice)
+			const clientBalance = selling.client?.payments?.reduce((sum, p) => sum.plus(p.total), new Decimal(0)) ?? new Decimal(0)
 
 			totalBalance = totalBalance.plus(clientBalance)
 			ourDebt = ourDebt.plus(diff)
-			theirDebt = theirDebt.plus(totalPrice.minus(payment))
+			theirDebt = theirDebt.plus(selling.totalPrice.minus(selling.payment.total))
 		}
 
 		// Hisoblashni yakunlash
@@ -417,17 +415,11 @@ export class SellingService {
 		let totalBalance = new Decimal(0)
 
 		for (const arrival of list) {
-			const payment = arrival.payment.card.plus(arrival.payment.cash).plus(arrival.payment.other).plus(arrival.payment.transfer)
-
-			const totalCost = arrival.products.reduce((sum, p) => sum.plus(new Decimal(p.count).mul(p.cost)), new Decimal(0))
-
-			const diff = payment.minus(totalCost)
+			const diff = arrival.payment.total.minus(arrival.totalCost)
 			ourDebt = ourDebt.plus(diff)
-			theirDebt = theirDebt.plus(totalCost.minus(payment))
+			theirDebt = theirDebt.plus(arrival.totalCost.minus(arrival.payment.total))
 
-			const supplierBalance = arrival.supplier?.payments?.reduce((sum, p) => sum.plus(p.card.plus(p.cash).plus(p.other).plus(p.transfer)), new Decimal(0)) ?? new Decimal(0)
-
-			totalBalance = totalBalance.plus(supplierBalance)
+			totalBalance = totalBalance.plus(arrival.supplier.balance)
 		}
 
 		return {

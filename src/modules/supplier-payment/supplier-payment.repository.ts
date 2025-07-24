@@ -11,6 +11,7 @@ import {
 } from './interfaces'
 import { SupplierPaymentController } from './supplier-payment.controller'
 import { ServiceTypeEnum } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class SupplierPaymentRepository implements OnModuleInit {
@@ -30,10 +31,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 				staffId: query.staffId,
 				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				createdAt: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				createdAt: { gte: query.startDate, lte: query.endDate },
 			},
 			select: {
 				id: true,
@@ -81,10 +79,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 				staffId: query.staffId,
 				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				createdAt: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				createdAt: { gte: query.startDate, lte: query.endDate },
 			},
 		})
 
@@ -112,6 +107,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 	async getOne(query: SupplierPaymentGetOneRequest) {
 		const supplierPayment = await this.prisma.paymentModel.findFirst({
 			where: { id: query.id, staffId: query.staffId },
+			select: { id: true, user: true, total: true },
 		})
 
 		return supplierPayment
@@ -132,6 +128,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 	async createOne(body: SupplierPaymentCreateOneRequest) {
 		const supplierPayment = await this.prisma.paymentModel.create({
 			data: {
+				total: body.total,
 				card: body.card,
 				cash: body.cash,
 				other: body.other,
@@ -143,7 +140,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 			},
 			select: {
 				id: true,
-				user: { select: { id: true, fullname: true, phone: true } },
+				user: { select: { id: true, fullname: true, phone: true, balance: true } },
 				staff: { select: { id: true, fullname: true, phone: true } },
 				card: true,
 				cash: true,
@@ -155,6 +152,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 				deletedAt: true,
 			},
 		})
+
 		return supplierPayment
 	}
 
@@ -168,6 +166,17 @@ export class SupplierPaymentRepository implements OnModuleInit {
 				transfer: body.transfer,
 				userId: body.userId,
 				description: body.description,
+				total: body.total,
+			},
+			select: {
+				id: true,
+				userId: true,
+				card: true,
+				cash: true,
+				other: true,
+				transfer: true,
+				total: true,
+				user: { select: { id: true, fullname: true, phone: true } },
 			},
 		})
 

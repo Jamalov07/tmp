@@ -1,7 +1,7 @@
 import { PaginationRequest, RequestOtherFields } from '@common'
 import { ArrivalOptional, ArrivalRequired } from './fields.interfaces'
-import { SupplierPaymentRequired } from '../../supplier-payment'
-import { ProductMVRequired } from '../../product-mv'
+import { SupplierPaymentOptional, SupplierPaymentRequired } from '../../supplier-payment'
+import { ProductMVOptional, ProductMVRequired } from '../../product-mv'
 
 export declare interface ArrivalFindManyRequest
 	extends Pick<ArrivalOptional, 'supplierId' | 'staffId'>,
@@ -14,16 +14,16 @@ export declare interface ArrivalGetManyRequest extends ArrivalOptional, Paginati
 
 export declare interface ArrivalGetOneRequest extends ArrivalOptional, Pick<RequestOtherFields, 'isDeleted'> {}
 
-export declare interface ArrivalPayment extends Pick<SupplierPaymentRequired, 'card' | 'cash' | 'other' | 'transfer' | 'description'> {}
+export declare interface ArrivalPayment extends Pick<SupplierPaymentRequired, 'card' | 'cash' | 'other' | 'transfer' | 'description'>, Pick<SupplierPaymentOptional, 'total'> {}
 
-export declare interface ArrivalProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'cost' | 'productId'> {}
+export declare interface ArrivalProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'cost' | 'productId'>, Pick<ProductMVOptional, 'totalCost' | 'totalPrice'> {}
 
-export declare interface ArrivalCreateOneRequest extends Pick<ArrivalRequired, 'supplierId' | 'date'>, Pick<ArrivalOptional, 'staffId'> {
+export declare interface ArrivalCreateOneRequest extends Pick<ArrivalRequired, 'supplierId' | 'date'>, Pick<ArrivalOptional, 'staffId' | 'totalPrice' | 'totalCost'> {
 	payment?: ArrivalPayment
 	products?: ArrivalProduct[]
 }
 
-export declare interface ArrivalUpdateOneRequest extends Pick<ArrivalOptional, 'deletedAt' | 'supplierId' | 'date' | 'staffId'> {
+export declare interface ArrivalUpdateOneRequest extends Pick<ArrivalOptional, 'deletedAt' | 'supplierId' | 'date' | 'staffId' | 'totalPrice' | 'totalCost'> {
 	payment?: ArrivalPayment
 	products?: ArrivalProduct[]
 	productIdsToRemove?: string[]

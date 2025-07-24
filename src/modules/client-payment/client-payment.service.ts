@@ -109,7 +109,20 @@ export class ClientPaymentService {
 	async createOne(request: CRequest, body: ClientPaymentCreateOneRequest) {
 		await this.clientService.findOne({ id: body.userId })
 
-		const clientPayment = await this.clientPaymentRepository.createOne({ ...body, staffId: request.user.id })
+		const decimalZero = new Decimal(0)
+
+		const total = (body.card ?? decimalZero)
+			.plus(body.cash ?? decimalZero)
+			.plus(body.other ?? decimalZero)
+			.plus(body.transfer ?? decimalZero)
+
+		body = { ...body, staffId: request.user.id, total: total }
+
+		const clientPayment = await this.clientPaymentRepository.createOne(body)
+
+		if (!total.isZero()) {
+			await this.clientService.updateOne({ id: body.userId }, { balance: clientPayment.user.balance.plus(total) })
+		}
 
 		const client = await this.clientService.findOne({ id: clientPayment.user.id })
 
@@ -119,9 +132,25 @@ export class ClientPaymentService {
 	}
 
 	async updateOne(query: ClientPaymentGetOneRequest, body: ClientPaymentUpdateOneRequest) {
-		await this.getOne(query)
+		const payment = await this.getOne(query)
 
-		const clientPayment = await this.clientPaymentRepository.updateOne(query, { ...body })
+		const newTotal = new Decimal(body.card ?? 0)
+			.plus(body.cash ?? 0)
+			.plus(body.other ?? 0)
+			.plus(body.transfer ?? 0)
+
+		const totalDiff = newTotal.minus(payment.data.total)
+
+		body = {
+			...body,
+			total: !totalDiff.isZero() ? newTotal : undefined,
+		}
+
+		const clientPayment = await this.clientPaymentRepository.updateOne(query, body)
+
+		if (!totalDiff.isZero()) {
+			await this.clientService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.plus(totalDiff) })
+		}
 
 		const client = await this.clientService.findOne({ id: clientPayment.user.id })
 
@@ -133,15 +162,12 @@ export class ClientPaymentService {
 	async deleteOne(query: ClientPaymentDeleteOneRequest) {
 		const payment = await this.getOne(query)
 		if (payment.data.type === ServiceTypeEnum.selling) {
-			await this.clientPaymentRepository.updateOne(query, {
-				card: new Decimal(0),
-				cash: new Decimal(0),
-				other: new Decimal(0),
-				transfer: new Decimal(0),
-				description: '',
-			})
+			await this.clientPaymentRepository.updateOne(query, { card: new Decimal(0), cash: new Decimal(0), other: new Decimal(0), transfer: new Decimal(0), description: '' })
 		} else {
 			if (query.method === DeleteMethodEnum.hard) {
+				if (!payment.data.total.isZero()) {
+					await this.clientService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+				}
 				await this.clientPaymentRepository.deleteOne(query)
 			} else {
 				await this.clientPaymentRepository.updateOne(query, { deletedAt: new Date() })

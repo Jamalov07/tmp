@@ -3,6 +3,7 @@ import { DefaultOptionalFieldsDto, DefaultRequiredFieldsDto } from '../../../com
 import { SupplierOptional, SupplierRequired } from '../interfaces'
 import { IsEnum, IsJWT, IsNotEmpty, IsOptional, IsPhoneNumber, IsString } from 'class-validator'
 import { $Enums, UserTypeEnum } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 export class SupplierRequiredDto extends DefaultRequiredFieldsDto implements SupplierRequired {
 	@ApiProperty({ type: String })
@@ -29,6 +30,9 @@ export class SupplierRequiredDto extends DefaultRequiredFieldsDto implements Sup
 	@IsNotEmpty()
 	@IsEnum(UserTypeEnum)
 	type: $Enums.UserTypeEnum
+
+	@ApiProperty({ type: Decimal })
+	balance: Decimal
 }
 
 export class SupplierOptionalDto extends DefaultOptionalFieldsDto implements SupplierOptional {
@@ -56,4 +60,7 @@ export class SupplierOptionalDto extends DefaultOptionalFieldsDto implements Sup
 	@IsOptional()
 	@IsEnum(UserTypeEnum)
 	type?: $Enums.UserTypeEnum
+
+	@ApiPropertyOptional({ type: Decimal })
+	balance?: Decimal
 }

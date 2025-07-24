@@ -10,7 +10,7 @@ export class SyncronizeController {
 	}
 
 	@Get()
-	@AuthOptions(true, true)
+	// @AuthOptions(true, true)
 	async syncronize() {
 		return this.syncronizeService.syncronize()
 	}

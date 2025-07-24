@@ -30,10 +30,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 				staffId: query.staffId,
 				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				createdAt: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				createdAt: { gte: query.startDate, lte: query.endDate },
 				userId: query.userId,
 				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
@@ -87,10 +84,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 				staffId: query.staffId,
 				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				createdAt: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				createdAt: { gte: query.startDate, lte: query.endDate },
 				userId: query.userId,
 				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
@@ -120,6 +114,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 	async getOne(query: ClientPaymentGetOneRequest) {
 		const clientPayment = await this.prisma.paymentModel.findFirst({
 			where: { id: query.id, staffId: query.staffId },
+			select: { id: true, user: true, total: true, type: true },
 		})
 
 		return clientPayment
@@ -140,6 +135,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 	async createOne(body: ClientPaymentCreateOneRequest) {
 		const clientPayment = await this.prisma.paymentModel.create({
 			data: {
+				total: body.total,
 				card: body.card,
 				cash: body.cash,
 				other: body.other,
@@ -152,7 +148,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 			select: {
 				id: true,
 				staff: { select: { id: true, fullname: true, phone: true } },
-				user: { select: { id: true, fullname: true, phone: true } },
+				user: { select: { id: true, fullname: true, phone: true, balance: true } },
 				card: true,
 				cash: true,
 				description: true,
@@ -164,6 +160,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 				deletedAt: true,
 			},
 		})
+
 		return clientPayment
 	}
 
@@ -177,20 +174,17 @@ export class ClientPaymentRepository implements OnModuleInit {
 				transfer: body.transfer,
 				userId: body.userId,
 				description: body.description,
+				total: body.total,
 			},
 			select: {
 				id: true,
-				staff: { select: { id: true, fullname: true, phone: true } },
-				user: { select: { id: true, fullname: true, phone: true } },
+				userId: true,
 				card: true,
 				cash: true,
-				description: true,
-				type: true,
 				other: true,
 				transfer: true,
-				updatedAt: true,
-				createdAt: true,
-				deletedAt: true,
+				total: true,
+				user: { select: { id: true, fullname: true, phone: true } },
 			},
 		})
 

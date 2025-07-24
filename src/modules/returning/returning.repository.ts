@@ -11,6 +11,7 @@ import {
 } from './interfaces'
 import { ReturningController } from './returning.controller'
 import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class ReturningRepository implements OnModuleInit {
@@ -30,21 +31,19 @@ export class ReturningRepository implements OnModuleInit {
 				status: query.status,
 				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				date: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				date: { gte: query.startDate, lte: query.endDate },
 			},
 			select: {
 				id: true,
 				status: true,
+				totalPrice: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
 				date: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-				payment: { select: { id: true, cash: true, fromBalance: true } },
+				payment: { select: { id: true, cash: true, fromBalance: true, total: true } },
 				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 			...paginationOptions,
@@ -79,10 +78,7 @@ export class ReturningRepository implements OnModuleInit {
 				status: query.status,
 				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				date: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				date: { gte: query.startDate, lte: query.endDate },
 			},
 		})
 
@@ -110,6 +106,7 @@ export class ReturningRepository implements OnModuleInit {
 	async getOne(query: ReturningGetOneRequest) {
 		const returning = await this.prisma.returningModel.findFirst({
 			where: { id: query.id, clientId: query.clientId, staffId: query.staffId, status: query.status },
+			select: { id: true, payment: true, staffId: true, status: true },
 		})
 
 		return returning
@@ -134,8 +131,10 @@ export class ReturningRepository implements OnModuleInit {
 				clientId: body.clientId,
 				date: new Date(body.date),
 				staffId: body.staffId,
+				totalPrice: body.totalPrice,
 				payment: {
 					create: {
+						total: body.payment.total,
 						cash: body.payment?.cash,
 						fromBalance: body.payment?.fromBalance,
 						userId: body.clientId,
@@ -147,7 +146,14 @@ export class ReturningRepository implements OnModuleInit {
 					createMany: {
 						skipDuplicates: false,
 						data: body.products
-							? body.products?.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.returning, count: p.count, price: p.price, staffId: body.staffId }))
+							? body.products?.map((p) => ({
+									productId: p.productId,
+									type: ServiceTypeEnum.returning,
+									count: p.count,
+									price: p.price,
+									totalPrice: p.totalPrice,
+									staffId: body.staffId,
+								}))
 							: [],
 					},
 				},
@@ -166,18 +172,25 @@ export class ReturningRepository implements OnModuleInit {
 			},
 		})
 
-		if (body.status === SellingStatusEnum.accepted) {
-			if (body.products) {
-				for (const product of body.products) {
-					const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
-					if (pr) {
-						await this.prisma.productModel.update({
+		if (body.status === SellingStatusEnum.accepted && body.products?.length) {
+			// Barcha mahsulotlarni birdaniga olish
+			const existingProducts = await this.prisma.productModel.findMany({
+				where: { id: { in: body.products.map((p) => p.productId) } },
+				select: { id: true },
+			})
+
+			const existingProductIds = new Set(existingProducts.map((p) => p.id))
+
+			await Promise.all(
+				body.products
+					.filter((p) => existingProductIds.has(p.productId))
+					.map((product) =>
+						this.prisma.productModel.update({
 							where: { id: product.productId },
 							data: { count: { increment: product.count } },
-						})
-					}
-				}
-			}
+						}),
+					),
+			)
 		}
 
 		return returning
@@ -192,21 +205,14 @@ export class ReturningRepository implements OnModuleInit {
 				date: body.date ? new Date(body.date) : undefined,
 				status: body.status,
 				clientId: body.clientId,
+				totalPrice: body.totalPrice,
 				deletedAt: body.deletedAt,
 				payment: {
 					update: {
+						total: body.payment.total,
 						cash: body.payment?.cash,
 						fromBalance: body.payment?.fromBalance,
 					},
-				},
-				products: {
-					createMany: {
-						skipDuplicates: false,
-						data: body.products
-							? body.products?.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.returning, count: p.count, price: p.price, staffId: body.staffId }))
-							: [],
-					},
-					deleteMany: body.productIdsToRemove?.map((id) => ({ id: id })),
 				},
 			},
 			select: {
@@ -221,6 +227,11 @@ export class ReturningRepository implements OnModuleInit {
 				payment: { select: { id: true, cash: true, fromBalance: true } },
 				products: { select: { id: true, price: true, count: true, product: { select: { id: true, name: true } } } },
 			},
+		})
+
+		await this.prisma.returningModel.update({
+			where: { id: returning.id },
+			data: { payment: { update: { total: returning.payment.cash.plus(returning.payment.fromBalance) } } },
 		})
 
 		if (body.status === SellingStatusEnum.accepted && existReturning.status !== SellingStatusEnum.accepted) {

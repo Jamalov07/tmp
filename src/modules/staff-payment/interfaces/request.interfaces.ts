@@ -12,8 +12,8 @@ export declare interface StaffPaymentGetManyRequest extends StaffPaymentOptional
 
 export declare interface StaffPaymentGetOneRequest extends StaffPaymentOptional, Pick<RequestOtherFields, 'isDeleted'> {}
 
-export declare interface StaffPaymentCreateOneRequest extends Pick<StaffPaymentRequired, 'sum' | 'description' | 'userId'>, Pick<StaffPaymentOptional, 'staffId'> {}
+export declare interface StaffPaymentCreateOneRequest extends Pick<StaffPaymentRequired, 'sum' | 'description' | 'userId'>, Pick<StaffPaymentOptional, 'staffId' | 'total'> {}
 
-export declare interface StaffPaymentUpdateOneRequest extends Pick<StaffPaymentOptional, 'userId' | 'sum' | 'description' | 'deletedAt'> {}
+export declare interface StaffPaymentUpdateOneRequest extends Pick<StaffPaymentOptional, 'userId' | 'sum' | 'description' | 'deletedAt' | 'total'> {}
 
 export declare interface StaffPaymentDeleteOneRequest extends Pick<StaffPaymentOptional, 'id'>, Pick<RequestOtherFields, 'method'> {}

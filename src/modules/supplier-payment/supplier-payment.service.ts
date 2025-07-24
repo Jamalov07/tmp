@@ -105,22 +105,59 @@ export class SupplierPaymentService {
 	async createOne(request: CRequest, body: SupplierPaymentCreateOneRequest) {
 		await this.supplierService.findOne({ id: body.userId })
 
-		const supplierPayment = await this.supplierPaymentRepository.createOne({ ...body, staffId: request.user.id })
+		const decimalZero = new Decimal(0)
+
+		const total = (body.card ?? decimalZero)
+			.plus(body.cash ?? decimalZero)
+			.plus(body.other ?? decimalZero)
+			.plus(body.transfer ?? decimalZero)
+
+		const supplierPayment = await this.supplierPaymentRepository.createOne({ ...body, staffId: request.user.id, total: total })
+
+		if (!total.isZero()) {
+			await this.supplierService.updateOne({ id: supplierPayment.user.id }, { balance: total.plus(supplierPayment.user.balance) })
+		}
 
 		return createResponse({ data: supplierPayment, success: { messages: ['create one success'] } })
 	}
 
 	async updateOne(query: SupplierPaymentGetOneRequest, body: SupplierPaymentUpdateOneRequest) {
-		await this.getOne(query)
+		const payment = await this.getOne(query)
 
-		await this.supplierPaymentRepository.updateOne(query, { ...body })
+		const hasPaymentFields = body.card !== undefined || body.cash !== undefined || body.other !== undefined || body.transfer !== undefined
+
+		let totalDiff = new Decimal(0)
+
+		if (hasPaymentFields) {
+			const newTotal = new Decimal(body.card ?? 0)
+				.plus(body.cash ?? 0)
+				.plus(body.other ?? 0)
+				.plus(body.transfer ?? 0)
+
+			totalDiff = newTotal.minus(payment.data.total)
+
+			body = {
+				...body,
+				total: !totalDiff.isZero() ? newTotal : undefined,
+			}
+		}
+
+		await this.supplierPaymentRepository.updateOne(query, body)
+
+		if (!totalDiff.isZero()) {
+			await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.plus(totalDiff) })
+		}
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}
 
 	async deleteOne(query: SupplierPaymentDeleteOneRequest) {
-		await this.getOne(query)
+		const payment = await this.getOne(query)
 		if (query.method === DeleteMethodEnum.hard) {
+			if (!payment.data.total.isZero()) {
+				await this.supplierService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+			}
+
 			await this.supplierPaymentRepository.deleteOne(query)
 		} else {
 			await this.supplierPaymentRepository.updateOne(query, { deletedAt: new Date() })

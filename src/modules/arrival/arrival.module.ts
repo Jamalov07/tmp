@@ -7,7 +7,7 @@ import { SupplierModule } from '../supplier'
 import { ProductModule } from '../product'
 
 @Module({
-	imports: [PrismaModule, ExcelModule, forwardRef(() => SupplierModule), forwardRef(() => ProductModule)],
+	imports: [PrismaModule, ExcelModule, forwardRef(() => SupplierModule)],
 	controllers: [ArrivalController],
 	providers: [ArrivalService, ArrivalRepository],
 	exports: [ArrivalService, ArrivalRepository],

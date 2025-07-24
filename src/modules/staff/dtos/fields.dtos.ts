@@ -1,3 +1,4 @@
+import { Decimal } from '@prisma/client/runtime/library'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { DefaultOptionalFieldsDto, DefaultRequiredFieldsDto } from '../../../common'
 import { StaffOptional, StaffRequired } from '../interfaces'
@@ -29,6 +30,9 @@ export class StaffRequiredDto extends DefaultRequiredFieldsDto implements StaffR
 	@IsNotEmpty()
 	@IsEnum(UserTypeEnum)
 	type: $Enums.UserTypeEnum
+
+	@ApiProperty({ type: Decimal })
+	balance: Decimal
 }
 
 export class StaffOptionalDto extends DefaultOptionalFieldsDto implements StaffOptional {
@@ -56,4 +60,7 @@ export class StaffOptionalDto extends DefaultOptionalFieldsDto implements StaffO
 	@IsOptional()
 	@IsEnum(UserTypeEnum)
 	type?: $Enums.UserTypeEnum
+
+	@ApiPropertyOptional({ type: Decimal })
+	balance?: Decimal
 }

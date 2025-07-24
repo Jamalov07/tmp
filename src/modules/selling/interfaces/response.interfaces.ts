@@ -19,7 +19,7 @@ export declare interface SellingFindManyData extends PaginationResponse<SellingF
 	calc: SellingCalc
 }
 
-export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' | 'status' | 'createdAt' | 'date' | 'send' | 'sended'>, Pick<SellingOptional, 'publicId'> {
+export declare interface SellingFindOneData extends Pick<SellingRequired, 'id' | 'status' | 'createdAt' | 'date'>, Pick<SellingOptional, 'publicId'> {
 	client?: ClientFindOneData
 	staff?: StaffFindOneData
 	debt?: Decimal

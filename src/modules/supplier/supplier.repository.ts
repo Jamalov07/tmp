@@ -34,18 +34,20 @@ export class SupplierRepository implements OnModuleInit {
 			select: {
 				id: true,
 				fullname: true,
+				balance: true,
 				phone: true,
 				arrivals: {
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true } },
+						totalCost: true,
+						payment: { select: { card: true, cash: true, other: true, transfer: true, total: true } },
 						products: { select: { cost: true, count: true, price: true } },
 					},
 					orderBy: { date: 'desc' },
 				},
 				payments: {
 					where: { type: ServiceTypeEnum.supplier },
-					select: { card: true, cash: true, other: true, transfer: true },
+					select: { card: true, cash: true, other: true, transfer: true, total: true },
 				},
 				actions: true,
 				updatedAt: true,
@@ -165,6 +167,7 @@ export class SupplierRepository implements OnModuleInit {
 			data: {
 				fullname: body.fullname,
 				phone: body.phone,
+				balance: body.balance,
 				deletedAt: body.deletedAt,
 			},
 		})

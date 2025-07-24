@@ -18,10 +18,7 @@ import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class ProductMVRepository {
-	private readonly prisma: PrismaService
-	constructor(prisma: PrismaService) {
-		this.prisma = prisma
-	}
+	constructor(private readonly prisma: PrismaService) {}
 
 	async findMany(query: ProductMVFindManyRequest) {
 		let paginationOptions = {}
@@ -98,7 +95,19 @@ export class ProductMVRepository {
 				staffId: query.staffId,
 				type: query.type,
 			},
-			select: { selling: true, arrival: true, returning: true, type: true, product: true, price: true, count: true, cost: true, id: true },
+			select: {
+				totalCost: true,
+				totalPrice: true,
+				selling: true,
+				arrival: true,
+				returning: true,
+				type: true,
+				product: true,
+				price: true,
+				count: true,
+				cost: true,
+				id: true,
+			},
 		})
 
 		return product
@@ -122,6 +131,7 @@ export class ProductMVRepository {
 	async createOneSelling(body: SellingProductMVCreateOneRequest) {
 		const product = await this.prisma.productMVModel.create({
 			data: {
+				totalPrice: body.totalPrice,
 				count: body.count,
 				price: body.price,
 				sellingId: body.sellingId,
@@ -131,20 +141,18 @@ export class ProductMVRepository {
 			},
 			select: {
 				id: true,
+				totalPrice: true,
 				selling: {
 					select: {
 						id: true,
+						totalPrice: true,
 						status: true,
 						publicId: true,
-						updatedAt: true,
 						createdAt: true,
-						deletedAt: true,
 						date: true,
-						send: true,
-						sended: true,
 						client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
 						staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-						payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+						payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true, total: true } },
 						products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
 					},
 				},
@@ -167,6 +175,8 @@ export class ProductMVRepository {
 			data: {
 				count: body.count,
 				price: body.price,
+				totalCost: body.totalCost,
+				totalPrice: body.totalPrice,
 				arrivalId: body.arrivalId,
 				type: ServiceTypeEnum.arrival,
 				productId: body.productId,
@@ -177,6 +187,9 @@ export class ProductMVRepository {
 				cost: true,
 				count: true,
 				price: true,
+				arrival: true,
+				totalCost: true,
+				totalPrice: true,
 			},
 		})
 
@@ -194,8 +207,9 @@ export class ProductMVRepository {
 				type: ServiceTypeEnum.returning,
 				productId: body.productId,
 				staffId: body.staffId,
+				totalPrice: body.totalPrice,
 			},
-			select: { returning: true, product: true, count: true },
+			select: { returning: true, product: true, count: true, totalPrice: true },
 		})
 
 		if (product.returning.status === SellingStatusEnum.accepted) {
@@ -229,17 +243,16 @@ export class ProductMVRepository {
 				selling: {
 					select: {
 						id: true,
+						totalPrice: true,
 						status: true,
 						publicId: true,
 						updatedAt: true,
 						createdAt: true,
 						deletedAt: true,
 						date: true,
-						send: true,
-						sended: true,
 						client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
 						staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-						payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+						payment: { select: { total: true, id: true, card: true, cash: true, other: true, transfer: true, description: true } },
 						products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
 					},
 				},
@@ -333,17 +346,16 @@ export class ProductMVRepository {
 				selling: {
 					select: {
 						id: true,
+						totalPrice: true,
 						status: true,
 						publicId: true,
 						updatedAt: true,
 						createdAt: true,
 						deletedAt: true,
 						date: true,
-						send: true,
-						sended: true,
 						client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
 						staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-						payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+						payment: { select: { total: true, id: true, card: true, cash: true, other: true, transfer: true, description: true } },
 						products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
 					},
 				},
@@ -371,9 +383,5 @@ export class ProductMVRepository {
 
 	async onModuleInit() {
 		await this.prisma.createActionMethods(ProductMVController)
-	}
-
-	async updateSellingSendStatus(id: string, sended: boolean) {
-		await this.prisma.sellingModel.update({ where: { id: id }, data: { sended: sended } })
 	}
 }

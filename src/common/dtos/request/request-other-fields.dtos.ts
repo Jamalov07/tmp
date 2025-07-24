@@ -59,12 +59,14 @@ export class RequestOtherFieldsDto implements RequestOtherFields {
 	@ApiPropertyOptional({ description: 'Start date in ISO format (YYYY-MM-DD)' })
 	@IsOptional()
 	@IsDateString()
-	startDate?: Date = this.startDate ? new Date(new Date(this.startDate).setHours(0, 0, 0, 0)) : undefined
+	@Transform(({ value }) => (value ? new Date(new Date(value).setHours(0, 0, 0, 0)).toISOString() : undefined))
+	startDate?: Date
 
 	@ApiPropertyOptional({ description: 'End date in ISO format (YYYY-MM-DD)' })
 	@IsOptional()
 	@IsDateString()
-	endDate?: Date = this.endDate ? new Date(new Date(this.endDate).setHours(23, 59, 59, 999)) : undefined
+	@Transform(({ value }) => (value ? new Date(new Date(value).setHours(23, 59, 59, 999)).toISOString() : undefined))
+	endDate?: Date
 
 	@ApiPropertyOptional({ enum: DebtTypeEnum })
 	@IsEnum(DebtTypeEnum)

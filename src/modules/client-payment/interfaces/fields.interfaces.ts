@@ -3,6 +3,6 @@ import { DefaultRequiredFields } from '../../../common'
 
 export declare interface ClientPaymentRequired
 	extends DefaultRequiredFields,
-		Required<Pick<PaymentModel, 'staffId' | 'description' | 'userId' | 'card' | 'cash' | 'other' | 'transfer'>> {}
+		Required<Pick<PaymentModel, 'staffId' | 'description' | 'userId' | 'card' | 'cash' | 'other' | 'transfer' | 'total'>> {}
 
 export declare interface ClientPaymentOptional extends Partial<ClientPaymentRequired> {}

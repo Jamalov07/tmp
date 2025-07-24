@@ -11,6 +11,7 @@ import {
 } from './interfaces'
 import { StaffPaymentController } from './staff-payment.controller'
 import { ServiceTypeEnum } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class StaffPaymentRepository implements OnModuleInit {
@@ -29,10 +30,7 @@ export class StaffPaymentRepository implements OnModuleInit {
 			where: {
 				staffId: query.staffId,
 				type: ServiceTypeEnum.staff,
-				createdAt: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				createdAt: { gte: query.startDate, lte: query.endDate },
 			},
 			select: {
 				id: true,
@@ -73,10 +71,7 @@ export class StaffPaymentRepository implements OnModuleInit {
 			where: {
 				staffId: query.staffId,
 				type: ServiceTypeEnum.staff,
-				createdAt: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				createdAt: { gte: query.startDate, lte: query.endDate },
 			},
 		})
 
@@ -104,6 +99,7 @@ export class StaffPaymentRepository implements OnModuleInit {
 	async getOne(query: StaffPaymentGetOneRequest) {
 		const staffPayment = await this.prisma.paymentModel.findFirst({
 			where: { id: query.id, staffId: query.staffId },
+			select: { id: true, total: true, user: true, sum: true },
 		})
 
 		return staffPayment
@@ -124,6 +120,7 @@ export class StaffPaymentRepository implements OnModuleInit {
 	async createOne(body: StaffPaymentCreateOneRequest) {
 		const staffPayment = await this.prisma.paymentModel.create({
 			data: {
+				total: body.sum,
 				sum: body.sum,
 				userId: body.userId,
 				staffId: body.staffId,
@@ -135,9 +132,10 @@ export class StaffPaymentRepository implements OnModuleInit {
 				sum: true,
 				description: true,
 				createdAt: true,
-				user: { select: { id: true, fullname: true, phone: true } },
+				user: { select: { id: true, fullname: true, phone: true, balance: true } },
 			},
 		})
+
 		return staffPayment
 	}
 
@@ -145,6 +143,7 @@ export class StaffPaymentRepository implements OnModuleInit {
 		const staffPayment = await this.prisma.paymentModel.update({
 			where: { id: query.id },
 			data: {
+				total: body.total,
 				sum: body.sum,
 				userId: body.userId,
 				deletedAt: body.deletedAt,

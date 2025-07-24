@@ -14,16 +14,16 @@ export declare interface ReturningGetManyRequest extends ReturningOptional, Pagi
 
 export declare interface ReturningGetOneRequest extends ReturningOptional, Pick<RequestOtherFields, 'isDeleted'> {}
 
-export declare interface ReturningPayment extends Pick<PaymentModel, 'fromBalance' | 'cash'> {}
+export declare interface ReturningPayment extends Pick<PaymentModel, 'fromBalance' | 'cash' | 'total'> {}
 
-export declare interface ReturningProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId'> {}
+export declare interface ReturningProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'totalPrice' | 'productId'> {}
 
-export declare interface ReturningCreateOneRequest extends Pick<ReturningRequired, 'clientId' | 'date'>, Pick<ReturningOptional, 'staffId' | 'status'> {
+export declare interface ReturningCreateOneRequest extends Pick<ReturningRequired, 'clientId' | 'date'>, Pick<ReturningOptional, 'staffId' | 'status' | 'totalPrice'> {
 	payment?: ReturningPayment
 	products?: ReturningProduct[]
 }
 
-export declare interface ReturningUpdateOneRequest extends Pick<ReturningOptional, 'deletedAt' | 'clientId' | 'date' | 'staffId' | 'status'> {
+export declare interface ReturningUpdateOneRequest extends Pick<ReturningOptional, 'deletedAt' | 'clientId' | 'date' | 'staffId' | 'status' | 'totalPrice'> {
 	payment?: ReturningPayment
 	products?: ReturningProduct[]
 	productIdsToRemove?: string[]

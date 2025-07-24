@@ -19,38 +19,24 @@ import { Response } from 'express'
 
 @Injectable()
 export class ReturningService {
-	private readonly returningRepository: ReturningRepository
-	private readonly clientService: ClientService
-	private readonly productService: ProductService
-	private readonly excelService: ExcelService
-
-	constructor(returningRepository: ReturningRepository, clientService: ClientService, productService: ProductService, excelService: ExcelService) {
-		this.returningRepository = returningRepository
-		this.clientService = clientService
-		this.productService = productService
-		this.excelService = excelService
-	}
+	constructor(
+		private readonly returningRepository: ReturningRepository,
+		private readonly clientService: ClientService,
+		private readonly productService: ProductService,
+		private readonly excelService: ExcelService,
+	) {}
 
 	async findMany(query: ReturningFindManyRequest) {
 		const returnings = await this.returningRepository.findMany(query)
 		const returningsCount = await this.returningRepository.countFindMany(query)
 
 		const mappedReturnings = returnings.map((returning) => {
-			const totalPayment = returning.payment.fromBalance.plus(returning.payment.cash)
-
-			const totalPrice = returning.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.price))
-			}, new Decimal(0))
-
-			const p = returning.payment
-
-			const hasMeaningfulPayment = (p.fromBalance && !p.fromBalance.equals(0)) || (p.cash && !p.cash.equals(0))
 			return {
 				...returning,
-				payment: hasMeaningfulPayment ? p : null,
-				debt: totalPrice.minus(totalPayment),
-				totalPayment: totalPayment,
-				totalPrice: totalPrice,
+				payment: returning.payment.total.toNumber() ? returning.payment : null,
+				debt: returning.totalPrice.minus(returning.payment.total),
+				totalPayment: returning.payment.total,
+				totalPrice: returning.totalPrice,
 			}
 		})
 
@@ -112,6 +98,8 @@ export class ReturningService {
 	async createOne(request: CRequest, body: ReturningCreateOneRequest) {
 		await this.clientService.findOne({ id: body.clientId })
 
+		const decimalZero = new Decimal(0)
+		let total = new Decimal(0)
 		if (body.payment) {
 			if (Object.values(body.payment).some((value) => value !== 0)) {
 				body.status = SellingStatusEnum.accepted
@@ -129,6 +117,8 @@ export class ReturningService {
 				} else {
 					body.date = new Date()
 				}
+
+				total = (body.payment?.cash ?? decimalZero).plus(body.payment?.fromBalance ?? decimalZero)
 			}
 		}
 
@@ -136,7 +126,24 @@ export class ReturningService {
 			body.date = new Date()
 		}
 
-		const returning = await this.returningRepository.createOne({ ...body, staffId: request.user.id })
+		body = {
+			...body,
+			staffId: request.user.id,
+			payment: {
+				...body.payment,
+				total: total,
+			},
+			products: body.products.map((product) => {
+				const totalPrice = product.price.mul(product.count)
+				body.totalPrice = body.totalPrice.plus(totalPrice)
+				return {
+					...product,
+					totalPrice: totalPrice,
+				}
+			}),
+		}
+
+		const returning = await this.returningRepository.createOne(body)
 
 		return createResponse({ data: returning, success: { messages: ['create one success'] } })
 	}
@@ -149,11 +156,14 @@ export class ReturningService {
 			body.products = []
 		}
 
+		const hasValidPayment = body.payment && ['fromBalance', 'cash'].some((key) => !!body.payment?.[key] && +body.payment[key] !== 0)
+
 		if (body.status !== SellingStatusEnum.accepted) {
 			if (body.payment) {
 				if (Object.values(body.payment).some((value) => value !== 0)) {
 					body.status = SellingStatusEnum.accepted
 					body.date = new Date()
+					body.payment.total = new Decimal(body.payment.cash || 0).plus(body.payment.fromBalance || 0)
 				}
 			}
 		}
@@ -161,7 +171,12 @@ export class ReturningService {
 			body.date = new Date()
 		}
 
-		await this.returningRepository.updateOne(query, { ...body, staffId: returning.data.staffId })
+		body = {
+			...body,
+			staffId: returning.data.staffId,
+			payment: hasValidPayment ? body.payment : returning.data.payment,
+		}
+		await this.returningRepository.updateOne(query, body)
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}

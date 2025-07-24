@@ -35,23 +35,19 @@ export class SellingRepository implements OnModuleInit {
 				staffId: query.staffId,
 				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				date: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				date: { gte: query.startDate, lte: query.endDate },
 			},
 			select: {
 				id: true,
 				status: true,
+				totalPrice: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
 				date: true,
-				send: true,
-				sended: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
+				payment: { select: { id: true, total: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
 				products: {
 					orderBy: [{ createdAt: 'desc' }],
 					select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } },
@@ -74,11 +70,9 @@ export class SellingRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				date: true,
-				send: true,
-				sended: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-				payment: { select: { type: true, id: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
+				payment: { select: { total: true, type: true, id: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
 				products: {
 					orderBy: [{ createdAt: 'desc' }],
 					select: { createdAt: true, id: true, price: true, count: true, product: { select: { id: true, createdAt: true, name: true } } },
@@ -96,10 +90,7 @@ export class SellingRepository implements OnModuleInit {
 				staffId: query.staffId,
 				clientId: query.clientId,
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				date: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				date: { gte: query.startDate, lte: query.endDate },
 			},
 		})
 
@@ -116,10 +107,7 @@ export class SellingRepository implements OnModuleInit {
 			where: {
 				id: { in: query.ids },
 				status: query.status,
-				date: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				date: { gte: query.startDate, lte: query.endDate },
 			},
 			select: {
 				id: true,
@@ -127,9 +115,8 @@ export class SellingRepository implements OnModuleInit {
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
+				totalPrice: true,
 				date: true,
-				send: true,
-				sended: true,
 				client: {
 					select: {
 						id: true,
@@ -137,7 +124,7 @@ export class SellingRepository implements OnModuleInit {
 						phone: true,
 						payments: {
 							where: { type: ServiceTypeEnum.client },
-							select: { card: true, cash: true, other: true, transfer: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true },
 						},
 					},
 				},
@@ -161,8 +148,6 @@ export class SellingRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				date: true,
-				send: true,
-				sended: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
@@ -194,10 +179,10 @@ export class SellingRepository implements OnModuleInit {
 				clientId: body.clientId,
 				date: new Date(body.date),
 				staffId: body.staffId,
-				send: body.send,
-				sended: body.sended,
+				totalPrice: body.totalPrice,
 				payment: {
 					create: {
+						total: body.payment.total,
 						card: body.payment?.card,
 						cash: body.payment?.cash,
 						other: body.payment?.other,
@@ -211,7 +196,14 @@ export class SellingRepository implements OnModuleInit {
 				products: {
 					createMany: {
 						skipDuplicates: false,
-						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId })),
+						data: body.products.map((p) => ({
+							productId: p.productId,
+							type: ServiceTypeEnum.selling,
+							totalPrice: p.totalPrice,
+							count: p.count,
+							price: p.price,
+							staffId: body.staffId,
+						})),
 					},
 				},
 			},
@@ -223,8 +215,6 @@ export class SellingRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				date: true,
-				send: true,
-				sended: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, type: true, transfer: true, description: true, createdAt: true } },
@@ -251,25 +241,15 @@ export class SellingRepository implements OnModuleInit {
 				status: body.status,
 				clientId: body.clientId,
 				deletedAt: body.deletedAt,
-				sended: body.sended,
-				send: body.send,
 				payment: {
 					update: {
+						total: body.payment.total,
 						card: body.payment?.card,
 						cash: body.payment?.cash,
 						other: body.payment?.other,
 						transfer: body.payment?.transfer,
 						description: body.payment?.description,
 					},
-				},
-				products: {
-					createMany: {
-						skipDuplicates: false,
-						data: body.products
-							? body.products?.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: body.staffId }))
-							: [],
-					},
-					deleteMany: body.productIdsToRemove?.map((id) => ({ id: id })),
 				},
 			},
 			select: {
@@ -280,13 +260,17 @@ export class SellingRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				date: true,
-				send: true,
-				sended: true,
+				totalPrice: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { id: true, card: true, cash: true, other: true, type: true, transfer: true, description: true, createdAt: true } },
 				products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
 			},
+		})
+
+		await this.prisma.sellingModel.update({
+			where: { id: selling.id },
+			data: { payment: { update: { total: selling.payment.card.plus(selling.payment.cash).plus(selling.payment.other).plus(selling.payment.transfer) } } },
 		})
 
 		if (body.status === SellingStatusEnum.accepted && existSelling.status !== SellingStatusEnum.accepted) {
@@ -342,15 +326,11 @@ export class SellingRepository implements OnModuleInit {
 			const hourEnd = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day, hour, 59, 59, 999))
 			const sales = await this.prisma.sellingModel.findMany({
 				where: { createdAt: { gte: hourStart, lte: hourEnd } },
-				select: { products: true },
+				select: { totalPrice: true },
 			})
 
 			const totalSum = sales.reduce((sum, selling) => {
-				const totalPrice = selling.products.reduce((acc, product) => {
-					return acc.plus(new Decimal(product.count).mul(product.price))
-				}, new Decimal(0))
-
-				return sum.plus(totalPrice)
+				return sum.plus(selling.totalPrice)
 			}, new Decimal(0))
 
 			const start = extractDateParts(hourStart)
@@ -377,15 +357,11 @@ export class SellingRepository implements OnModuleInit {
 
 			const sales = await this.prisma.sellingModel.findMany({
 				where: { createdAt: { gte: dayStart, lte: dayEnd } },
-				select: { products: true },
+				select: { totalPrice: true },
 			})
 
 			const totalSum = sales.reduce((sum, selling) => {
-				const totalPrice = selling.products.reduce((acc, product) => {
-					return acc.plus(new Decimal(product.count).mul(product.price))
-				}, new Decimal(0))
-
-				return sum.plus(totalPrice)
+				return sum.plus(selling.totalPrice)
 			}, new Decimal(0))
 
 			salesByDay.push({
@@ -411,15 +387,11 @@ export class SellingRepository implements OnModuleInit {
 
 			const sales = await this.prisma.sellingModel.findMany({
 				where: { createdAt: { gte: dayStart, lte: dayEnd } },
-				select: { products: true },
+				select: { totalPrice: true },
 			})
 
 			const totalSum = sales.reduce((sum, selling) => {
-				const totalPrice = selling.products.reduce((acc, product) => {
-					return acc.plus(new Decimal(product.count).mul(product.price))
-				}, new Decimal(0))
-
-				return sum.plus(totalPrice)
+				return sum.plus(selling.totalPrice)
 			}, new Decimal(0))
 
 			salesByDay.push({
@@ -443,15 +415,11 @@ export class SellingRepository implements OnModuleInit {
 
 			const sales = await this.prisma.sellingModel.findMany({
 				where: { createdAt: { gte: monthStart, lte: monthEnd } },
-				select: { products: true },
+				select: { totalPrice: true },
 			})
 
 			const totalSum = sales.reduce((sum, selling) => {
-				const totalPrice = selling.products.reduce((acc, product) => {
-					return acc.plus(new Decimal(product.count).mul(product.price))
-				}, new Decimal(0))
-
-				return sum.plus(totalPrice)
+				return sum.plus(selling.totalPrice)
 			}, new Decimal(0))
 			salesByMonth.push({
 				date: dateFormat(monthStart),

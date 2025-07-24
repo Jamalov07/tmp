@@ -11,7 +11,6 @@ import {
 	ArrivalDeleteOneRequest,
 } from './interfaces'
 import { SupplierService } from '../supplier'
-import { ProductService } from '../product'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ExcelService } from '../shared'
 import { Response } from 'express'
@@ -20,18 +19,11 @@ import { Response } from 'express'
 export class ArrivalService {
 	private readonly arrivalRepository: ArrivalRepository
 	private readonly supplierService: SupplierService
-	private readonly productService: ProductService
 	private readonly excelService: ExcelService
 
-	constructor(
-		arrivalRepository: ArrivalRepository,
-		@Inject(forwardRef(() => SupplierService)) supplierService: SupplierService,
-		@Inject(forwardRef(() => ProductService)) productService: ProductService,
-		excelService: ExcelService,
-	) {
+	constructor(arrivalRepository: ArrivalRepository, @Inject(forwardRef(() => SupplierService)) supplierService: SupplierService, excelService: ExcelService) {
 		this.arrivalRepository = arrivalRepository
 		this.supplierService = supplierService
-		this.productService = productService
 		this.excelService = excelService
 	}
 
@@ -51,40 +43,22 @@ export class ArrivalService {
 		}
 
 		const mappedArrivals = arrivals.map((arrival) => {
-			const totalPayment = arrival.payment.card.plus(arrival.payment.cash).plus(arrival.payment.other).plus(arrival.payment.transfer)
-
-			const totalPrice = arrival.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.price))
-			}, new Decimal(0))
-
-			const totalCost = arrival.products.reduce((acc, product) => {
-				return acc.plus(new Decimal(product.count).mul(product.cost))
-			}, new Decimal(0))
-
-			calc.totalPrice = calc.totalPrice.plus(totalPrice)
-			calc.totalCost = calc.totalCost.plus(totalCost)
-			calc.totalPayment = calc.totalPayment.plus(totalPayment)
-			calc.totalDebt = calc.totalDebt.plus(totalCost.minus(totalPayment))
+			calc.totalPrice = calc.totalPrice.plus(arrival.totalPrice)
+			calc.totalCost = calc.totalCost.plus(arrival.totalCost)
+			calc.totalPayment = calc.totalPayment.plus(arrival.payment.total)
+			calc.totalDebt = calc.totalDebt.plus(arrival.totalCost.minus(arrival.payment.total))
 			calc.totalCardPayment = calc.totalCardPayment.plus(arrival.payment.card)
 			calc.totalCashPayment = calc.totalCashPayment.plus(arrival.payment.cash)
 			calc.totalOtherPayment = calc.totalOtherPayment.plus(arrival.payment.other)
 			calc.totalTransferPayment = calc.totalTransferPayment.plus(arrival.payment.transfer)
 
-			const p = arrival.payment
-
-			const hasMeaningfulPayment =
-				(p.card && !p.card.equals(0)) ||
-				(p.cash && !p.cash.equals(0)) ||
-				(p.other && !p.other.equals(0)) ||
-				(p.transfer && !p.transfer.equals(0)) ||
-				(p.description && p.description.trim() !== '')
 			return {
 				...arrival,
-				payment: hasMeaningfulPayment ? p : null,
-				debt: totalCost.minus(totalPayment),
-				totalPayment: totalPayment,
-				totalCost: totalCost,
-				totalPrice: totalPrice,
+				payment: arrival.payment.total.toNumber() ? arrival.payment : null,
+				debt: arrival.totalCost.minus(arrival.payment.total),
+				totalPayment: arrival.payment.total,
+				totalCost: arrival.totalCost,
+				totalPrice: arrival.totalPrice,
 			}
 		})
 
@@ -147,7 +121,29 @@ export class ArrivalService {
 	async createOne(request: CRequest, body: ArrivalCreateOneRequest) {
 		await this.supplierService.findOne({ id: body.supplierId })
 
-		const arrival = await this.arrivalRepository.createOne({ ...body, staffId: request.user.id })
+		const decimalZero = new Decimal(0)
+
+		const total = (body.payment?.card ?? decimalZero)
+			.plus(body.payment?.cash ?? decimalZero)
+			.plus(body.payment?.other ?? decimalZero)
+			.plus(body.payment?.transfer ?? decimalZero)
+
+		body = {
+			...body,
+			staffId: request.user.id,
+			payment: { ...body.payment, total: total },
+			products: body.products.map((product) => {
+				const totalCost = product.cost.mul(product.count)
+				const totalPrice = product.price.mul(product.count)
+
+				body.totalPrice = (body.totalCost ?? new Decimal(0)).plus(totalPrice)
+				body.totalCost = (body.totalCost ?? new Decimal(0)).plus(totalCost)
+
+				return { ...product, totalCost: totalCost, totalPrice: totalPrice }
+			}),
+		}
+
+		const arrival = await this.arrivalRepository.createOne(body)
 
 		return createResponse({ data: arrival, success: { messages: ['create one success'] } })
 	}
@@ -155,16 +151,19 @@ export class ArrivalService {
 	async updateOne(query: ArrivalGetOneRequest, body: ArrivalUpdateOneRequest) {
 		const arrival = await this.getOne(query)
 
-		//update product: decr
-		if (body.productIdsToRemove && body.productIdsToRemove.length) {
-			const productMVs = await this.arrivalRepository.findManyArrivalProductMv(body.productIdsToRemove ?? [])
+		const decimalZero = new Decimal(0)
 
-			productMVs.map(async (pmv) => {
-				await this.productService.updateOne({ id: pmv.product.id }, { count: pmv.product.count - pmv.count })
-			})
+		const newTotal = (body.payment?.card ?? decimalZero)
+			.plus(body.payment?.cash ?? decimalZero)
+			.plus(body.payment?.other ?? decimalZero)
+			.plus(body.payment?.transfer ?? decimalZero)
+
+		body = {
+			...body,
+			payment: { ...body.payment, total: !newTotal.equals(arrival.data.payment.total) ? newTotal : undefined },
 		}
 
-		await this.arrivalRepository.updateOne(query, { ...body, staffId: arrival.data.staffId })
+		await this.arrivalRepository.updateOne(query, body)
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}

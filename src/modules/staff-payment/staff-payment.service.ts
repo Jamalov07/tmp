@@ -17,15 +17,11 @@ import { Response } from 'express'
 
 @Injectable()
 export class StaffPaymentService {
-	private readonly staffPaymentRepository: StaffPaymentRepository
-	private readonly staffService: StaffService
-	private readonly excelService: ExcelService
-
-	constructor(staffPaymentRepository: StaffPaymentRepository, staffService: StaffService, excelService: ExcelService) {
-		this.staffPaymentRepository = staffPaymentRepository
-		this.staffService = staffService
-		this.excelService = excelService
-	}
+	constructor(
+		private readonly staffPaymentRepository: StaffPaymentRepository,
+		private readonly staffService: StaffService,
+		private readonly excelService: ExcelService,
+	) {}
 
 	async findMany(query: StaffPaymentFindManyRequest) {
 		const staffPayments = await this.staffPaymentRepository.findMany(query)
@@ -92,24 +88,45 @@ export class StaffPaymentService {
 	}
 
 	async createOne(request: CRequest, body: StaffPaymentCreateOneRequest) {
-		await this.staffService.findOne({ id: body.userId })
+		const payment = await this.staffService.findOne({ id: body.userId })
 
 		const staffPayment = await this.staffPaymentRepository.createOne({ ...body, staffId: request.user.id })
+
+		if (!body.sum) {
+			await this.staffService.updateOne({ id: staffPayment.user.id }, { balance: staffPayment.user.balance.plus(staffPayment.sum) })
+		}
 
 		return createResponse({ data: staffPayment, success: { messages: ['create one success'] } })
 	}
 
 	async updateOne(query: StaffPaymentGetOneRequest, body: StaffPaymentUpdateOneRequest) {
-		await this.getOne(query)
+		const payment = await this.getOne(query)
+
+		const hasPaymentFields = body.sum !== undefined
+
+		let sumDiff = new Decimal(0)
+
+		if (hasPaymentFields) {
+			const oldSum = new Decimal(payment.data.sum ?? 0)
+			const newSum = new Decimal(body.sum ?? 0)
+			sumDiff = newSum.minus(oldSum)
+		}
 
 		await this.staffPaymentRepository.updateOne(query, { ...body })
+
+		if (!sumDiff.isZero()) {
+			await this.staffService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(sumDiff) })
+		}
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}
 
 	async deleteOne(query: StaffPaymentDeleteOneRequest) {
-		await this.getOne(query)
+		const payment = await this.getOne(query)
 		if (query.method === DeleteMethodEnum.hard) {
+			if (!payment.data.total.isZero()) {
+				await this.staffService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+			}
 			await this.staffPaymentRepository.deleteOne(query)
 		} else {
 			await this.staffPaymentRepository.updateOne(query, { deletedAt: new Date() })

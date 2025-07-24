@@ -12,7 +12,7 @@ export declare interface StaffGetOneRequest extends StaffOptional, Pick<RequestO
 export declare interface StaffCreateOneRequest extends Pick<StaffRequired, 'fullname' | 'phone' | 'password'>, Pick<RequestOtherFields, 'actionsToConnect'> {}
 
 export declare interface StaffUpdateOneRequest
-	extends Pick<StaffOptional, 'fullname' | 'password' | 'phone' | 'token' | 'deletedAt'>,
+	extends Pick<StaffOptional, 'fullname' | 'password' | 'phone' | 'token' | 'deletedAt' | 'balance'>,
 		Pick<RequestOtherFields, 'actionsToConnect' | 'actionsToDisconnect'> {}
 
 export declare interface StaffDeleteOneRequest extends Pick<StaffOptional, 'id'>, Pick<RequestOtherFields, 'method'> {}

@@ -12,15 +12,19 @@ export declare interface ProductMVGetManyRequest extends ProductMVOptional, Pagi
 
 export declare interface ProductMVGetOneRequest extends ProductMVOptional {}
 
-export declare interface SellingProductMVCreateOneRequest extends Pick<ProductMVRequired, 'count' | 'price' | 'productId' | 'sellingId'>, Pick<ProductMVOptional, 'staffId'> {}
+export declare interface SellingProductMVCreateOneRequest
+	extends Pick<ProductMVRequired, 'count' | 'price' | 'productId' | 'sellingId'>,
+		Pick<ProductMVOptional, 'staffId' | 'totalPrice'> {}
 export declare interface ArrivalProductMVCreateOneRequest
 	extends Pick<ProductMVRequired, 'cost' | 'count' | 'price' | 'arrivalId' | 'productId'>,
-		Pick<ProductMVOptional, 'staffId'> {}
+		Pick<ProductMVOptional, 'staffId' | 'totalCost' | 'totalPrice'> {}
 
-export declare interface ReturningProductMVCreateOneRequest extends Pick<ProductMVRequired, 'count' | 'price' | 'productId' | 'returningId'>, Pick<ProductMVOptional, 'staffId'> {}
+export declare interface ReturningProductMVCreateOneRequest
+	extends Pick<ProductMVRequired, 'count' | 'price' | 'productId' | 'returningId'>,
+		Pick<ProductMVOptional, 'staffId' | 'totalPrice'> {}
 
-export declare interface SellingProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'count' | 'price' | 'productId' | 'sellingId'> {}
-export declare interface ArrivalProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'cost' | 'count' | 'price' | 'arrivalId' | 'productId'> {}
-export declare interface ReturningProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'count' | 'price' | 'productId' | 'returningId'> {}
+export declare interface SellingProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'count' | 'price' | 'productId' | 'sellingId' | 'totalPrice'> {}
+export declare interface ArrivalProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'cost' | 'count' | 'price' | 'arrivalId' | 'productId' | 'totalCost' | 'totalPrice'> {}
+export declare interface ReturningProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'count' | 'price' | 'productId' | 'returningId' | 'totalPrice'> {}
 
 export declare interface ProductMVDeleteOneRequest extends Pick<ProductMVOptional, 'id'> {}

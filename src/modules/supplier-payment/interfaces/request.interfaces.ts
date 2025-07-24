@@ -14,8 +14,9 @@ export declare interface SupplierPaymentGetOneRequest extends SupplierPaymentOpt
 
 export declare interface SupplierPaymentCreateOneRequest
 	extends Pick<SupplierPaymentRequired, 'userId' | 'card' | 'cash' | 'other' | 'transfer'>,
-		Pick<SupplierPaymentOptional, 'description' | 'staffId'> {}
+		Pick<SupplierPaymentOptional, 'description' | 'staffId' | 'total'> {}
 
-export declare interface SupplierPaymentUpdateOneRequest extends Pick<SupplierPaymentOptional, 'userId' | 'card' | 'description' | 'deletedAt' | 'cash' | 'other' | 'transfer'> {}
+export declare interface SupplierPaymentUpdateOneRequest
+	extends Pick<SupplierPaymentOptional, 'userId' | 'card' | 'description' | 'deletedAt' | 'cash' | 'other' | 'transfer' | 'total'> {}
 
 export declare interface SupplierPaymentDeleteOneRequest extends Pick<SupplierPaymentOptional, 'id'>, Pick<RequestOtherFields, 'method'> {}

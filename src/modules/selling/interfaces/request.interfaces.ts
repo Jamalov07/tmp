@@ -15,19 +15,21 @@ export declare interface SellingGetManyRequest extends SellingOptional, Paginati
 
 export declare interface SellingGetOneRequest extends SellingOptional, Pick<RequestOtherFields, 'isDeleted'> {}
 
-export declare interface SellingPayment extends Pick<ClientPaymentRequired, 'card' | 'cash' | 'other' | 'transfer'>, Pick<ClientPaymentOptional, 'description'> {}
+export declare interface SellingPayment extends Pick<ClientPaymentRequired, 'card' | 'cash' | 'other' | 'transfer'>, Pick<ClientPaymentOptional, 'description' | 'total'> {}
 
-export declare interface SellingProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId'> {}
+export declare interface SellingProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId' | 'totalPrice'> {}
 
-export declare interface SellingCreateOneRequest extends Pick<SellingRequired, 'clientId' | 'date' | 'send'>, Pick<SellingOptional, 'staffId' | 'sended' | 'status'> {
+export declare interface SellingCreateOneRequest extends Pick<SellingRequired, 'clientId' | 'date'>, Pick<SellingOptional, 'staffId' | 'status' | 'totalPrice'> {
 	payment?: SellingPayment
 	products?: SellingProduct[]
+	send?: boolean
 }
 
-export declare interface SellingUpdateOneRequest extends Pick<SellingOptional, 'deletedAt' | 'clientId' | 'date' | 'status' | 'staffId' | 'sended' | 'send'> {
+export declare interface SellingUpdateOneRequest extends Pick<SellingOptional, 'deletedAt' | 'clientId' | 'date' | 'status' | 'staffId' | 'totalPrice'> {
 	payment?: SellingPayment
 	products?: SellingProduct[]
 	productIdsToRemove?: string[]
+	send?: boolean
 }
 
 export declare interface SellingDeleteOneRequest extends Pick<SellingOptional, 'id'>, Pick<RequestOtherFields, 'method'> {}

@@ -30,19 +30,12 @@ export class ClientService {
 		// const clientsCount = await this.clientRepository.countFindMany(query)
 
 		const mappedClients = clients.map((c) => {
-			let payment = c.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
-
 			const sellingPayment = c.sellings.reduce((acc, sel) => {
-				const productsSum = sel.products.reduce((a, p) => {
-					return a.plus(p.price.mul(p.count))
-				}, new Decimal(0))
-
-				const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-				return acc.plus(productsSum).minus(totalPayment)
+				return acc.plus(sel.totalPrice).minus(sel.payment.total)
 			}, new Decimal(0))
 
 			c.returnings.map((returning) => {
-				payment = payment.plus(returning.payment.fromBalance)
+				c.balance = c.balance.plus(returning.payment.fromBalance)
 			})
 
 			return {
@@ -52,7 +45,7 @@ export class ClientService {
 				actions: c.actions,
 				createdAt: c.createdAt,
 				phone: c.phone,
-				debt: sellingPayment.minus(payment),
+				debt: sellingPayment.minus(c.balance),
 				lastSellingDate: c.sellings?.length ? c.sellings[0].date : null,
 			}
 		})
@@ -106,34 +99,26 @@ export class ClientService {
 		let totalCredit: Decimal = new Decimal(0)
 
 		let payment = client.payments.reduce((acc, curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-
 			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
-				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-				totalCredit = totalCredit.plus(totalPayment)
+				deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
+				totalCredit = totalCredit.plus(curr.total)
 			}
 
-			return acc.plus(totalPayment)
+			return acc.plus(curr.total)
 		}, new Decimal(0))
 
 		const sellingPayment = client.sellings.reduce((acc, sel) => {
-			const productsSum = sel.products.reduce((a, p) => {
-				return a.plus(p.price.mul(p.count))
-			}, new Decimal(0))
-
 			if ((!deedStartDate || sel.date >= deedStartDate) && (!deedEndDate || sel.date <= deedEndDate)) {
-				deeds.push({ type: 'debit', action: 'selling', value: productsSum, date: sel.date, description: '' })
-				totalDebit = totalDebit.plus(productsSum)
+				deeds.push({ type: 'debit', action: 'selling', value: sel.totalPrice, date: sel.date, description: '' })
+				totalDebit = totalDebit.plus(sel.totalPrice)
 			}
-
-			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
 
 			if ((!deedStartDate || sel.payment.createdAt >= deedStartDate) && (!deedEndDate || sel.payment.createdAt <= deedEndDate)) {
-				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
-				totalCredit = totalCredit.plus(totalPayment)
+				deeds.push({ type: 'credit', action: 'payment', value: sel.payment.total, date: sel.payment.createdAt, description: sel.payment.description })
+				totalCredit = totalCredit.plus(sel.payment.total)
 			}
 
-			return acc.plus(productsSum).minus(totalPayment)
+			return acc.plus(sel.totalPrice).minus(sel.payment.total)
 		}, new Decimal(0))
 
 		client.returnings.map((returning) => {

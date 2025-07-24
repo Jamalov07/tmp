@@ -143,13 +143,23 @@ export class SyncronizeService {
 		const data = await this.fetchAllPages<{ sum: number; createdAt: Date; description: string; employee: { name: string; phone: string } }>('/employeePayment')
 
 		const pays = []
+		const staffBalance: Record<string, number> = {}
 		for (const pay of data) {
 			const key = `${pay.employee?.name.trim()}-${pay.employee?.phone.trim()}`
 			const staff = staffObject[key] ? staffObject[key] : { id: null }
 			if (!staff) {
 				continue
 			} else {
-				pays.push({ type: ServiceTypeEnum.staff, userId: staff.id, staffId: staff.id, sum: pay.sum, description: pay.description, createdAt: pay.createdAt })
+				pays.push({
+					type: ServiceTypeEnum.staff,
+					userId: staff.id,
+					staffId: staff.id,
+					total: pay.sum,
+					sum: pay.sum,
+					description: pay.description,
+					createdAt: pay.createdAt,
+				})
+				staffBalance[staff.id] = (staffBalance[staff.id] ?? 0) + pay.sum
 			}
 		}
 
@@ -157,6 +167,17 @@ export class SyncronizeService {
 			skipDuplicates: false,
 			data: pays,
 		})
+
+		await Promise.all(
+			Object.entries(staffBalance).map(([userId, sum]) =>
+				this.prisma.userModel.update({
+					where: { id: userId },
+					data: {
+						balance: { increment: sum },
+					},
+				}),
+			),
+		)
 
 		console.log('staff payments', data.length, payments.length)
 		return payments
@@ -190,6 +211,7 @@ export class SyncronizeService {
 
 		const pays = []
 		const orpays = []
+		const supplierBalance: Record<string, number> = {}
 		for (const pay of data) {
 			const staff = { id: staffs[0].id }
 			const key = `${pay.supplier.name.trim()}-${pay.supplier.phone.trim()}`
@@ -203,7 +225,11 @@ export class SyncronizeService {
 				}
 			}
 			if (!pay.order) {
+				const decimalZero = 0
+
+				const totalPayment = (pay.card ?? decimalZero) + (pay.cash ?? decimalZero) + (pay.other ?? decimalZero) + (pay.transfer ?? decimalZero)
 				pays.push({
+					total: totalPayment,
 					type: ServiceTypeEnum.supplier,
 					userId: supplier.id,
 					staffId: staff.id,
@@ -214,6 +240,8 @@ export class SyncronizeService {
 					description: pay.description,
 					createdAt: pay.createdAt,
 				})
+
+				supplierBalance[staff.id] = (supplierBalance[staff.id] ?? 0) + totalPayment
 			} else {
 				orpays.push(pay)
 			}
@@ -223,6 +251,17 @@ export class SyncronizeService {
 			skipDuplicates: false,
 			data: pays,
 		})
+
+		await Promise.all(
+			Object.entries(supplierBalance).map(([userId, sum]) =>
+				this.prisma.userModel.update({
+					where: { id: userId },
+					data: {
+						balance: { increment: sum },
+					},
+				}),
+			),
+		)
 
 		console.log(orpays.length)
 		console.log('supplier payment', data.length, payments.length)
@@ -259,6 +298,8 @@ export class SyncronizeService {
 
 		const pays = []
 		const orpays = []
+		const clientBalance: Record<string, number> = {}
+
 		for (const pay of data) {
 			const stkey = `${pay.seller?.name.trim()}-${pay.seller?.phone.trim()}`
 			const staff = staffObject[stkey] ? staffObject[stkey] : { id: staffs[0].id }
@@ -274,7 +315,12 @@ export class SyncronizeService {
 				}
 			}
 			if (!pay.order) {
+				const decimalZero = 0
+
+				const totalPayment = (pay.card ?? decimalZero) + (pay.cash ?? decimalZero) + (pay.other ?? decimalZero) + (pay.transfer ?? decimalZero)
+
 				pays.push({
+					total: totalPayment,
 					type: ServiceTypeEnum.client,
 					userId: client.id,
 					staffId: staff.id,
@@ -285,6 +331,7 @@ export class SyncronizeService {
 					description: pay.description,
 					createdAt: pay.createdAt,
 				})
+				clientBalance[staff.id] = (clientBalance[staff.id] ?? 0) + totalPayment
 			} else {
 				orpays.push(pay)
 			}
@@ -294,6 +341,17 @@ export class SyncronizeService {
 			skipDuplicates: false,
 			data: pays,
 		})
+
+		await Promise.all(
+			Object.entries(clientBalance).map(([userId, sum]) =>
+				this.prisma.userModel.update({
+					where: { id: userId },
+					data: {
+						balance: { increment: sum },
+					},
+				}),
+			),
+		)
 
 		console.log(orpays.length)
 		console.log('client payments', data.length, payments.length)
@@ -348,7 +406,8 @@ export class SyncronizeService {
 					})
 				}
 			}
-			const products: { cost: number; price: number; count: number; createdAt: Date; productId: string }[] = []
+			const products: { price: number; count: number; totalPrice: number; createdAt: Date; productId: string }[] = []
+			let totalPrice = 0
 			for (const pro of selling.products) {
 				const pkey = pro.product.name.trim()
 				let product = productObject[pkey] ? productObject[pkey] : { id: null }
@@ -358,17 +417,24 @@ export class SyncronizeService {
 						product = await this.prisma.productModel.create({ data: { name: pkey } })
 					}
 				}
-				products.push({ cost: pro.cost, count: pro.count, price: pro.price, createdAt: pro.createdAt, productId: product.id })
+				const tprice = pro.count * pro.price
+				totalPrice = totalPrice + tprice
+				products.push({ count: pro.count, price: pro.price, totalPrice: tprice, createdAt: pro.createdAt, productId: product.id })
 			}
+			const decimalZero = 0
+
+			const totalPayment =
+				(selling.payment?.card ?? decimalZero) + (selling.payment?.cash ?? decimalZero) + (selling.payment?.other ?? decimalZero) + (selling.payment?.transfer ?? decimalZero)
+
 			sels.push({
 				status: selling.accepted ? SellingStatusEnum.accepted : SellingStatusEnum.notaccepted,
 				clientId: client.id,
 				date: selling.sellingDate,
 				staffId: staff.id,
-				send: false,
-				sended: false,
+				totalPrice: totalPrice,
 				payment: {
 					create: {
+						total: totalPayment,
 						card: selling.payment?.card,
 						cash: selling.payment?.cash,
 						other: selling.payment?.other,
@@ -384,7 +450,15 @@ export class SyncronizeService {
 					createMany: {
 						skipDuplicates: false,
 						data: products.map((p) => {
-							return { productId: p.productId, type: ServiceTypeEnum.selling, count: p.count, price: p.price, staffId: staff.id, createdAt: p.createdAt }
+							return {
+								productId: p.productId,
+								type: ServiceTypeEnum.selling,
+								totalPrice: p.totalPrice,
+								count: p.count,
+								price: p.price,
+								staffId: staff.id,
+								createdAt: p.createdAt,
+							}
 						}),
 					},
 				},
@@ -430,7 +504,7 @@ export class SyncronizeService {
 			payment: { card: number; cash: number; other: number; transfer: number; description: string; createdAt: Date }
 			createdAt: Date
 			sellingDate: Date
-			incomingProducts: { cost: number; count: number; price: number; createdAt: Date; product: { name: string } }[]
+			incomingProducts: { cost: number; count: number; selling_price: number; createdAt: Date; product: { name: string } }[]
 		}>('/incomingOrder')
 
 		const arrivals = []
@@ -447,7 +521,17 @@ export class SyncronizeService {
 					})
 				}
 			}
-			const products: { cost: number; price: number; count: number; createdAt: Date; productId: string }[] = []
+			const products: {
+				cost: number
+				price: number
+				totalPrice: number
+				totalCost: number
+				count: number
+				createdAt: Date
+				productId: string
+			}[] = []
+			let totalCost = 0
+			let totalPrice = 0
 			for (const pro of arrival.incomingProducts) {
 				const pkey = pro.product.name.trim()
 				let product = productObject[pkey] ? productObject[pkey] : { id: null }
@@ -457,14 +541,35 @@ export class SyncronizeService {
 						product = await this.prisma.productModel.create({ data: { name: pkey } })
 					}
 				}
-				products.push({ cost: pro.cost, count: pro.count, price: pro.price, createdAt: pro.createdAt, productId: product.id })
+				const tprice = (pro.count ?? 0) * (pro.selling_price ?? 0)
+				const tcost = (pro.count ?? 0) * (pro.cost ?? 0)
+				totalCost = totalCost + tcost
+				totalPrice = totalPrice + tprice
+				products.push({
+					cost: pro.cost,
+					totalCost: tcost,
+					totalPrice: tprice,
+					count: pro.count,
+					price: pro.selling_price,
+					createdAt: pro.createdAt,
+					productId: product.id,
+				})
 			}
+
+			const decimalZero = 0
+
+			const totalPayment =
+				(arrival.payment?.card ?? decimalZero) + (arrival.payment?.cash ?? decimalZero) + (arrival.payment?.other ?? decimalZero) + (arrival.payment?.transfer ?? decimalZero)
+
 			arrivals.push({
 				supplierId: supplier.id,
 				date: arrival.sellingDate,
 				staffId: staff.id,
+				totalCost: totalCost,
+				totalPrice: totalPrice,
 				payment: {
 					create: {
+						total: totalPayment,
 						card: arrival.payment?.card,
 						cash: arrival.payment?.cash,
 						other: arrival.payment?.other,
@@ -480,7 +585,16 @@ export class SyncronizeService {
 					createMany: {
 						skipDuplicates: false,
 						data: products.map((p) => {
-							return { productId: p.productId, type: ServiceTypeEnum.arrival, count: p.count, price: p.price, staffId: staff.id, createdAt: p.createdAt }
+							return {
+								productId: p.productId,
+								type: ServiceTypeEnum.arrival,
+								totalCost: p.totalCost,
+								totalPrice: p.totalPrice,
+								count: p.count,
+								price: p.price,
+								staffId: staff.id,
+								createdAt: p.createdAt,
+							}
 						}),
 					},
 				},
@@ -530,7 +644,6 @@ export class SyncronizeService {
 			returnedDate: Date
 			client: { phone: string; name: string }
 			seller: { phone: string; name: string }
-			payment: { card: number; cash: number; other: number; transfer: number; description: string; createdAt: Date }
 			products: { count: number; price: number; createdAt: Date; product: { name: string } }[]
 		}>('/returned-order')
 
@@ -548,7 +661,8 @@ export class SyncronizeService {
 					})
 				}
 			}
-			const products: { price: number; count: number; createdAt: Date; productId: string }[] = []
+			const products: { price: number; totalPrice: number; count: number; createdAt: Date; productId: string }[] = []
+			let totalPrice = 0
 			for (const pro of returning.products) {
 				const pkey = pro.product.name.trim()
 				let product = productObject[pkey] ? productObject[pkey] : { id: null }
@@ -558,20 +672,25 @@ export class SyncronizeService {
 						product = await this.prisma.productModel.create({ data: { name: pkey } })
 					}
 				}
-				products.push({ count: pro.count, price: pro.price, createdAt: pro.createdAt, productId: product.id })
+				const tprice = pro.count * pro.price
+				totalPrice = totalPrice + tprice
+				products.push({ count: pro.count, totalPrice: tprice, price: pro.price, createdAt: pro.createdAt, productId: product.id })
 			}
+			const decimalZero = 0
+
+			const totalPayment = (returning.fromClient ?? decimalZero) + (returning.cashPayment ?? decimalZero)
 			returnings.push({
 				clientId: client.id,
 				date: returning.returnedDate,
 				staffId: staff.id,
+				totalPrice: totalPrice,
 				payment: {
 					create: {
-						card: returning.payment?.card,
-						cash: returning.payment?.cash,
-						other: returning.payment?.other,
-						transfer: returning.payment?.transfer,
-						description: returning.payment?.description,
-						createdAt: returning.payment?.createdAt,
+						total: totalPayment,
+						fromBalance: returning.fromClient,
+						cash: returning.cashPayment,
+						description: returning?.description,
+						createdAt: returning?.createdAt,
 						type: ServiceTypeEnum.returning,
 						staffId: staff.id,
 						userId: client.id,
@@ -581,7 +700,15 @@ export class SyncronizeService {
 					createMany: {
 						skipDuplicates: false,
 						data: products.map((p) => {
-							return { productId: p.productId, type: ServiceTypeEnum.returning, count: p.count, price: p.price, staffId: staff.id, createdAt: p.createdAt }
+							return {
+								productId: p.productId,
+								type: ServiceTypeEnum.returning,
+								count: p.count,
+								totalPrice: p.totalPrice,
+								price: p.price,
+								staffId: staff.id,
+								createdAt: p.createdAt,
+							}
 						}),
 					},
 				},

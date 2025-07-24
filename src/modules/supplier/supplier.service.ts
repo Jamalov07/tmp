@@ -30,20 +30,12 @@ export class SupplierService {
 		// const suppliersCount = await this.supplierRepository.countFindMany(query)
 
 		const mappedSuppliers = suppliers.map((s) => {
-			const payment = s.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
-
 			const arrivalPayment = s.arrivals.reduce((acc, arr) => {
-				const productsSum = arr.products.reduce((a, p) => {
-					return a.plus(p.cost.mul(p.count))
-				}, new Decimal(0))
-
-				const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-
-				return acc.plus(productsSum).minus(totalPayment)
+				return acc.plus(arr.totalCost).minus(arr.payment.total)
 			}, new Decimal(0))
 			return {
 				...s,
-				debt: payment.plus(arrivalPayment),
+				debt: s.balance.plus(arrivalPayment),
 				lastArrivalDate: s.arrivals?.length ? s.arrivals[0].date : null,
 			}
 		})

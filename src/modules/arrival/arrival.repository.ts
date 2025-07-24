@@ -11,15 +11,17 @@ import {
 } from './interfaces'
 import { ArrivalController } from './arrival.controller'
 import { ServiceTypeEnum } from '@prisma/client'
+import { ProductMVRepository } from '../product-mv'
 
 @Injectable()
 export class ArrivalRepository implements OnModuleInit {
-	private readonly prisma: PrismaService
-	constructor(prisma: PrismaService) {
-		this.prisma = prisma
-	}
+	constructor(
+		private readonly prisma: PrismaService,
+		// private readonly productMVRepository: ProductMVRepository,
+	) {}
 
 	async findMany(query: ArrivalFindManyRequest) {
+		console.log(query)
 		let paginationOptions = {}
 		if (query.pagination) {
 			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }
@@ -29,20 +31,19 @@ export class ArrivalRepository implements OnModuleInit {
 			where: {
 				supplierId: query.supplierId,
 				OR: [{ supplier: { fullname: { contains: query.search, mode: 'insensitive' } } }, { supplier: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				date: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				date: { gte: query.startDate, lte: query.endDate },
 			},
 			select: {
 				id: true,
 				date: true,
+				totalCost: true,
+				totalPrice: true,
 				supplier: { select: { fullname: true, phone: true, id: true } },
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
 				staff: { select: { fullname: true, phone: true, id: true } },
-				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+				payment: { select: { id: true, total: true, card: true, cash: true, other: true, transfer: true, description: true } },
 				products: {
 					orderBy: [{ createdAt: 'desc' }],
 					select: { id: true, price: true, count: true, cost: true, product: { select: { name: true, cost: true, count: true, price: true, id: true } } },
@@ -79,10 +80,7 @@ export class ArrivalRepository implements OnModuleInit {
 			where: {
 				supplierId: query.supplierId,
 				OR: [{ supplier: { fullname: { contains: query.search, mode: 'insensitive' } } }, { supplier: { phone: { contains: query.search, mode: 'insensitive' } } }],
-				date: {
-					gte: query.startDate ? new Date(new Date(query.startDate).setHours(0, 0, 0, 0)) : undefined,
-					lte: query.endDate ? new Date(new Date(query.endDate).setHours(23, 59, 59, 999)) : undefined,
-				},
+				date: { gte: query.startDate, lte: query.endDate },
 			},
 		})
 
@@ -103,14 +101,17 @@ export class ArrivalRepository implements OnModuleInit {
 			select: {
 				id: true,
 				date: true,
+				totalCost: true,
+				totalPrice: true,
 				supplier: {
 					select: {
 						id: true,
 						fullname: true,
+						balance: true,
 						phone: true,
 						payments: {
 							where: { type: ServiceTypeEnum.client },
-							select: { card: true, cash: true, other: true, transfer: true },
+							select: { card: true, cash: true, other: true, transfer: true, total: true },
 						},
 					},
 				},
@@ -130,6 +131,7 @@ export class ArrivalRepository implements OnModuleInit {
 	async getOne(query: ArrivalGetOneRequest) {
 		const arrival = await this.prisma.arrivalModel.findFirst({
 			where: { id: query.id, supplierId: query.supplierId, staffId: query.staffId },
+			select: { id: true, payment: true, staffId: true },
 		})
 
 		return arrival
@@ -151,9 +153,12 @@ export class ArrivalRepository implements OnModuleInit {
 			data: {
 				supplierId: body.supplierId,
 				date: new Date(body.date),
+				totalCost: body.totalCost,
+				totalPrice: body.totalPrice,
 				staffId: body.staffId,
 				payment: {
 					create: {
+						total: body.payment.total,
 						card: body.payment?.card,
 						cash: body.payment?.cash,
 						other: body.payment?.other,
@@ -167,7 +172,16 @@ export class ArrivalRepository implements OnModuleInit {
 				products: {
 					createMany: {
 						skipDuplicates: false,
-						data: body.products.map((p) => ({ productId: p.productId, type: ServiceTypeEnum.arrival, cost: p.cost, count: p.count, price: p.price, staffId: body.staffId })),
+						data: body.products.map((p) => ({
+							productId: p.productId,
+							type: ServiceTypeEnum.arrival,
+							cost: p.cost,
+							count: p.count,
+							price: p.price,
+							totalCost: p.totalCost,
+							totalPrice: p.totalPrice,
+							staffId: body.staffId,
+						})),
 					},
 				},
 			},
@@ -179,15 +193,21 @@ export class ArrivalRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				staff: { select: { fullname: true, phone: true, id: true } },
-				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true, total: true } },
 				products: { select: { id: true, price: true, count: true, cost: true, product: { select: { name: true } } } },
 			},
 		})
 
 		if (body.products) {
+			const existingProducts = await this.prisma.productModel.findMany({
+				where: { id: { in: body.products.map((p) => p.productId) } },
+				select: { id: true },
+			})
+
+			const existingProductSet = new Set(existingProducts.map((p) => p.id))
+
 			for (const product of body.products) {
-				const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
-				if (pr) {
+				if (existingProductSet.has(product.productId)) {
 					await this.prisma.productModel.update({
 						where: { id: product.productId },
 						data: { cost: product.cost, price: product.price, count: { increment: product.count } },
@@ -208,6 +228,7 @@ export class ArrivalRepository implements OnModuleInit {
 				deletedAt: body.deletedAt,
 				payment: {
 					update: {
+						total: body.payment.total,
 						card: body.payment?.card,
 						cash: body.payment?.cash,
 						other: body.payment?.other,
@@ -215,29 +236,9 @@ export class ArrivalRepository implements OnModuleInit {
 						description: body.payment?.description,
 					},
 				},
-				products: {
-					createMany: {
-						skipDuplicates: false,
-						data: body.products
-							? body.products?.map((p) => ({ productId: p.productId, cost: p.cost, type: ServiceTypeEnum.arrival, count: p.count, price: p.price, staffId: body.staffId }))
-							: [],
-					},
-					deleteMany: body.productIdsToRemove?.map((id) => ({ id: id })),
-				},
 			},
+			select: { id: true, payment: true },
 		})
-
-		if (body.products) {
-			for (const product of body.products) {
-				const pr = await this.prisma.productModel.findFirst({ where: { id: product.productId } })
-				if (pr) {
-					await this.prisma.productModel.update({
-						where: { id: product.productId },
-						data: { cost: product.cost, price: product.price, count: { increment: product.count } },
-					})
-				}
-			}
-		}
 
 		return arrival
 	}
@@ -248,9 +249,14 @@ export class ArrivalRepository implements OnModuleInit {
 			select: { products: { select: { product: true, count: true } } },
 		})
 
-		for (const product of arrival.products) {
-			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
-		}
+		await Promise.all(
+			arrival.products.map((product) =>
+				this.prisma.productModel.update({
+					where: { id: product.product.id },
+					data: { count: { decrement: product.count } },
+				}),
+			),
+		)
 
 		return arrival
 	}

@@ -36,18 +36,20 @@ export class ClientRepository implements OnModuleInit {
 				id: true,
 				fullname: true,
 				phone: true,
+				balance: true,
 				actions: true,
 				createdAt: true,
 				telegram: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, deletedAt: null },
-					select: { card: true, cash: true, other: true, transfer: true },
+					select: { card: true, cash: true, other: true, transfer: true, total: true },
 				},
 				sellings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true } },
+						totalPrice: true,
+						payment: { select: { card: true, cash: true, other: true, transfer: true, total: true } },
 						products: { select: { count: true, price: true } },
 					},
 					orderBy: { date: 'desc' },
@@ -79,15 +81,16 @@ export class ClientRepository implements OnModuleInit {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, deletedAt: null },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { card: true, total: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
 						date: true,
+						totalPrice: true,
 						products: { select: { cost: true, count: true, price: true } },
 						payment: {
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -184,6 +187,7 @@ export class ClientRepository implements OnModuleInit {
 			data: {
 				fullname: body.fullname,
 				phone: body.phone,
+				balance: body.balance,
 				deletedAt: body.deletedAt,
 			},
 		})

@@ -14,8 +14,9 @@ export declare interface ClientPaymentGetOneRequest extends ClientPaymentOptiona
 
 export declare interface ClientPaymentCreateOneRequest
 	extends Pick<ClientPaymentRequired, 'userId' | 'card' | 'cash' | 'other' | 'transfer'>,
-		Pick<ClientPaymentOptional, 'description' | 'staffId'> {}
+		Pick<ClientPaymentOptional, 'description' | 'staffId' | 'total'> {}
 
-export declare interface ClientPaymentUpdateOneRequest extends Pick<ClientPaymentOptional, 'userId' | 'card' | 'description' | 'deletedAt' | 'cash' | 'other' | 'transfer'> {}
+export declare interface ClientPaymentUpdateOneRequest
+	extends Pick<ClientPaymentOptional, 'userId' | 'card' | 'description' | 'deletedAt' | 'cash' | 'other' | 'transfer' | 'total'> {}
 
 export declare interface ClientPaymentDeleteOneRequest extends Pick<ClientPaymentOptional, 'id'>, Pick<RequestOtherFields, 'method'> {}
