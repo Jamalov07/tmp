@@ -240,7 +240,6 @@ export class ProductMVService {
 		const sellingProduct = await this.productMVRepository.deleteOne(query)
 
 		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
-			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
 			const sellingProducts = sellingProduct.selling.products.map((pro) => {
 				let status: BotSellingProductTitleEnum = undefined
 				if (pro.id === sellingProduct.id) {
@@ -253,6 +252,7 @@ export class ProductMVService {
 
 			await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: totalPrice })
 
+			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
 			const sellingInfo = {
 				...sellingProduct.selling,
 				client: client.data,
