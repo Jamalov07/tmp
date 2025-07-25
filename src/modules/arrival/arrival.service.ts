@@ -121,29 +121,36 @@ export class ArrivalService {
 	async createOne(request: CRequest, body: ArrivalCreateOneRequest) {
 		await this.supplierService.findOne({ id: body.supplierId })
 
-		const decimalZero = new Decimal(0)
+		const total = new Decimal(body.payment?.card ?? 0)
+			.plus(body.payment?.cash ?? 0)
+			.plus(body.payment?.other ?? 0)
+			.plus(body.payment?.transfer ?? 0)
 
-		const total = (body.payment?.card ?? decimalZero)
-			.plus(body.payment?.cash ?? decimalZero)
-			.plus(body.payment?.other ?? decimalZero)
-			.plus(body.payment?.transfer ?? decimalZero)
+		let totalCost = new Decimal(0)
+		let totalPrice = new Decimal(0)
 
-		body = {
+		const products = body.products.map((product) => {
+			const cost = new Decimal(product.cost ?? 0)
+			const price = new Decimal(product.price ?? 0)
+			const count = new Decimal(product.count ?? 0)
+
+			const totalCostForProduct = cost.mul(count)
+			const totalPriceForProduct = price.mul(count)
+
+			totalCost = totalCost.plus(totalCostForProduct)
+			totalPrice = totalPrice.plus(totalPriceForProduct)
+
+			return { ...product, totalCost: totalCostForProduct, totalPrice: totalPriceForProduct }
+		})
+
+		const arrival = await this.arrivalRepository.createOne({
 			...body,
 			staffId: request.user.id,
 			payment: { ...body.payment, total: total },
-			products: body.products.map((product) => {
-				const totalCost = product.cost.mul(product.count)
-				const totalPrice = product.price.mul(product.count)
-
-				body.totalPrice = (body.totalCost ?? new Decimal(0)).plus(totalPrice)
-				body.totalCost = (body.totalCost ?? new Decimal(0)).plus(totalCost)
-
-				return { ...product, totalCost: totalCost, totalPrice: totalPrice }
-			}),
-		}
-
-		const arrival = await this.arrivalRepository.createOne(body)
+			products,
+			totalCost,
+			totalPrice,
+		})
 
 		return createResponse({ data: arrival, success: { messages: ['create one success'] } })
 	}
@@ -151,12 +158,10 @@ export class ArrivalService {
 	async updateOne(query: ArrivalGetOneRequest, body: ArrivalUpdateOneRequest) {
 		const arrival = await this.getOne(query)
 
-		const decimalZero = new Decimal(0)
-
-		const newTotal = (body.payment?.card ?? decimalZero)
-			.plus(body.payment?.cash ?? decimalZero)
-			.plus(body.payment?.other ?? decimalZero)
-			.plus(body.payment?.transfer ?? decimalZero)
+		const newTotal = new Decimal(body.payment?.card ?? 0)
+			.plus(body.payment?.cash ?? 0)
+			.plus(body.payment?.other ?? 0)
+			.plus(body.payment?.transfer ?? 0)
 
 		body = {
 			...body,
