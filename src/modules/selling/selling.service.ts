@@ -371,7 +371,7 @@ export class SellingService {
 		const supplierDebt = await this.getSupplierStatsInArrival()
 
 		// ✅ Umumiy sotuv, to‘lov va mijoz balanslari
-		const [sellingsAgg, paymentsAgg, clientsAgg] = await Promise.all([
+		const [sellingsAgg, paymentsAgg, clientsAgg, clientReturningBalanceAgg] = await Promise.all([
 			this.prisma.sellingModel.aggregate({
 				where: { status: SellingStatusEnum.accepted },
 				_sum: { totalPrice: true },
@@ -387,17 +387,21 @@ export class SellingService {
 				where: { type: UserTypeEnum.client },
 				_sum: { balance: true },
 			}),
+			this.prisma.paymentModel.aggregate({
+				where: { type: ServiceTypeEnum.returning },
+				_sum: { fromBalance: true },
+			}),
 		])
 
 		const totalSellings = new Decimal(sellingsAgg._sum.totalPrice || 0)
 		const totalPayments = new Decimal(paymentsAgg._sum.total || 0)
-		const totalBalance = new Decimal(clientsAgg._sum.balance || 0)
+		const totalBalance = new Decimal(clientsAgg._sum.balance || 0).plus(clientReturningBalanceAgg._sum.fromBalance)
 
-		const ourDebt = totalPayments.minus(totalSellings)
-		const theirDebt = totalSellings.minus(totalPayments)
+		const ourDebt = totalPayments.plus(totalBalance).minus(totalSellings)
+		const theirDebt = totalSellings.minus(totalPayments.plus(totalBalance))
 
-		const finalOurDebt = ourDebt.minus(totalBalance).lt(0) ? new Decimal(0) : ourDebt
-		const finalTheirDebt = theirDebt.plus(totalBalance).lt(0) ? new Decimal(0) : theirDebt
+		const finalOurDebt = ourDebt.lt(0) ? new Decimal(0) : ourDebt
+		const finalTheirDebt = theirDebt.lt(0) ? new Decimal(0) : theirDebt
 
 		return createResponse({
 			data: {
