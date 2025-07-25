@@ -351,8 +351,8 @@ export class SellingService {
 				const result = await this.prisma.sellingModel.aggregate({
 					where: {
 						createdAt: {
-							gte: startDate ? new Date(new Date(startDate).setHours(23, 59, 59, 999)).toISOString() : undefined,
-							lte: endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString() : undefined,
+							gte: startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : undefined,
+							lte: endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : undefined,
 						},
 						status: SellingStatusEnum.accepted,
 					},
@@ -363,10 +363,13 @@ export class SellingService {
 			}),
 		)
 
-		// ✅ Bu yerda parallel bajariladi
-		const [daily, weekly, monthly, yearly, supplierDebt] = await Promise.all([...statsPromises, this.getSupplierStatsInArrival()])
+		// ✅ Promise.all natijalarini to‘g‘ri tartibda ajratib olamiz
+		const [daily, weekly, monthly, yearly] = await Promise.all(statsPromises)
 
-		// ✅ DB darajasida klient balans, sotuv va to'lov summalari olinadi
+		// ✅ Yetkazib beruvchilar uchun qarzdorlik
+		const supplierDebt = await this.getSupplierStatsInArrival()
+
+		// ✅ Umumiy sotuv, to‘lov va mijoz balanslari
 		const [sellingsAgg, paymentsAgg, clientsAgg] = await Promise.all([
 			this.prisma.sellingModel.aggregate({
 				where: { status: SellingStatusEnum.accepted },
@@ -401,10 +404,7 @@ export class SellingService {
 				weekly,
 				monthly,
 				yearly,
-				client: {
-					ourDebt: finalOurDebt,
-					theirDebt: finalTheirDebt,
-				},
+				client: { ourDebt: finalOurDebt, theirDebt: finalTheirDebt },
 				supplier: supplierDebt,
 			},
 			success: { messages: ['get total stats success'] },

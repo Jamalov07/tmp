@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
 import { Injectable } from '@nestjs/common'
 import { PdfService, PrismaService } from '../shared'
 import { Context, Markup, Telegraf } from 'telegraf'
@@ -20,7 +19,7 @@ export class BotService {
 		prisma: PrismaService,
 		pdfService: PdfService,
 		configService: ConfigService,
-		// @InjectBot(MyBotName) private readonly bot: Telegraf<Context>,
+		@InjectBot(MyBotName) private readonly bot: Telegraf<Context>,
 	) {
 		this.prisma = prisma
 		this.pdfService = pdfService
@@ -166,13 +165,13 @@ export class BotService {
 				break
 		}
 
-		// await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: `xarid.pdf` }, { caption })
+		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: `xarid.pdf` }, { caption })
 	}
 
 	async sendDeletedSellingToChannel(selling: SellingFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.sellingChannelId')
-		// const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
-		// if (!chatInfo) return
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+		if (!chatInfo) return
 
 		let caption = ''
 		const baseInfo = `🧾 Продажа\n\n` + `🆔 Заказ: ${selling.publicId}\n` + `💰 Сумма: ${selling.totalPrice.toNumber()}\n` + `💸 Долг: ${selling.debt.toNumber()}\n`
@@ -181,13 +180,13 @@ export class BotService {
 
 		caption = `🗑️ Продажа удалено\n\n${baseInfo}\n\n${clientInfo}`
 
-		// await this.bot.telegram.sendMessage(channelId, caption)
+		await this.bot.telegram.sendMessage(channelId, caption)
 	}
 
 	async sendSellingToChannel(selling: SellingFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.sellingChannelId')
-		// const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
-		// if (!chatInfo) return
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+		if (!chatInfo) return
 
 		const bufferPdf = await this.pdfService.generateInvoicePdfBuffer2(selling)
 
@@ -239,14 +238,14 @@ export class BotService {
 				break
 		}
 
-		// await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: `${selling.client.phone}.pdf` }, { caption })
+		await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: `${selling.client.phone}.pdf` }, { caption })
 	}
 
 	async sendPaymentToChannel(payment: Partial<PaymentModel>, isModified: boolean = false, client: ClientFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.paymentChannelId')
-		// const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
 
-		// if (!chatInfo) return
+		if (!chatInfo) return
 
 		const paymentType: Record<string, string> = {
 			client: 'для клиента',
@@ -269,14 +268,14 @@ export class BotService {
 			`📝 Описание: ${payment.description ?? '-'}\n` +
 			`📊 Общий долг: ${client.debt.toNumber()}`
 
-		// await this.bot.telegram.sendMessage(channelId, title)
+		await this.bot.telegram.sendMessage(channelId, title)
 	}
 
 	async sendDeletedPaymentToChannel(payment: Partial<PaymentModel>, client: ClientFindOneData) {
 		const channelId = this.configService.getOrThrow<string>('bot.paymentChannelId')
-		// const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+		const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
 
-		// if (!chatInfo) return
+		if (!chatInfo) return
 
 		const paymentType: Record<string, string> = {
 			client: 'для клиента',
@@ -299,7 +298,7 @@ export class BotService {
 			`📝 Описание: ${payment.description ?? '-'}\n` +
 			`📊 Общий долг: ${client.debt.toNumber()}`
 
-		// await this.bot.telegram.sendMessage(channelId, title)
+		await this.bot.telegram.sendMessage(channelId, title)
 	}
 
 	private async findBotUserById(id: number | string) {
