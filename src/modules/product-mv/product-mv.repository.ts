@@ -223,18 +223,10 @@ export class ProductMVRepository {
 	async updateOneSelling(query: ProductMVGetOneRequest, body: SellingProductMVUpdateOneRequest) {
 		const pr = await this.getOne({ id: query.id })
 
-		const oldCount = pr.count
-		const newCount = body.count
-
-		let difference = 0
-		if (pr.selling.status === SellingStatusEnum.accepted) {
-			difference = oldCount - newCount
-		}
-
 		const product = await this.prisma.productMVModel.update({
 			where: { id: query.id },
 			data: {
-				count: newCount,
+				count: body.count,
 				price: body.price,
 				productId: body.productId,
 				sellingId: body.sellingId,
@@ -267,7 +259,7 @@ export class ProductMVRepository {
 		if (product.selling.status === SellingStatusEnum.accepted) {
 			await this.prisma.productModel.update({
 				where: { id: product.product.id },
-				data: { count: { increment: difference } },
+				data: { count: { increment: product.count, decrement: product.count } },
 			})
 		}
 
@@ -276,8 +268,6 @@ export class ProductMVRepository {
 
 	async updateOneArrival(query: ProductMVGetOneRequest, body: ArrivalProductMVUpdateOneRequest) {
 		const pr = await this.getOne({ id: query.id })
-
-		const difference = pr.count - body.count
 
 		const product = await this.prisma.productMVModel.update({
 			where: { id: query.id },
@@ -295,7 +285,7 @@ export class ProductMVRepository {
 
 		await this.prisma.productModel.update({
 			where: { id: product.product.id },
-			data: { count: { increment: difference }, cost: product.cost, price: product.price },
+			data: { count: { increment: body.count, decrement: pr.count }, cost: product.cost, price: product.price },
 		})
 
 		return product
@@ -304,18 +294,10 @@ export class ProductMVRepository {
 	async updateOneReturning(query: ProductMVGetOneRequest, body: ReturningProductMVUpdateOneRequest) {
 		const pr = await this.getOne({ id: query.id })
 
-		const oldCount = pr.count
-		const newCount = body.count
-
-		let difference = 0
-		if (pr.returning.status === SellingStatusEnum.accepted) {
-			difference = oldCount - newCount
-		}
-
 		const product = await this.prisma.productMVModel.update({
 			where: { id: query.id },
 			data: {
-				count: newCount,
+				count: body.count,
 				price: body.price,
 				productId: body.productId,
 				returningId: body.returningId,
@@ -326,7 +308,7 @@ export class ProductMVRepository {
 		if (product.returning.status === SellingStatusEnum.accepted) {
 			await this.prisma.productModel.update({
 				where: { id: product.product.id },
-				data: { count: { increment: difference } },
+				data: { count: { increment: body.count, decrement: pr.count } },
 			})
 		}
 
@@ -371,7 +353,7 @@ export class ProductMVRepository {
 			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 		} else if (product.type === ServiceTypeEnum.returning) {
 			if (product.returning && product.returning.status === SellingStatusEnum.accepted) {
-				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
+				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { increment: product.count } } })
 			}
 		}
 
