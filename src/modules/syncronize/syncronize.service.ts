@@ -427,7 +427,7 @@ export class SyncronizeService implements OnModuleInit {
 			accepted: boolean
 			createdAt: Date
 			sellingDate: Date
-			products: { cost: number; count: number; price: number; createdAt: Date; product: { name: string } }[]
+			products: { cost: number; count: number; price: number; createdAt: Date; product: { name: string; count: number } }[]
 		}>('/Order')
 
 		const sels = []
@@ -462,7 +462,7 @@ export class SyncronizeService implements OnModuleInit {
 				if (!product.id) {
 					product = await this.prisma.productModel.findFirst({ where: { name: pkey } })
 					if (!product) {
-						product = await this.prisma.productModel.create({ data: { name: pkey } })
+						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count } })
 					}
 				}
 				const tprice = pro.count * pro.price
@@ -547,7 +547,7 @@ export class SyncronizeService implements OnModuleInit {
 			supplier: { phone: string; name: string }
 			admin: { phone: string; name: string }
 			payment: { totalPay: number; card: number; cash: number; other: number; transfer: number; description: string; createdAt: Date }
-			incomingProducts: { cost: number; count: number; selling_price: number; createdAt: Date; product: { name: string } }[]
+			incomingProducts: { cost: number; count: number; selling_price: number; createdAt: Date; product: { name: string; count: number } }[]
 		}>('/incomingOrder')
 
 		const arrivals = []
@@ -581,7 +581,7 @@ export class SyncronizeService implements OnModuleInit {
 				if (!product.id) {
 					product = await this.prisma.productModel.findFirst({ where: { name: pkey } })
 					if (!product) {
-						product = await this.prisma.productModel.create({ data: { name: pkey } })
+						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count } })
 					}
 				}
 				const tprice = (pro.count ?? 0) * (pro.selling_price ?? 0)
@@ -682,7 +682,7 @@ export class SyncronizeService implements OnModuleInit {
 			returnedDate: Date
 			client: { phone: string; name: string }
 			seller: { phone: string; name: string }
-			products: { count: number; price: number; createdAt: Date; product: { name: string } }[]
+			products: { count: number; price: number; createdAt: Date; product: { name: string; count: number } }[]
 		}>('/returned-order')
 
 		const returnings = []
@@ -706,7 +706,7 @@ export class SyncronizeService implements OnModuleInit {
 				if (!product.id) {
 					product = await this.prisma.productModel.findFirst({ where: { name: pkey } })
 					if (!product) {
-						product = await this.prisma.productModel.create({ data: { name: pkey } })
+						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count } })
 					}
 				}
 				const tprice = pro.count * pro.price
