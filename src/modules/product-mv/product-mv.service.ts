@@ -144,22 +144,19 @@ export class ProductMVService {
 	}
 
 	async updateOneSelling(query: ProductMVGetOneRequest, body: SellingProductMVUpdateOneRequest) {
-		const original = await this.getOne(query)
+		const productmv = await this.getOne(query)
 
 		const sellingProduct = await this.productMVRepository.updateOneSelling(query, {
 			...body,
-			totalPrice: new Decimal(body.price ?? original.data.price).mul(body.count ?? original.data.count),
+			totalPrice: new Decimal(body.price ?? productmv.data.price).mul(body.count ?? productmv.data.count),
 		})
+
+		const newSellingTotalPrice = sellingProduct.selling.totalPrice.minus(productmv.data.totalPrice).plus(sellingProduct.totalPrice)
+
+		await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: newSellingTotalPrice })
 
 		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
 			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
-
-			const oldTotal = new Decimal(original.data.count).mul(original.data.price)
-			const newTotal = new Decimal(sellingProduct.count).mul(sellingProduct.price)
-
-			const newSellingTotalPrice = sellingProduct.selling.totalPrice.minus(oldTotal).plus(newTotal)
-
-			await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: newSellingTotalPrice })
 
 			const sellingProducts = sellingProduct.selling.products.map((pro) => {
 				const status = pro.id === sellingProduct.id ? BotSellingProductTitleEnum.updated : undefined
