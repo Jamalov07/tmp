@@ -98,7 +98,6 @@ export class ReturningService {
 	async createOne(request: CRequest, body: ReturningCreateOneRequest) {
 		await this.clientService.findOne({ id: body.clientId })
 
-		const decimalZero = new Decimal(0)
 		let total = new Decimal(0)
 		if (body.payment) {
 			if (Object.values(body.payment).some((value) => value !== 0)) {
@@ -118,7 +117,7 @@ export class ReturningService {
 					body.date = new Date()
 				}
 
-				total = (body.payment?.cash ?? decimalZero).plus(body.payment?.fromBalance ?? decimalZero)
+				total = new Decimal(body.payment?.cash ?? 0).plus(body.payment?.fromBalance ?? 0)
 			}
 		}
 
@@ -126,24 +125,20 @@ export class ReturningService {
 			body.date = new Date()
 		}
 
+		let totalPrice = new Decimal(0)
+
 		body = {
 			...body,
 			staffId: request.user.id,
-			payment: {
-				...body.payment,
-				total: total,
-			},
+			payment: { ...body.payment, total: total },
 			products: body.products.map((product) => {
-				const totalPrice = product.price.mul(product.count)
-				body.totalPrice = body.totalPrice.plus(totalPrice)
-				return {
-					...product,
-					totalPrice: totalPrice,
-				}
+				const totalProductPrice = new Decimal(product.price).mul(product.count)
+				totalPrice = totalPrice.plus(totalProductPrice)
+				return { ...product, totalPrice: totalProductPrice }
 			}),
 		}
 
-		const returning = await this.returningRepository.createOne(body)
+		const returning = await this.returningRepository.createOne({ ...body, totalPrice: totalPrice })
 
 		return createResponse({ data: returning, success: { messages: ['create one success'] } })
 	}
