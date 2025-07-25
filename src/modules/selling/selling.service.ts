@@ -422,7 +422,7 @@ export class SellingService {
 				_sum: { total: true },
 			}),
 			this.prisma.userModel.aggregate({
-				where: { type: UserTypeEnum.client },
+				where: { type: UserTypeEnum.supplier },
 				_sum: { balance: true },
 			}),
 		])
