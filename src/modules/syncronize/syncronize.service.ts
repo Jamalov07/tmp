@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 import { SyncronizeRepository } from './syncronize.repository'
 import axios from 'axios'
 import { PrismaService } from '../shared'
@@ -8,10 +8,10 @@ import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
 
 @Injectable()
-export class SyncronizeService {
-	private readonly baseUrl = this.configService.getOrThrow('old-service.baseUrl')
-	private readonly phone = this.configService.getOrThrow('old-service.user')
-	private readonly password = this.configService.getOrThrow('old-service.password')
+export class SyncronizeService implements OnModuleInit {
+	private baseUrl: string
+	private phone: string
+	private password: string
 	private accessToken = ''
 
 	constructor(
@@ -19,6 +19,12 @@ export class SyncronizeService {
 		private readonly prisma: PrismaService,
 		private readonly configService: ConfigService,
 	) {}
+
+	onModuleInit() {
+		this.baseUrl = this.configService.getOrThrow('old-service.baseUrl')
+		this.phone = this.configService.getOrThrow('old-service.user')
+		this.password = this.configService.getOrThrow('old-service.password')
+	}
 
 	private async signIn() {
 		const url = `${this.baseUrl}/admin/sign-in`
@@ -64,34 +70,36 @@ export class SyncronizeService {
 	async staff() {
 		await this.prisma.userModel.deleteMany({ where: { type: UserTypeEnum.staff } })
 		const staffData = await this.fetchAllPages<{ name: string; phone: string; createdAt: Date }>('/admin')
-		const staffs = await this.prisma.userModel.createManyAndReturn({
+		const staffs = await this.prisma.userModel.createMany({
 			skipDuplicates: false,
 			data: staffData.map((s) => ({
 				fullname: s.name.trim(),
-				createdAt: s.createdAt,
 				phone: s.phone.trim(),
+				createdAt: s.createdAt,
+
 				type: UserTypeEnum.staff,
 				password: bcrypt.hashSync(s.phone.trim(), 7),
 			})),
 		})
-		console.log('staffs', staffData.length, staffs.length)
+		console.log('staffs', staffData.length, staffs.count)
 		return staffs
 	}
 
 	async supplier() {
 		await this.prisma.userModel.deleteMany({ where: { type: UserTypeEnum.supplier } })
 		const data = await this.fetchAllPages<{ name: string; phone: string; createdAt: Date }>('/user/supplier')
-		const suppliers = await this.prisma.userModel.createManyAndReturn({
+		const suppliers = await this.prisma.userModel.createMany({
 			skipDuplicates: false,
 			data: data.map((s) => ({
 				fullname: s.name.trim(),
-				createdAt: s.createdAt,
 				phone: s.phone.trim(),
+				createdAt: s.createdAt,
+
 				type: UserTypeEnum.supplier,
 				password: bcrypt.hashSync(s.phone.trim(), 7),
 			})),
 		})
-		console.log('suppliers', data.length, suppliers.length)
+		console.log('suppliers', data.length, suppliers.count)
 		return suppliers
 	}
 
@@ -99,35 +107,43 @@ export class SyncronizeService {
 		await this.prisma.userModel.deleteMany({ where: { type: UserTypeEnum.client } })
 		const data = await this.fetchAllPages<{ name: string; phone: string; createdAt: Date }>('/user/client')
 
-		const clients = await this.prisma.userModel.createManyAndReturn({
+		const clients = await this.prisma.userModel.createMany({
 			skipDuplicates: false,
 			data: data.map((c) => ({
 				fullname: c.name.trim(),
-				createdAt: c.createdAt,
 				phone: c.phone.trim(),
+				createdAt: c.createdAt,
+
 				type: UserTypeEnum.client,
 				password: bcrypt.hashSync(c.phone.trim(), 7),
 			})),
 		})
-		console.log('clients', data.length, clients.length)
+		console.log('clients', data.length, clients.count)
 		return clients
 	}
 
 	async product() {
 		await this.prisma.productModel.deleteMany({})
-		const data = await this.fetchAllPages<{ name: string; cost: number; count: number; createdAt: Date; min_amount: number; selling_price: number }>('/product')
-		const products = await this.prisma.productModel.createManyAndReturn({
+		const data = await this.fetchAllPages<{
+			name: string
+			cost: number
+			count: number
+			min_amount: number
+			selling_price: number
+			createdAt: Date
+		}>('/product')
+		const products = await this.prisma.productModel.createMany({
 			skipDuplicates: false,
 			data: data.map((p) => ({
 				name: p.name.trim(),
-				createdAt: p.createdAt,
+				cost: p.cost,
 				count: p.count,
 				price: p.selling_price,
-				cost: p.cost,
 				minAmount: p.min_amount,
+				createdAt: p.createdAt,
 			})),
 		})
-		console.log('products', data.length, products.length)
+		console.log('products', data.length, products.count)
 		return products
 	}
 
@@ -140,7 +156,12 @@ export class SyncronizeService {
 			staffObject[`${st.fullname}-${st.phone}`] = st
 		}
 
-		const data = await this.fetchAllPages<{ sum: number; createdAt: Date; description: string; employee: { name: string; phone: string } }>('/employeePayment')
+		const data = await this.fetchAllPages<{
+			sum: number
+			description: string
+			employee: { name: string; phone: string }
+			createdAt: Date
+		}>('/employeePayment')
 
 		const pays = []
 		const staffBalance: Record<string, number> = {}
@@ -163,7 +184,7 @@ export class SyncronizeService {
 			}
 		}
 
-		const payments = await this.prisma.paymentModel.createManyAndReturn({
+		const payments = await this.prisma.paymentModel.createMany({
 			skipDuplicates: false,
 			data: pays,
 		})
@@ -172,14 +193,12 @@ export class SyncronizeService {
 			Object.entries(staffBalance).map(([userId, sum]) =>
 				this.prisma.userModel.update({
 					where: { id: userId },
-					data: {
-						balance: { increment: sum },
-					},
+					data: { balance: { increment: sum } },
 				}),
 			),
 		)
 
-		console.log('staff payments', data.length, payments.length)
+		console.log('staff payments', data.length, payments.count)
 		return payments
 	}
 
@@ -199,14 +218,14 @@ export class SyncronizeService {
 		}
 
 		const data = await this.fetchAllPages<{
-			cash: number
 			card: number
-			transfer: number
+			cash: number
 			other: number
-			createdAt: Date
+			transfer: number
 			description: string
 			order?: { id: string }
 			supplier: { name: string; phone: string }
+			createdAt: Date
 		}>('/incomingOrderPayment')
 
 		const pays = []
@@ -217,10 +236,21 @@ export class SyncronizeService {
 			const key = `${pay.supplier.name.trim()}-${pay.supplier.phone.trim()}`
 			let supplier = supplierObject[key] ? supplierObject[key] : { id: null }
 			if (!supplier.id) {
-				supplier = await this.prisma.userModel.findFirst({ where: { type: 'supplier', phone: pay.supplier.phone.trim(), fullname: pay.supplier.name.trim() } })
+				supplier = await this.prisma.userModel.findFirst({
+					where: {
+						type: UserTypeEnum.supplier,
+						phone: pay.supplier.phone.trim(),
+						fullname: pay.supplier.name.trim(),
+					},
+				})
 				if (!supplier) {
 					supplier = await this.prisma.userModel.create({
-						data: { type: 'supplier', phone: pay.supplier.phone.trim(), fullname: pay.supplier.name.trim(), password: pay.supplier.phone.trim() },
+						data: {
+							type: UserTypeEnum.supplier,
+							phone: pay.supplier.phone.trim(),
+							fullname: pay.supplier.name.trim(),
+							password: pay.supplier.phone.trim(),
+						},
 					})
 				}
 			}
@@ -247,7 +277,7 @@ export class SyncronizeService {
 			}
 		}
 
-		const payments = await this.prisma.paymentModel.createManyAndReturn({
+		const payments = await this.prisma.paymentModel.createMany({
 			skipDuplicates: false,
 			data: pays,
 		})
@@ -256,15 +286,13 @@ export class SyncronizeService {
 			Object.entries(supplierBalance).map(([userId, sum]) =>
 				this.prisma.userModel.update({
 					where: { id: userId },
-					data: {
-						balance: { increment: sum },
-					},
+					data: { balance: { increment: sum } },
 				}),
 			),
 		)
 
 		console.log(orpays.length)
-		console.log('supplier payment', data.length, payments.length)
+		console.log('supplier payment', data.length, payments.count)
 
 		return payments
 	}
@@ -285,15 +313,15 @@ export class SyncronizeService {
 		}
 
 		const data = await this.fetchAllPages<{
-			cash: number
 			card: number
-			transfer: number
+			cash: number
 			other: number
-			createdAt: Date
+			transfer: number
 			description: string
 			order?: { id: string }
 			client: { name: string; phone: string }
 			seller: { name: string; phone: string }
+			createdAt: Date
 		}>('/payment')
 
 		const pays = []
@@ -307,10 +335,21 @@ export class SyncronizeService {
 			const clkey = `${pay.client.name.trim()}-${pay.client.phone.trim()}`
 			let client = clientObject[clkey] ? clientObject[clkey] : { id: null }
 			if (!client.id) {
-				client = await this.prisma.userModel.findFirst({ where: { fullname: pay.client.name.trim(), phone: pay.client.phone.trim(), type: 'client' } })
+				client = await this.prisma.userModel.findFirst({
+					where: {
+						fullname: pay.client.name.trim(),
+						phone: pay.client.phone.trim(),
+						type: UserTypeEnum.client,
+					},
+				})
 				if (!client) {
 					client = await this.prisma.userModel.create({
-						data: { fullname: pay.client.name.trim(), phone: pay.client.phone.trim(), type: 'client', password: pay.client.phone.trim() },
+						data: {
+							fullname: pay.client.name.trim(),
+							phone: pay.client.phone.trim(),
+							type: UserTypeEnum.client,
+							password: pay.client.phone.trim(),
+						},
 					})
 				}
 			}
@@ -337,7 +376,7 @@ export class SyncronizeService {
 			}
 		}
 
-		const payments = await this.prisma.paymentModel.createManyAndReturn({
+		const payments = await this.prisma.paymentModel.createMany({
 			skipDuplicates: false,
 			data: pays,
 		})
@@ -346,15 +385,13 @@ export class SyncronizeService {
 			Object.entries(clientBalance).map(([userId, sum]) =>
 				this.prisma.userModel.update({
 					where: { id: userId },
-					data: {
-						balance: { increment: sum },
-					},
+					data: { balance: { increment: sum } },
 				}),
 			),
 		)
 
 		console.log(orpays.length)
-		console.log('client payments', data.length, payments.length)
+		console.log('client payments', data.length, payments.count)
 	}
 
 	async selling() {
@@ -383,9 +420,10 @@ export class SyncronizeService {
 
 		const data = await this.fetchAllPages<{
 			articl: number
+			sum: number
 			client: { phone: string; name: string }
 			seller: { phone: string; name: string }
-			payment: { card: number; cash: number; other: number; transfer: number; description: string; createdAt: Date }
+			payment: { totalPay: number; card: number; cash: number; other: number; transfer: number; description: string; createdAt: Date }
 			accepted: boolean
 			createdAt: Date
 			sellingDate: Date
@@ -399,15 +437,25 @@ export class SyncronizeService {
 			const clkey = `${selling.client.name.trim()}-${selling.client.phone.trim()}`
 			let client = clientObject[clkey] ? clientObject[clkey] : { id: null }
 			if (!client.id) {
-				client = await this.prisma.userModel.findFirst({ where: { fullname: selling.client.name.trim(), phone: selling.client.phone.trim(), type: 'client' } })
+				client = await this.prisma.userModel.findFirst({
+					where: {
+						fullname: selling.client.name.trim(),
+						phone: selling.client.phone.trim(),
+						type: UserTypeEnum.client,
+					},
+				})
 				if (!client) {
 					client = await this.prisma.userModel.create({
-						data: { fullname: selling.client.name.trim(), phone: selling.client.phone.trim(), type: 'client', password: selling.client.phone.trim() },
+						data: {
+							fullname: selling.client.name.trim(),
+							phone: selling.client.phone.trim(),
+							type: UserTypeEnum.client,
+							password: selling.client.phone.trim(),
+						},
 					})
 				}
 			}
 			const products: { price: number; count: number; totalPrice: number; createdAt: Date; productId: string }[] = []
-			let totalPrice = 0
 			for (const pro of selling.products) {
 				const pkey = pro.product.name.trim()
 				let product = productObject[pkey] ? productObject[pkey] : { id: null }
@@ -418,23 +466,18 @@ export class SyncronizeService {
 					}
 				}
 				const tprice = pro.count * pro.price
-				totalPrice = totalPrice + tprice
 				products.push({ count: pro.count, price: pro.price, totalPrice: tprice, createdAt: pro.createdAt, productId: product.id })
 			}
-			const decimalZero = 0
-
-			const totalPayment =
-				(selling.payment?.card ?? decimalZero) + (selling.payment?.cash ?? decimalZero) + (selling.payment?.other ?? decimalZero) + (selling.payment?.transfer ?? decimalZero)
 
 			sels.push({
 				status: selling.accepted ? SellingStatusEnum.accepted : SellingStatusEnum.notaccepted,
 				clientId: client.id,
 				date: selling.sellingDate,
 				staffId: staff.id,
-				totalPrice: totalPrice,
+				totalPrice: selling.sum,
 				payment: {
 					create: {
-						total: totalPayment,
+						total: selling.payment?.totalPay,
 						card: selling.payment?.card,
 						cash: selling.payment?.cash,
 						other: selling.payment?.other,
@@ -468,7 +511,7 @@ export class SyncronizeService {
 		const addedsellings = []
 		for (let i = 0; i < sels.length; i += chunkSize) {
 			const chunk = sels.slice(i, i + chunkSize)
-			await Promise.all(chunk.map((sel) => this.prisma.sellingModel.create({ data: sel }).then((data) => addedsellings.push(data))))
+			await Promise.all(chunk.map((sel) => this.prisma.sellingModel.create({ data: sel }).then(() => addedsellings.push(true))))
 		}
 
 		console.log('sellings', data.length, addedsellings.length)
@@ -499,11 +542,11 @@ export class SyncronizeService {
 		}
 
 		const data = await this.fetchAllPages<{
-			supplier: { phone: string; name: string }
-			admin: { phone: string; name: string }
-			payment: { card: number; cash: number; other: number; transfer: number; description: string; createdAt: Date }
 			createdAt: Date
 			sellingDate: Date
+			supplier: { phone: string; name: string }
+			admin: { phone: string; name: string }
+			payment: { totalPay: number; card: number; cash: number; other: number; transfer: number; description: string; createdAt: Date }
 			incomingProducts: { cost: number; count: number; selling_price: number; createdAt: Date; product: { name: string } }[]
 		}>('/incomingOrder')
 
@@ -556,11 +599,6 @@ export class SyncronizeService {
 				})
 			}
 
-			const decimalZero = 0
-
-			const totalPayment =
-				(arrival.payment?.card ?? decimalZero) + (arrival.payment?.cash ?? decimalZero) + (arrival.payment?.other ?? decimalZero) + (arrival.payment?.transfer ?? decimalZero)
-
 			arrivals.push({
 				supplierId: supplier.id,
 				date: arrival.sellingDate,
@@ -569,7 +607,7 @@ export class SyncronizeService {
 				totalPrice: totalPrice,
 				payment: {
 					create: {
-						total: totalPayment,
+						total: arrival.payment?.totalPay,
 						card: arrival.payment?.card,
 						cash: arrival.payment?.cash,
 						other: arrival.payment?.other,
@@ -604,7 +642,7 @@ export class SyncronizeService {
 		const addedArrivals = []
 		for (let i = 0; i < arrivals.length; i += chunkSize) {
 			const chunk = arrivals.slice(i, i + chunkSize)
-			await Promise.all(chunk.map((arr) => this.prisma.arrivalModel.create({ data: arr }).then((data) => addedArrivals.push(data))))
+			await Promise.all(chunk.map((arr) => this.prisma.arrivalModel.create({ data: arr }).then(() => addedArrivals.push(true))))
 		}
 
 		console.log('arrivals', data.length, addedArrivals.length)
@@ -635,10 +673,10 @@ export class SyncronizeService {
 		}
 
 		const data = await this.fetchAllPages<{
+			sum: number
 			cashPayment: number
-			description: string
 			fromClient: number
-			// payment tepada
+			description: string
 			accepted: boolean
 			createdAt: Date
 			returnedDate: Date
@@ -662,7 +700,6 @@ export class SyncronizeService {
 				}
 			}
 			const products: { price: number; totalPrice: number; count: number; createdAt: Date; productId: string }[] = []
-			let totalPrice = 0
 			for (const pro of returning.products) {
 				const pkey = pro.product.name.trim()
 				let product = productObject[pkey] ? productObject[pkey] : { id: null }
@@ -673,20 +710,17 @@ export class SyncronizeService {
 					}
 				}
 				const tprice = pro.count * pro.price
-				totalPrice = totalPrice + tprice
 				products.push({ count: pro.count, totalPrice: tprice, price: pro.price, createdAt: pro.createdAt, productId: product.id })
 			}
-			const decimalZero = 0
 
-			const totalPayment = (returning.fromClient ?? decimalZero) + (returning.cashPayment ?? decimalZero)
 			returnings.push({
 				clientId: client.id,
 				date: returning.returnedDate,
 				staffId: staff.id,
-				totalPrice: totalPrice,
+				totalPrice: returning.sum,
 				payment: {
 					create: {
-						total: totalPayment,
+						total: returning.sum,
 						fromBalance: returning.fromClient,
 						cash: returning.cashPayment,
 						description: returning?.description,
@@ -718,7 +752,7 @@ export class SyncronizeService {
 		const addedReturnings = []
 		for (let i = 0; i < returnings.length; i += chunkSize) {
 			const chunk = returnings.slice(i, i + chunkSize)
-			await Promise.all(chunk.map((arr) => this.prisma.returningModel.create({ data: arr }).then((data) => addedReturnings.push(data))))
+			await Promise.all(chunk.map((arr) => this.prisma.returningModel.create({ data: arr }).then(() => addedReturnings.push(true))))
 		}
 
 		console.log('retunrings', data.length, addedReturnings.length)
