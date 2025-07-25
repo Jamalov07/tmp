@@ -151,34 +151,35 @@ export class SellingService {
 					body.date = new Date()
 				}
 			}
-			const decimalZero = new Decimal(0)
 
-			total = (body.payment.card ?? decimalZero)
-				.plus(body.payment.cash ?? decimalZero)
-				.plus(body.payment.other ?? decimalZero)
-				.plus(body.payment.transfer ?? decimalZero)
+			total = new Decimal(body.payment.card ?? 0)
+				.plus(body.payment.cash ?? 0)
+				.plus(body.payment.other ?? 0)
+				.plus(body.payment.transfer ?? 0)
 		}
 
 		if (body.status === SellingStatusEnum.accepted) {
 			body.date = new Date()
 		}
 
+		let totalPrice = new Decimal(0)
 		body = {
 			...body,
 			staffId: request.user.id,
 			payment: { ...body.payment, total: total },
 			products: body.products.map((product) => {
-				const totalPrice = product.price.mul(product.count)
-				body.totalPrice = body.totalPrice.plus(totalPrice)
+				const productTotalPrice = new Decimal(product.price ?? 0).mul(product.count)
+
+				totalPrice = totalPrice.plus(productTotalPrice)
 
 				return {
 					...product,
-					totalPrice: totalPrice,
+					totalPrice: productTotalPrice,
 				}
 			}),
 		}
 
-		const selling = await this.sellingRepository.createOne(body)
+		const selling = await this.sellingRepository.createOne({ ...body, totalPrice: totalPrice })
 
 		if (body.send) {
 			if (selling.status === SellingStatusEnum.accepted) {
