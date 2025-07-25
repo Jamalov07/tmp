@@ -42,7 +42,7 @@
     "express": "^5.1.0",
     "moment-timezone": "^0.5.48",
     "nestjs-telegraf": "^2.9.1",
-    "p-limit": "^6.2.0",
+    "p-limit": "^3.1.0",
     "pdfkit": "^0.17.1",
     "pdfmake": "^0.2.20",
     "prisma": "^6.5.0",
