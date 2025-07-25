@@ -277,13 +277,7 @@ export class ProductMVRepository {
 	async updateOneArrival(query: ProductMVGetOneRequest, body: ArrivalProductMVUpdateOneRequest) {
 		const pr = await this.getOne({ id: query.id })
 
-		const oldCount = pr.count
-		const newCount = body.count
-
-		let difference = 0
-		if (pr.selling.status === SellingStatusEnum.accepted) {
-			difference = oldCount - newCount
-		}
+		const difference = pr.count - body.count
 
 		const product = await this.prisma.productMVModel.update({
 			where: { id: query.id },
