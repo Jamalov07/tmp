@@ -242,6 +242,7 @@ export class SellingRepository implements OnModuleInit {
 				status: body.status,
 				clientId: body.clientId,
 				deletedAt: body.deletedAt,
+				totalPrice: body.totalPrice,
 				payment: {
 					update: {
 						total: body.payment.total,
