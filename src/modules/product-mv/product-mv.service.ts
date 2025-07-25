@@ -148,7 +148,7 @@ export class ProductMVService {
 
 		const sellingProduct = await this.productMVRepository.updateOneSelling(query, {
 			...body,
-			totalPrice: (body.price ?? original.data.price).mul(body.count ?? original.data.count),
+			totalPrice: new Decimal(body.price ?? original.data.price).mul(body.count ?? original.data.count),
 		})
 
 		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
