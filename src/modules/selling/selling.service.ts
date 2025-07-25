@@ -350,7 +350,7 @@ export class SellingService {
 				const { startDate, endDate } = getDateRange(type)
 				const result = await this.prisma.sellingModel.aggregate({
 					where: {
-						createdAt: {
+						date: {
 							gte: startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : undefined,
 							lte: endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : undefined,
 						},
