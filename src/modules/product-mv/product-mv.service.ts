@@ -241,15 +241,10 @@ export class ProductMVService {
 
 		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
 			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
-			const sellingProducts = sellingProduct.selling.products.map((pro) => {
-				let status: BotSellingProductTitleEnum = undefined
-				if (pro.id === sellingProduct.id) {
-					status = BotSellingProductTitleEnum.deleted
-				}
-				return { ...pro, status: status }
-			})
 
-			const totalPrice = sellingProduct.selling.totalPrice.minus(sellingProduct.price.mul(sellingProduct.count))
+			const totalPrice = sellingProduct.selling.totalPrice.minus(productmv.data.price.mul(productmv.data.count))
+
+			await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: totalPrice })
 
 			const sellingInfo = {
 				...sellingProduct.selling,
@@ -258,7 +253,7 @@ export class ProductMVService {
 				totalPayment: sellingProduct.selling.payment.total,
 				totalPrice: totalPrice,
 				debt: totalPrice.minus(sellingProduct.selling.payment.total),
-				products: sellingProducts,
+				products: sellingProduct.selling.products,
 			}
 
 			if (client.data.telegram?.id) {
