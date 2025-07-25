@@ -94,7 +94,7 @@ export class ProductMVService {
 		const productmv = await this.productMVRepository.createOneSelling({
 			...body,
 			staffId: request.user.id,
-			totalPrice: body.price.mul(body.count),
+			totalPrice: new Decimal(body.price ?? 0).mul(body.count),
 		})
 
 		await this.sellingService.updateOne({ id: productmv.selling.id }, { totalPrice: productmv.selling.totalPrice.plus(productmv.totalPrice) })
