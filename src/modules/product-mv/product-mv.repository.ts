@@ -142,6 +142,7 @@ export class ProductMVRepository {
 			select: {
 				id: true,
 				totalPrice: true,
+				createdAt: true,
 				selling: {
 					select: {
 						id: true,

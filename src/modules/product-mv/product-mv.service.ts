@@ -5,6 +5,7 @@ import {
 	ArrivalProductMVCreateOneRequest,
 	ArrivalProductMVUpdateOneRequest,
 	ProductMVFindManyRequest,
+	ProductMVFindOneData,
 	ProductMVFindOneRequest,
 	ProductMVGetManyRequest,
 	ProductMVGetOneRequest,
@@ -274,7 +275,7 @@ export class ProductMVService {
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}
 
-	private async sendSellingNotifications(productmv: any) {
+	private async sendSellingNotifications(productmv: ProductMVFindOneData) {
 		const client = await this.clientService.findOne({ id: productmv.selling.client.id })
 
 		const sellingProducts = productmv.selling.products.map((pro) => ({
@@ -287,7 +288,7 @@ export class ProductMVService {
 			client: client.data,
 			title: BotSellingTitleEnum.added,
 			totalPayment: productmv.selling.payment.total,
-			totalPrice: productmv.selling.totalPrice,
+			totalPrice: productmv.selling.totalPrice.plus(productmv.price.mul(productmv.count)),
 			debt: productmv.selling.totalPrice.minus(productmv.selling.payment.total),
 			products: sellingProducts,
 		}

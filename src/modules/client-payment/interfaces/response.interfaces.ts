@@ -13,7 +13,7 @@ export declare interface ClientPaymentFindManyData extends PaginationResponse<Cl
 	calc: ClientPaymentCalc
 }
 
-export declare interface ClientPaymentFindOneData extends Pick<ClientPaymentRequired, 'id' | 'description' | 'createdAt'> {}
+export declare interface ClientPaymentFindOneData extends Pick<ClientPaymentRequired, 'id' | 'description' | 'total'> {}
 
 export declare interface ClientPaymentFindManyResponse extends GlobalResponse {
 	data: ClientPaymentFindManyData
