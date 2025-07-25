@@ -109,12 +109,10 @@ export class ClientPaymentService {
 	async createOne(request: CRequest, body: ClientPaymentCreateOneRequest) {
 		await this.clientService.findOne({ id: body.userId })
 
-		const decimalZero = new Decimal(0)
-
-		const total = (body.card ?? decimalZero)
-			.plus(body.cash ?? decimalZero)
-			.plus(body.other ?? decimalZero)
-			.plus(body.transfer ?? decimalZero)
+		const total = new Decimal(body.card ?? 0)
+			.plus(body.cash ?? 0)
+			.plus(body.other ?? 0)
+			.plus(body.transfer ?? 0)
 
 		body = { ...body, staffId: request.user.id, total: total }
 
