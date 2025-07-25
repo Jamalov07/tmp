@@ -431,12 +431,11 @@ export class SellingService {
 		const totalPayment = new Decimal(paymentsAgg._sum.total || 0)
 		const totalBalance = new Decimal(suppliersAgg._sum.balance || 0)
 
-		const ourDebt = totalPayment.minus(totalCost)
-		const theirDebt = totalCost.minus(totalPayment)
+		const net = totalPayment.plus(totalBalance).minus(totalCost)
 
 		return {
-			ourDebt: ourDebt.minus(totalBalance).lt(0) ? new Decimal(0) : ourDebt,
-			theirDebt: theirDebt.plus(totalBalance).lt(0) ? new Decimal(0) : theirDebt,
+			ourDebt: net.lt(0) ? net.abs() : new Decimal(0),
+			theirDebt: net.gt(0) ? net : new Decimal(0),
 		}
 	}
 
