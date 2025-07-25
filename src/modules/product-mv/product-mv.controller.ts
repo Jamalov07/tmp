@@ -68,7 +68,7 @@ export class ProductMVController {
 		return this.productMVService.updateOneSelling(query, body)
 	}
 
-	@Patch('arival/one')
+	@Patch('arrival/one')
 	@ApiOperation({ summary: 'update one arrival product' })
 	@ApiOkResponse({ type: ProductModifyResponseDto })
 	async updateOneArrival(@Query() query: ProductMVFindOneRequestDto, @Body() body: ArrivalProductMVUpdateOneRequestDto): Promise<ProductModifyResponseDto> {
