@@ -226,6 +226,8 @@ export class ArrivalRepository implements OnModuleInit {
 				supplierId: body.supplierId,
 				date: body.date ? new Date(body.date) : undefined,
 				deletedAt: body.deletedAt,
+				totalCost: body.totalCost,
+				totalPrice: body.totalPrice,
 				payment: {
 					update: {
 						total: body.payment.total,
