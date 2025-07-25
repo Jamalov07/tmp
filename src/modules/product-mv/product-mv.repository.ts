@@ -285,6 +285,8 @@ export class ProductMVRepository {
 				count: body.count,
 				price: body.price,
 				cost: body.cost,
+				totalCost: body.totalCost,
+				totalPrice: body.totalPrice,
 				productId: body.productId,
 				arrivalId: body.arrivalId,
 			},
