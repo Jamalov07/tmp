@@ -462,7 +462,7 @@ export class SyncronizeService implements OnModuleInit {
 				if (!product.id) {
 					product = await this.prisma.productModel.findFirst({ where: { name: pkey } })
 					if (!product) {
-						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count } })
+						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count ?? undefined } })
 					}
 				}
 				const tprice = pro.count * pro.price
@@ -581,7 +581,7 @@ export class SyncronizeService implements OnModuleInit {
 				if (!product.id) {
 					product = await this.prisma.productModel.findFirst({ where: { name: pkey } })
 					if (!product) {
-						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count } })
+						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count ?? undefined } })
 					}
 				}
 				const tprice = (pro.count ?? 0) * (pro.selling_price ?? 0)
@@ -706,7 +706,7 @@ export class SyncronizeService implements OnModuleInit {
 				if (!product.id) {
 					product = await this.prisma.productModel.findFirst({ where: { name: pkey } })
 					if (!product) {
-						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count } })
+						product = await this.prisma.productModel.create({ data: { name: pkey, count: pro.product.count ?? undefined } })
 					}
 				}
 				const tprice = pro.count * pro.price
