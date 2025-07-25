@@ -120,6 +120,7 @@ export class SellingRepository implements OnModuleInit {
 				client: {
 					select: {
 						id: true,
+						balance: true,
 						fullname: true,
 						phone: true,
 						payments: {

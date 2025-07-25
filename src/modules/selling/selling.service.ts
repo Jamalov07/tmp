@@ -1,7 +1,7 @@
 import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { SellingRepository } from './selling.repository'
 import { createResponse, CRequest, DeleteMethodEnum } from '@common'
-import { SellingStatusEnum } from '@prisma/client'
+import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import {
 	SellingGetOneRequest,
 	SellingCreateOneRequest,
@@ -20,6 +20,8 @@ import { ExcelService } from '../shared/excel'
 import { Response } from 'express'
 import { BotService } from '../bot'
 import { BotSellingProductTitleEnum, BotSellingTitleEnum } from './enums'
+import { PrismaService } from '../shared'
+import pLimit from 'p-limit'
 
 @Injectable()
 export class SellingService {
@@ -29,6 +31,7 @@ export class SellingService {
 		private readonly clientService: ClientService,
 		private readonly excelService: ExcelService,
 		private readonly botService: BotService,
+		private readonly prisma: PrismaService,
 	) {}
 
 	async findMany(query: SellingFindManyRequest) {
@@ -339,54 +342,56 @@ export class SellingService {
 			return { startDate: start, endDate: end }
 		}
 
-		// Parallel hisoblash uchun barcha stats so'rovlarni yig'amiz
 		const statTypes = ['daily', 'weekly', 'monthly', 'yearly'] as const
+		const limit = pLimit(2)
 
-		const statsPromises = statTypes.map(async (type) => {
-			const { startDate, endDate } = getDateRange(type)
-			const sellings = await this.sellingRepository.getMany({
-				pagination: false,
-				startDate,
-				endDate,
-				status: SellingStatusEnum.accepted,
-			})
+		const statsPromises = statTypes.map((type) =>
+			limit(async () => {
+				const { startDate, endDate } = getDateRange(type)
+				const result = await this.prisma.sellingModel.aggregate({
+					where: {
+						createdAt: {
+							gte: startDate ? new Date(new Date(startDate).setHours(23, 59, 59, 999)).toISOString() : undefined,
+							lte: endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString() : undefined,
+						},
+						status: SellingStatusEnum.accepted,
+					},
+					_sum: { totalPrice: true },
+				})
 
-			return sellings.reduce((sum, selling) => {
-				return sum.plus(selling.totalPrice)
-			}, new Decimal(0))
-		})
+				return new Decimal(result._sum.totalPrice || 0)
+			}),
+		)
 
-		const allSellingsPromise = this.sellingRepository.getMany({
-			pagination: false,
-			status: SellingStatusEnum.accepted,
-		})
+		// ✅ Bu yerda parallel bajariladi
+		const [daily, weekly, monthly, yearly, supplierDebt] = await Promise.all([...statsPromises, this.getSupplierStatsInArrival()])
 
-		const supplierDebtPromise = this.getSupplierStatsInArrival()
-
-		const [daily, weekly, monthly, yearly, allSellings, supplierDebt] = await Promise.all([
-			statsPromises[0],
-			statsPromises[1],
-			statsPromises[2],
-			statsPromises[3],
-			allSellingsPromise,
-			supplierDebtPromise,
+		// ✅ DB darajasida klient balans, sotuv va to'lov summalari olinadi
+		const [sellingsAgg, paymentsAgg, clientsAgg] = await Promise.all([
+			this.prisma.sellingModel.aggregate({
+				where: { status: SellingStatusEnum.accepted },
+				_sum: { totalPrice: true },
+			}),
+			this.prisma.paymentModel.aggregate({
+				where: {
+					selling: { status: SellingStatusEnum.accepted },
+					type: ServiceTypeEnum.selling,
+				},
+				_sum: { total: true },
+			}),
+			this.prisma.userModel.aggregate({
+				where: { type: UserTypeEnum.client },
+				_sum: { balance: true },
+			}),
 		])
 
-		// Client Stats
-		let ourDebt = new Decimal(0)
-		let theirDebt = new Decimal(0)
-		let totalBalance = new Decimal(0)
+		const totalSellings = new Decimal(sellingsAgg._sum.totalPrice || 0)
+		const totalPayments = new Decimal(paymentsAgg._sum.total || 0)
+		const totalBalance = new Decimal(clientsAgg._sum.balance || 0)
 
-		for (const selling of allSellings) {
-			const diff = selling.payment.total.minus(selling.totalPrice)
-			const clientBalance = selling.client?.payments?.reduce((sum, p) => sum.plus(p.total), new Decimal(0)) ?? new Decimal(0)
+		const ourDebt = totalPayments.minus(totalSellings)
+		const theirDebt = totalSellings.minus(totalPayments)
 
-			totalBalance = totalBalance.plus(clientBalance)
-			ourDebt = ourDebt.plus(diff)
-			theirDebt = theirDebt.plus(selling.totalPrice.minus(selling.payment.total))
-		}
-
-		// Hisoblashni yakunlash
 		const finalOurDebt = ourDebt.minus(totalBalance).lt(0) ? new Decimal(0) : ourDebt
 		const finalTheirDebt = theirDebt.plus(totalBalance).lt(0) ? new Decimal(0) : theirDebt
 
@@ -407,20 +412,26 @@ export class SellingService {
 	}
 
 	async getSupplierStatsInArrival() {
-		const arrivals = await this.arrivalService.getMany({ pagination: false })
-		const list = arrivals.data.data
+		const [arrivalsAgg, paymentsAgg, suppliersAgg] = await Promise.all([
+			this.prisma.arrivalModel.aggregate({
+				_sum: { totalCost: true },
+			}),
+			this.prisma.paymentModel.aggregate({
+				where: { type: ServiceTypeEnum.arrival },
+				_sum: { total: true },
+			}),
+			this.prisma.userModel.aggregate({
+				where: { type: UserTypeEnum.client },
+				_sum: { balance: true },
+			}),
+		])
 
-		let ourDebt = new Decimal(0)
-		let theirDebt = new Decimal(0)
-		let totalBalance = new Decimal(0)
+		const totalCost = new Decimal(arrivalsAgg._sum.totalCost || 0)
+		const totalPayment = new Decimal(paymentsAgg._sum.total || 0)
+		const totalBalance = new Decimal(suppliersAgg._sum.balance || 0)
 
-		for (const arrival of list) {
-			const diff = arrival.payment.total.minus(arrival.totalCost)
-			ourDebt = ourDebt.plus(diff)
-			theirDebt = theirDebt.plus(arrival.totalCost.minus(arrival.payment.total))
-
-			totalBalance = totalBalance.plus(arrival.supplier.balance)
-		}
+		const ourDebt = totalPayment.minus(totalCost)
+		const theirDebt = totalCost.minus(totalPayment)
 
 		return {
 			ourDebt: ourDebt.minus(totalBalance).lt(0) ? new Decimal(0) : ourDebt,
