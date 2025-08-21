@@ -41,12 +41,10 @@ export class Syncronize2Service implements OnModuleInit {
 		private readonly configService: ConfigService,
 	) {}
 
-	async onModuleInit() {
+	onModuleInit() {
 		this.baseUrl = this.configService.getOrThrow('old-service.baseUrl')
 		this.phone = this.configService.getOrThrow('old-service.user')
 		this.password = this.configService.getOrThrow('old-service.password')
-
-		await this.sync()
 	}
 
 	round = (num: number, digits = 2) => Math.round((num + Number.EPSILON) * Math.pow(10, digits)) / Math.pow(10, digits)
@@ -977,5 +975,7 @@ export class Syncronize2Service implements OnModuleInit {
 		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count)
 		console.log(newStaffPayments.count, newSupplierPayments.count, newClientPayments.count)
 		console.log(newSellings.count, newArrivals.count, newReturnings.count)
+
+		return createResponse({ data: {}, success: { messages: ['syncronize success'] } })
 	}
 }
