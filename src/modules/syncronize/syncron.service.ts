@@ -406,21 +406,19 @@ export class Syncronize2Service implements OnModuleInit {
 				totalPrice: totalPrice,
 				createdAt: selling.createdAt,
 				products: sellingProducts,
-				payment: selling.payment
-					? {
-							id: selling.payment.id,
-							card: new Decimal(selling.payment.card),
-							cash: new Decimal(selling.payment.cash),
-							other: new Decimal(selling.payment.other),
-							transfer: new Decimal(selling.payment.transfer),
-							total: new Decimal(selling.payment.totalPay),
-							description: selling.payment.description,
-							type: ServiceTypeEnum.selling,
-							staffId: staffs[selling.seller.id].id,
-							userId: clients[selling.client.id].id,
-							createdAt: selling.payment.createdAt,
-						}
-					: undefined,
+				payment: {
+					id: selling.payment?.id,
+					card: new Decimal(selling.payment?.card || 0),
+					cash: new Decimal(selling.payment?.cash || 0),
+					other: new Decimal(selling.payment?.other || 0),
+					transfer: new Decimal(selling.payment?.transfer || 0),
+					total: new Decimal(selling.payment?.totalPay || 0),
+					description: selling.payment?.description,
+					type: ServiceTypeEnum.selling,
+					staffId: staffs[selling.seller.id].id,
+					userId: clients[selling.client.id].id,
+					createdAt: selling.payment?.createdAt || selling.createdAt,
+				},
 			}
 		})
 
@@ -509,21 +507,19 @@ export class Syncronize2Service implements OnModuleInit {
 				totalCost: totalCost,
 				createdAt: arrival.createdAt,
 				products: arrivalProducts,
-				payment: arrival.payment
-					? {
-							id: arrival.payment.id,
-							card: new Decimal(arrival.payment.card),
-							cash: new Decimal(arrival.payment.cash),
-							other: new Decimal(arrival.payment.other),
-							transfer: new Decimal(arrival.payment.transfer),
-							total: new Decimal(arrival.payment.totalPay),
-							description: arrival.payment.description,
-							type: ServiceTypeEnum.arrival,
-							staffId: staffs[arrival.admin.id].id,
-							userId: suppliers[arrival.supplier.id].id,
-							createdAt: arrival.payment.createdAt,
-						}
-					: undefined,
+				payment: {
+					id: arrival.payment?.id,
+					card: new Decimal(arrival.payment?.card || 0),
+					cash: new Decimal(arrival.payment?.cash || 0),
+					other: new Decimal(arrival.payment?.other || 0),
+					transfer: new Decimal(arrival.payment?.transfer || 0),
+					total: new Decimal(arrival.payment?.totalPay || 0),
+					description: arrival.payment?.description,
+					type: ServiceTypeEnum.arrival,
+					staffId: staffs[arrival.admin.id].id,
+					userId: suppliers[arrival.supplier.id].id,
+					createdAt: arrival.payment?.createdAt || arrival.createdAt,
+				},
 			}
 		})
 
