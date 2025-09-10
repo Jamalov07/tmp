@@ -18,6 +18,7 @@ export declare interface Staff {
 	type: UserTypeEnum
 	balance?: Decimal
 	payments?: StaffPayment[]
+	deletedAt?: Date
 }
 
 export declare interface ISupplier {
@@ -38,6 +39,7 @@ export declare interface Supplier {
 	balance?: Decimal
 	debt: Decimal
 	payments?: SupplierPayment[]
+	deletedAt?: Date
 }
 
 export declare interface IClient {
@@ -58,6 +60,7 @@ export declare interface Client {
 	balance?: Decimal
 	debt: Decimal
 	payments?: ClientPayment[]
+	deletedAt?: Date
 }
 
 export declare interface IProduct {

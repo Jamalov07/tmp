@@ -355,6 +355,7 @@ export class SellingService {
 							gte: startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : undefined,
 							lte: endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : undefined,
 						},
+						client: { deletedAt: null },
 						status: SellingStatusEnum.accepted,
 					},
 					_sum: { totalPrice: true },
@@ -373,22 +374,23 @@ export class SellingService {
 		// ✅ Umumiy sotuv, to‘lov va mijoz balanslari
 		const [sellingsAgg, paymentsAgg, clientsAgg, clientReturningBalanceAgg] = await Promise.all([
 			this.prisma.sellingModel.aggregate({
-				where: { status: SellingStatusEnum.accepted },
+				where: { status: SellingStatusEnum.accepted, client: { deletedAt: null } },
 				_sum: { totalPrice: true },
 			}),
 			this.prisma.paymentModel.aggregate({
 				where: {
 					selling: { status: SellingStatusEnum.accepted },
 					type: ServiceTypeEnum.selling,
+					user: { deletedAt: null },
 				},
 				_sum: { total: true },
 			}),
 			this.prisma.userModel.aggregate({
-				where: { type: UserTypeEnum.client },
+				where: { type: UserTypeEnum.client, deletedAt: null },
 				_sum: { balance: true },
 			}),
 			this.prisma.paymentModel.aggregate({
-				where: { type: ServiceTypeEnum.returning },
+				where: { type: ServiceTypeEnum.returning, user: { deletedAt: null } },
 				_sum: { fromBalance: true },
 			}),
 		])
@@ -420,13 +422,14 @@ export class SellingService {
 		const [arrivalsAgg, paymentsAgg, suppliersAgg] = await Promise.all([
 			this.prisma.arrivalModel.aggregate({
 				_sum: { totalCost: true },
+				where: { supplier: { deletedAt: null } },
 			}),
 			this.prisma.paymentModel.aggregate({
-				where: { type: ServiceTypeEnum.arrival },
+				where: { type: ServiceTypeEnum.arrival, user: { deletedAt: null } },
 				_sum: { total: true },
 			}),
 			this.prisma.userModel.aggregate({
-				where: { type: UserTypeEnum.supplier },
+				where: { type: UserTypeEnum.supplier, deletedAt: null },
 				_sum: { balance: true },
 			}),
 		])

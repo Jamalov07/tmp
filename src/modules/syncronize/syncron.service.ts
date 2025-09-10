@@ -201,6 +201,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(0),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -236,6 +237,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(0),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -289,6 +291,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(0),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -341,6 +344,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(selling.client.debt),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -355,6 +359,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(0),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -435,6 +440,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(arrival.supplier.debt),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -449,6 +455,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(0),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -536,6 +543,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(0),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -550,6 +558,7 @@ export class Syncronize2Service implements OnModuleInit {
 					payments: [],
 					balance: new Decimal(0),
 					debt: new Decimal(0),
+					deletedAt: new Date(),
 				}
 			}
 
@@ -705,6 +714,7 @@ export class Syncronize2Service implements OnModuleInit {
 					fullname: staff.fullname,
 					type: UserTypeEnum.staff,
 					createdAt: staff.createdAt,
+					deletedAt: staff.deletedAt,
 				})),
 		})
 
@@ -738,6 +748,7 @@ export class Syncronize2Service implements OnModuleInit {
 					fullname: supplier.fullname,
 					type: UserTypeEnum.supplier,
 					createdAt: supplier.createdAt,
+					deletedAt: supplier.deletedAt,
 				})),
 		})
 
@@ -774,6 +785,7 @@ export class Syncronize2Service implements OnModuleInit {
 					fullname: client.fullname,
 					type: UserTypeEnum.client,
 					createdAt: client.createdAt,
+					deletedAt: client.deletedAt,
 				})),
 		})
 
