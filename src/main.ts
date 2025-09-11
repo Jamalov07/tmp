@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core'
+import { NestFactory, repl } from '@nestjs/core'
 import { json, Request, Response } from 'express'
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -13,9 +13,18 @@ import {
 	TimezoneInterceptor,
 	RequestQueryTimezoneInterceptor,
 } from '@common'
+import compression from 'compression'
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
+// import compression from '@fastify/compress'
 
 async function bootstrap() {
-	const app = await NestFactory.create<INestApplication>(AppModule)
+	const app = await NestFactory.create<INestApplication>(AppModule, { forceCloseConnections: true })
+	// const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter())
+	// app.register(compression)
+
+	await repl(AppModule)
+
+	app.use(compression())
 
 	app.use('/health', (req: Request, res: Response) => res.status(200).send('alive'))
 

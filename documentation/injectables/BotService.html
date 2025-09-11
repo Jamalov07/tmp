@@ -1,0 +1,1827 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>tmp documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">tmp documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content injectable">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Injectables</li>
+  <li class="breadcrumb-item" >BotService</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/modules/bot/bot.service.ts</code>
+        </p>
+
+
+
+
+
+            <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Properties</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Readonly</span>
+                                <a href="#configService" >configService</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Readonly</span>
+                                <a href="#pdfService" >pdfService</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Readonly</span>
+                                <a href="#prisma" >prisma</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#createBotUserWithId" >createBotUserWithId</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#findBotUserById" >findBotUserById</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#findUserByPhone" >findUserByPhone</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#formatDate" >formatDate</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#onContact" >onContact</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#onSelectLanguage" >onSelectLanguage</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#onStart" >onStart</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#sendDeletedPaymentToChannel" >sendDeletedPaymentToChannel</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#sendDeletedSellingToChannel" >sendDeletedSellingToChannel</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#sendPaymentToChannel" >sendPaymentToChannel</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#sendSellingToChannel" >sendSellingToChannel</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#sendSellingToClient" >sendSellingToClient</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateBotUserWithId" >updateBotUserWithId</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+            <section data-compodoc="block-constructor">
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(prisma: <a href="../injectables/PrismaService.html" target="_self">PrismaService</a>, pdfService: <a href="../injectables/PdfService.html" target="_self">PdfService</a>, configService: ConfigService, bot: Telegraf<Context>)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="17" class="link-to-prism">src/modules/bot/bot.service.ts:17</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>prisma</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/PrismaService.html" target="_self" >PrismaService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>pdfService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/PdfService.html" target="_self" >PdfService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>configService</td>
+                                                  
+                                                        <td>
+                                                                    <code>ConfigService</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>bot</td>
+                                                  
+                                                        <td>
+                                                                    <code>Telegraf&lt;Context&gt;</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
+
+            <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createBotUserWithId"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>createBotUserWithId</b></span>
+                        <a href="#createBotUserWithId"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createBotUserWithId(id: number | string)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="309"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:309</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>id</td>
+                                            <td>
+                                                        <code>number | string</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="findBotUserById"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>findBotUserById</b></span>
+                        <a href="#findBotUserById"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>findBotUserById(id: number | string)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="304"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:304</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>id</td>
+                                            <td>
+                                                        <code>number | string</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="findUserByPhone"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>findUserByPhone</b></span>
+                        <a href="#findUserByPhone"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>findUserByPhone(phone: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="319"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:319</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>phone</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="formatDate"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>formatDate</b></span>
+                        <a href="#formatDate"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>formatDate(date: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank">Date</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="325"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:325</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>date</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank" >Date</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="onContact"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>onContact</b></span>
+                        <a href="#onContact"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>onContact(context: Context)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="84"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:84</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>context</td>
+                                            <td>
+                                                        <code>Context</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="onSelectLanguage"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>onSelectLanguage</b></span>
+                        <a href="#onSelectLanguage"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>onSelectLanguage(context: Context, language: BotLanguageEnum)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="62"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:62</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>context</td>
+                                            <td>
+                                                        <code>Context</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>language</td>
+                                            <td>
+                                                        <code>BotLanguageEnum</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="onStart"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>onStart</b></span>
+                        <a href="#onStart"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>onStart(context: Context)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="29"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:29</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>context</td>
+                                            <td>
+                                                        <code>Context</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="sendDeletedPaymentToChannel"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>sendDeletedPaymentToChannel</b></span>
+                        <a href="#sendDeletedPaymentToChannel"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>sendDeletedPaymentToChannel(payment: Partial<PaymentModel>, client: <a href="../interfaces/ClientFindOneData.html" target="_self">ClientFindOneData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="274"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:274</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>payment</td>
+                                            <td>
+                                                        <code>Partial&lt;PaymentModel&gt;</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>client</td>
+                                            <td>
+                                                            <code><a href="../interfaces/ClientFindOneData.html" target="_self" >ClientFindOneData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="sendDeletedSellingToChannel"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>sendDeletedSellingToChannel</b></span>
+                        <a href="#sendDeletedSellingToChannel"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>sendDeletedSellingToChannel(selling: <a href="../interfaces/SellingFindOneData.html" target="_self">SellingFindOneData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="171"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:171</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>selling</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingFindOneData.html" target="_self" >SellingFindOneData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="sendPaymentToChannel"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>sendPaymentToChannel</b></span>
+                        <a href="#sendPaymentToChannel"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>sendPaymentToChannel(payment: Partial<PaymentModel>, isModified: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/boolean" target="_blank">boolean</a>, client: <a href="../interfaces/ClientFindOneData.html" target="_self">ClientFindOneData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="244"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:244</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Default value</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>payment</td>
+                                            <td>
+                                                        <code>Partial&lt;PaymentModel&gt;</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>isModified</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/boolean" target="_blank" >boolean</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>false</code>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>client</td>
+                                            <td>
+                                                            <code><a href="../interfaces/ClientFindOneData.html" target="_self" >ClientFindOneData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="sendSellingToChannel"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>sendSellingToChannel</b></span>
+                        <a href="#sendSellingToChannel"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>sendSellingToChannel(selling: <a href="../interfaces/SellingFindOneData.html" target="_self">SellingFindOneData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="186"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:186</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>selling</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingFindOneData.html" target="_self" >SellingFindOneData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="sendSellingToClient"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>sendSellingToClient</b></span>
+                        <a href="#sendSellingToClient"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>sendSellingToClient(selling: <a href="../interfaces/SellingFindOneData.html" target="_self">SellingFindOneData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="117"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:117</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>selling</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingFindOneData.html" target="_self" >SellingFindOneData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateBotUserWithId"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>updateBotUserWithId</b></span>
+                        <a href="#updateBotUserWithId"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateBotUserWithId(id: number | string, body: literal type)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="314"
+                                    class="link-to-prism">src/modules/bot/bot.service.ts:314</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>id</td>
+                                            <td>
+                                                        <code>number | string</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>body</td>
+                                            <td>
+                                                        <code>literal type</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+            <section data-compodoc="block-properties">
+    
+    <h3 id="inputs">
+        Properties
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="configService"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Readonly</span>
+                        <span ><b>configService</b></span>
+                        <a href="#configService"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>ConfigService</code>
+
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="17" class="link-to-prism">src/modules/bot/bot.service.ts:17</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="pdfService"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Readonly</span>
+                        <span ><b>pdfService</b></span>
+                        <a href="#pdfService"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../injectables/PdfService.html" target="_self" >PdfService</a></code>
+
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="16" class="link-to-prism">src/modules/bot/bot.service.ts:16</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="prisma"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Readonly</span>
+                        <span ><b>prisma</b></span>
+                        <a href="#prisma"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../injectables/PrismaService.html" target="_self" >PrismaService</a></code>
+
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="15" class="link-to-prism">src/modules/bot/bot.service.ts:15</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+</section>
+
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable } from &#x27;@nestjs/common&#x27;
+import { PdfService, PrismaService } from &#x27;../shared&#x27;
+import { Context, Markup, Telegraf } from &#x27;telegraf&#x27;
+import { Message } from &#x27;telegraf/typings/core/types/typegram&#x27;
+import { BotLanguageEnum, PaymentModel, ServiceTypeEnum } from &#x27;@prisma/client&#x27;
+import { SellingFindOneData } from &#x27;../selling&#x27;
+import { InjectBot } from &#x27;nestjs-telegraf&#x27;
+import { MyBotName } from &#x27;./constants&#x27;
+import { ConfigService } from &#x27;@nestjs/config&#x27;
+import { BotSellingProductTitleEnum, BotSellingTitleEnum } from &#x27;../selling/enums&#x27;
+import { ClientFindOneData } from &#x27;../client&#x27;
+
+@Injectable()
+export class BotService {
+	private readonly prisma: PrismaService
+	private readonly pdfService: PdfService
+	private readonly configService: ConfigService
+	constructor(
+		prisma: PrismaService,
+		pdfService: PdfService,
+		configService: ConfigService,
+		@InjectBot(MyBotName) private readonly bot: Telegraf&lt;Context&gt;,
+	) {
+		this.prisma &#x3D; prisma
+		this.pdfService &#x3D; pdfService
+		this.configService &#x3D; configService
+	}
+
+	async onStart(context: Context) {
+		const user &#x3D; await this.findBotUserById(context.from.id)
+		if (user) {
+			if (user.language) {
+				if (user.userId) {
+					context.reply(&#x60;${user.user.fullname} siz allaqachon ro&#x27;yhatdan o&#x27;tgansiz!&#x60;)
+				} else {
+					context.reply(&quot;Ro&#x27;yhatdan o&#x27;tish uchun telefon raqam yuborish tugmasini bosing.&quot;, {
+						parse_mode: &#x27;HTML&#x27;,
+						reply_markup: Markup.keyboard([[Markup.button.contactRequest(&#x27;📲 Raqam yuborish&#x27;)]])
+							.oneTime()
+							.resize().reply_markup,
+					})
+				}
+			} else {
+				await context.reply(&quot;O&#x27;zingizga qulay bo&#x27;lgan tilni tanlang.&quot;, {
+					parse_mode: &#x27;HTML&#x27;,
+					reply_markup: Markup.keyboard([[&quot;O&#x27;zbek tili&quot;], [&#x27;Русскый язык&#x27;], [&#x27;English language&#x27;]])
+						.oneTime()
+						.resize().reply_markup,
+				})
+			}
+		} else {
+			await this.createBotUserWithId(context.from.id)
+			await context.reply(&quot;O&#x27;zingizga qulay bo&#x27;lgan tilni tanlang.&quot;, {
+				parse_mode: &#x27;HTML&#x27;,
+				...Markup.keyboard([[&quot;O&#x27;zbek tili&quot;], [&#x27;Русскый язык&#x27;], [&#x27;English language&#x27;]])
+					.oneTime()
+					.resize(),
+			})
+		}
+	}
+
+	async onSelectLanguage(context: Context, language: BotLanguageEnum) {
+		const user &#x3D; await this.findBotUserById(context.from.id)
+
+		if (user) {
+			const user2 &#x3D; await this.updateBotUserWithId(context.from.id, { language: language })
+			await context.reply(&quot;Ro&#x27;yhatdan o&#x27;tish uchun telefon raqam yuborish tugmasini bosing.&quot;, {
+				parse_mode: &#x27;HTML&#x27;,
+				...Markup.keyboard([[Markup.button.contactRequest(&#x27;📲 Raqam yuborish&#x27;)]])
+					.oneTime()
+					.resize(),
+			})
+		} else {
+			await this.createBotUserWithId(context.from.id)
+			await context.reply(&quot;Hayrli kun. O&#x27;zingizga qulay bo&#x27;lgan tilni tanlang.&quot;, {
+				parse_mode: &#x27;HTML&#x27;,
+				...Markup.keyboard([[&quot;O&#x27;zbek tili&quot;], [&#x27;Русскый язык&#x27;], [&#x27;English language&#x27;]])
+					.oneTime()
+					.resize(),
+			})
+		}
+	}
+
+	async onContact(context: Context) {
+		const user &#x3D; await this.findBotUserById(context.from.id)
+		if (user &amp;&amp; &#x27;contact&#x27; in context.message) {
+			if (user.language) {
+				const usr &#x3D; await this.findUserByPhone(context.message.contact.phone_number)
+				if (usr) {
+					await this.updateBotUserWithId(context.from.id, { userId: usr.id })
+					await context.reply(&quot;Tabriklaymiz. Muvaffaqiyatli ro&#x27;yhatdan o&#x27;tdingiz!&quot;, {
+						reply_markup: { remove_keyboard: true },
+					})
+				} else {
+					await context.reply(&quot;Bizda sizning ma&#x27;lumotlar topilmadi.&quot;)
+				}
+			} else {
+				await this.createBotUserWithId(context.from.id)
+				await context.reply(&quot;Hayrli kun. O&#x27;zingizga qulay bo&#x27;lgan tilni tanlang.&quot;, {
+					parse_mode: &#x27;HTML&#x27;,
+					...Markup.keyboard([[&quot;O&#x27;zbek tili&quot;], [&#x27;Русскый язык&#x27;], [&#x27;English language&#x27;]])
+						.oneTime()
+						.resize(),
+				})
+			}
+		} else {
+			await this.createBotUserWithId(context.from.id)
+			await context.reply(&quot;Hayrli kun. O&#x27;zingizga qulay bo&#x27;lgan tilni tanlang.&quot;, {
+				parse_mode: &#x27;HTML&#x27;,
+				...Markup.keyboard([[&quot;O&#x27;zbek tili&quot;], [&#x27;Русскый язык&#x27;], [&#x27;English language&#x27;]])
+					.oneTime()
+					.resize(),
+			})
+		}
+	}
+
+	async sendSellingToClient(selling: SellingFindOneData) {
+		const bufferPdf &#x3D; await this.pdfService.generateInvoicePdfBuffer2(selling)
+
+		let caption &#x3D; &#x27;&#x27;
+		const baseInfo &#x3D; &#x60;🧾 Продажа\n\n&#x60; + &#x60;🆔 Заказ: ${selling.publicId}\n&#x60; + &#x60;💰 Сумма: ${selling.totalPrice.toNumber()}\n&#x60; + &#x60;💸 Долг: ${selling.debt.toNumber()}\n&#x60;
+
+		const clientInfo &#x3D; &#x60;👤 Клиент: ${selling.client.fullname}\n&#x60; + &#x60;📊 Общий долг: ${selling.client.debt.toNumber()}&#x60;
+
+		let productInfo &#x3D; &#x27;&#x27;
+
+		const findProductByStatus &#x3D; (status: BotSellingProductTitleEnum) &#x3D;&gt; selling.products.find((prod) &#x3D;&gt; prod.status &#x3D;&#x3D;&#x3D; status)
+
+		switch (selling.title) {
+			case BotSellingTitleEnum.new:
+				caption &#x3D; &#x60;🧾 Новая продажа\n\n${baseInfo}\n${clientInfo}&#x60;
+				break
+
+			case BotSellingTitleEnum.added: {
+				const newProduct &#x3D; findProductByStatus(BotSellingProductTitleEnum.new)
+				if (newProduct) {
+					productInfo &#x3D; &#x60;\n📦 Товар добавлен\n&#x60; + &#x60;• Название: ${newProduct.product.name}\n&#x60; + &#x60;• Цена: ${newProduct.price.toNumber()}\n&#x60; + &#x60;• Кол-во: ${newProduct.count}&#x60;
+				}
+				caption &#x3D; &#x60;${baseInfo}${productInfo}\n\n${clientInfo}&#x60;
+				break
+			}
+
+			case BotSellingTitleEnum.updated: {
+				const updatedProduct &#x3D; findProductByStatus(BotSellingProductTitleEnum.updated)
+				if (updatedProduct) {
+					productInfo &#x3D;
+						&#x60;\n♻️ Товар обновлён\n&#x60; + &#x60;• Название: ${updatedProduct.product.name}\n&#x60; + &#x60;• Цена: ${updatedProduct.price.toNumber()}\n&#x60; + &#x60;• Кол-во: ${updatedProduct.count}&#x60;
+				}
+				caption &#x3D; &#x60;${baseInfo}${productInfo}\n\n${clientInfo}&#x60;
+				break
+			}
+
+			case BotSellingTitleEnum.deleted: {
+				const deletedProduct &#x3D; findProductByStatus(BotSellingProductTitleEnum.deleted)
+				if (deletedProduct) {
+					productInfo &#x3D;
+						&#x60;\n🗑️ Товар удалён\n&#x60; + &#x60;• Название: ${deletedProduct.product.name}\n&#x60; + &#x60;• Цена: ${deletedProduct.price.toNumber()}\n&#x60; + &#x60;• Кол-во: ${deletedProduct.count}&#x60;
+				}
+				caption &#x3D; &#x60;${baseInfo}${productInfo}\n\n${clientInfo}&#x60;
+				break
+			}
+
+			default:
+				caption &#x3D; &#x60;${baseInfo}\n${clientInfo}&#x60;
+				break
+		}
+
+		await this.bot.telegram.sendDocument(selling.client.telegram?.id, { source: bufferPdf, filename: &#x60;xarid.pdf&#x60; }, { caption })
+	}
+
+	async sendDeletedSellingToChannel(selling: SellingFindOneData) {
+		const channelId &#x3D; this.configService.getOrThrow&lt;string&gt;(&#x27;bot.sellingChannelId&#x27;)
+		const chatInfo &#x3D; await this.bot.telegram.getChat(channelId).catch(() &#x3D;&gt; undefined)
+		if (!chatInfo) return
+
+		let caption &#x3D; &#x27;&#x27;
+		const baseInfo &#x3D; &#x60;🧾 Продажа\n\n&#x60; + &#x60;🆔 Заказ: ${selling.publicId}\n&#x60; + &#x60;💰 Сумма: ${selling.totalPrice.toNumber()}\n&#x60; + &#x60;💸 Долг: ${selling.debt.toNumber()}\n&#x60;
+
+		const clientInfo &#x3D; &#x60;👤 Клиент: ${selling.client.fullname}\n&#x60; + &#x60;📊 Общий долг: ${selling.client.debt.toNumber()}&#x60;
+
+		caption &#x3D; &#x60;🗑️ Продажа удалено\n\n${baseInfo}\n\n${clientInfo}&#x60;
+
+		await this.bot.telegram.sendMessage(channelId, caption)
+	}
+
+	async sendSellingToChannel(selling: SellingFindOneData) {
+		const channelId &#x3D; this.configService.getOrThrow&lt;string&gt;(&#x27;bot.sellingChannelId&#x27;)
+		const chatInfo &#x3D; await this.bot.telegram.getChat(channelId).catch(() &#x3D;&gt; undefined)
+		if (!chatInfo) return
+
+		const bufferPdf &#x3D; await this.pdfService.generateInvoicePdfBuffer2(selling)
+
+		let caption &#x3D; &#x27;&#x27;
+		const baseInfo &#x3D; &#x60;🧾 Продажа\n\n&#x60; + &#x60;🆔 Заказ: ${selling.publicId}\n&#x60; + &#x60;💰 Сумма: ${selling.totalPrice.toNumber()}\n&#x60; + &#x60;💸 Долг: ${selling.debt.toNumber()}\n&#x60;
+
+		const clientInfo &#x3D; &#x60;👤 Клиент: ${selling.client.fullname}\n&#x60; + &#x60;📊 Общий долг: ${selling.client.debt.toNumber()}&#x60;
+
+		let productInfo &#x3D; &#x27;&#x27;
+
+		const findProductByStatus &#x3D; (status: BotSellingProductTitleEnum) &#x3D;&gt; selling.products.find((prod) &#x3D;&gt; prod.status &#x3D;&#x3D;&#x3D; status)
+
+		switch (selling.title) {
+			case BotSellingTitleEnum.new:
+				caption &#x3D; &#x60;🧾 Новая продажа\n\n${baseInfo}\n${clientInfo}&#x60;
+				break
+
+			case BotSellingTitleEnum.added: {
+				const newProduct &#x3D; findProductByStatus(BotSellingProductTitleEnum.new)
+				if (newProduct) {
+					productInfo &#x3D; &#x60;\n📦 Товар добавлен\n&#x60; + &#x60;• Название: ${newProduct.product.name}\n&#x60; + &#x60;• Цена: ${newProduct.price.toNumber()}\n&#x60; + &#x60;• Кол-во: ${newProduct.count}&#x60;
+				}
+				caption &#x3D; &#x60;${baseInfo}${productInfo}\n\n${clientInfo}&#x60;
+				break
+			}
+
+			case BotSellingTitleEnum.updated: {
+				const updatedProduct &#x3D; findProductByStatus(BotSellingProductTitleEnum.updated)
+				if (updatedProduct) {
+					productInfo &#x3D;
+						&#x60;\n♻️ Товар обновлён\n&#x60; + &#x60;• Название: ${updatedProduct.product.name}\n&#x60; + &#x60;• Цена: ${updatedProduct.price.toNumber()}\n&#x60; + &#x60;• Кол-во: ${updatedProduct.count}&#x60;
+				}
+				caption &#x3D; &#x60;${baseInfo}${productInfo}\n\n${clientInfo}&#x60;
+				break
+			}
+
+			case BotSellingTitleEnum.deleted: {
+				const deletedProduct &#x3D; findProductByStatus(BotSellingProductTitleEnum.deleted)
+				if (deletedProduct) {
+					productInfo &#x3D;
+						&#x60;\n🗑️ Товар удалён\n&#x60; + &#x60;• Название: ${deletedProduct.product.name}\n&#x60; + &#x60;• Цена: ${deletedProduct.price.toNumber()}\n&#x60; + &#x60;• Кол-во: ${deletedProduct.count}&#x60;
+				}
+				caption &#x3D; &#x60;${baseInfo}${productInfo}\n\n${clientInfo}&#x60;
+				break
+			}
+
+			default:
+				caption &#x3D; &#x60;${baseInfo}\n${clientInfo}&#x60;
+				break
+		}
+
+		await this.bot.telegram.sendDocument(channelId, { source: bufferPdf, filename: &#x60;${selling.client.phone}.pdf&#x60; }, { caption })
+	}
+
+	async sendPaymentToChannel(payment: Partial&lt;PaymentModel&gt;, isModified: boolean &#x3D; false, client: ClientFindOneData) {
+		const channelId &#x3D; this.configService.getOrThrow&lt;string&gt;(&#x27;bot.paymentChannelId&#x27;)
+		const chatInfo &#x3D; await this.bot.telegram.getChat(channelId).catch(() &#x3D;&gt; undefined)
+
+		if (!chatInfo) return
+
+		const paymentType: Record&lt;string, string&gt; &#x3D; {
+			client: &#x27;для клиента&#x27;,
+			selling: &#x27;для продажи&#x27;,
+		}
+
+		const totalPayment &#x3D; payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
+
+		const title &#x3D;
+			&#x60;${isModified ? &#x27;♻️ Обновлено\n\n&#x27; : &#x27;&#x27;}&#x60; +
+			&#x60;📌 Тип: ${paymentType[payment.type] ?? &#x27;неизвестно&#x27;}\n&#x60; +
+			&#x60;👤 Клиент: ${client.fullname}\n&#x60; +
+			&#x60;📞 Телефон: ${client.phone}\n&#x60; +
+			&#x60;💰 Сумма: ${totalPayment.toNumber()}\n\n&#x60; +
+			&#x60;💵 Наличными: ${payment.cash.toNumber()}\n&#x60; +
+			&#x60;💳 Картой: ${payment.card.toNumber()}\n&#x60; +
+			&#x60;🏦 Переводом: ${payment.transfer.toNumber()}\n&#x60; +
+			&#x60;📦 Другое: ${payment.other.toNumber()}\n&#x60; +
+			&#x60;📅 Дата: ${this.formatDate(payment.createdAt)}\n&#x60; +
+			&#x60;📝 Описание: ${payment.description ?? &#x27;-&#x27;}\n&#x60; +
+			&#x60;📊 Общий долг: ${client.debt.toNumber()}&#x60;
+
+		await this.bot.telegram.sendMessage(channelId, title)
+	}
+
+	async sendDeletedPaymentToChannel(payment: Partial&lt;PaymentModel&gt;, client: ClientFindOneData) {
+		const channelId &#x3D; this.configService.getOrThrow&lt;string&gt;(&#x27;bot.paymentChannelId&#x27;)
+		const chatInfo &#x3D; await this.bot.telegram.getChat(channelId).catch(() &#x3D;&gt; undefined)
+
+		if (!chatInfo) return
+
+		const paymentType: Record&lt;string, string&gt; &#x3D; {
+			client: &#x27;для клиента&#x27;,
+			selling: &#x27;для продажи&#x27;,
+		}
+
+		const totalPayment &#x3D; payment.card.plus(payment.cash).plus(payment.other).plus(payment.transfer)
+
+		const title &#x3D;
+			&#x60;🗑️ Удалено\n\n&#x60; +
+			&#x60;📌 Тип: ${paymentType[payment.type] ?? &#x27;неизвестно&#x27;}\n&#x60; +
+			&#x60;👤 Клиент: ${client.fullname}\n&#x60; +
+			&#x60;📞 Телефон: ${client.phone}\n&#x60; +
+			&#x60;💰 Сумма: ${totalPayment.toNumber()}\n\n&#x60; +
+			&#x60;💵 Наличными: ${payment.cash.toNumber()}\n&#x60; +
+			&#x60;💳 Картой: ${payment.card.toNumber()}\n&#x60; +
+			&#x60;🏦 Переводом: ${payment.transfer.toNumber()}\n&#x60; +
+			&#x60;📦 Другое: ${payment.other.toNumber()}\n&#x60; +
+			&#x60;📅 Дата: ${this.formatDate(payment.createdAt)}\n&#x60; +
+			&#x60;📝 Описание: ${payment.description ?? &#x27;-&#x27;}\n&#x60; +
+			&#x60;📊 Общий долг: ${client.debt.toNumber()}&#x60;
+
+		await this.bot.telegram.sendMessage(channelId, title)
+	}
+
+	private async findBotUserById(id: number | string) {
+		const user &#x3D; await this.prisma.botUserModel.findFirst({ where: { id: String(id) }, select: { id: true, language: true, isActive: true, userId: true, user: true } })
+		return user
+	}
+
+	private async createBotUserWithId(id: number | string) {
+		const user &#x3D; await this.prisma.botUserModel.create({ data: { id: String(id) } })
+		return user
+	}
+
+	private async updateBotUserWithId(id: number | string, body: { userId?: string; language?: BotLanguageEnum }) {
+		const user &#x3D; await this.prisma.botUserModel.update({ where: { id: String(id) }, data: { language: body.language, userId: body.userId } })
+		return user
+	}
+
+	private async findUserByPhone(phone: string) {
+		const cleanedPhone &#x3D; phone.replace(/^\+/, &#x27;&#x27;)
+		const user &#x3D; await this.prisma.userModel.findFirst({ where: { phone: cleanedPhone } })
+		return user
+	}
+
+	private formatDate(date: Date): string {
+		const dd &#x3D; String(date.getDate()).padStart(2, &#x27;0&#x27;)
+		const mm &#x3D; String(date.getMonth() + 1).padStart(2, &#x27;0&#x27;)
+		const yyyy &#x3D; date.getFullYear()
+
+		const hh &#x3D; String(date.getHours()).padStart(2, &#x27;0&#x27;)
+		const min &#x3D; String(date.getMinutes()).padStart(2, &#x27;0&#x27;)
+
+		return &#x60;${dd}.${mm}.${yyyy} ${hh}:${min}&#x60;
+	}
+}
+</code></pre>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
+            var COMPODOC_CURRENT_PAGE_URL = 'BotService.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

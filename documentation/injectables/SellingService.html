@@ -1,0 +1,1723 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>tmp documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">tmp documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content injectable">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Injectables</li>
+  <li class="breadcrumb-item" >SellingService</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/modules/selling/selling.service.ts</code>
+        </p>
+
+
+
+
+
+            <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#createOne" >createOne</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#deleteOne" >deleteOne</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#excelDownloadMany" >excelDownloadMany</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#excelDownloadOne" >excelDownloadOne</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#findMany" >findMany</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#findOne" >findOne</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getMany" >getMany</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getOne" >getOne</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getPeriodStats" >getPeriodStats</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getSupplierStatsInArrival" >getSupplierStatsInArrival</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getTotalStats" >getTotalStats</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateOne" >updateOne</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+            <section data-compodoc="block-constructor">
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(sellingRepository: <a href="../injectables/SellingRepository.html" target="_self">SellingRepository</a>, arrivalService: <a href="../injectables/ArrivalService.html" target="_self">ArrivalService</a>, clientService: <a href="../injectables/ClientService.html" target="_self">ClientService</a>, excelService: <a href="../injectables/ExcelService.html" target="_self">ExcelService</a>, botService: <a href="../injectables/BotService.html" target="_self">BotService</a>, prisma: <a href="../injectables/PrismaService.html" target="_self">PrismaService</a>)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="27" class="link-to-prism">src/modules/selling/selling.service.ts:27</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>sellingRepository</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/SellingRepository.html" target="_self" >SellingRepository</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>arrivalService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/ArrivalService.html" target="_self" >ArrivalService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>clientService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/ClientService.html" target="_self" >ClientService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>excelService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/ExcelService.html" target="_self" >ExcelService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>botService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/BotService.html" target="_self" >BotService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>prisma</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/PrismaService.html" target="_self" >PrismaService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
+
+            <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createOne"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>createOne</b></span>
+                        <a href="#createOne"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createOne(request: <a href="../interfaces/CRequest.html" target="_self">CRequest</a>, body: <a href="../interfaces/SellingCreateOneRequest.html" target="_self">SellingCreateOneRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="132"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:132</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>request</td>
+                                            <td>
+                                                            <code><a href="../interfaces/CRequest.html" target="_self" >CRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>body</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingCreateOneRequest.html" target="_self" >SellingCreateOneRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="deleteOne"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>deleteOne</b></span>
+                        <a href="#deleteOne"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>deleteOne(query: <a href="../interfaces/SellingDeleteOneRequest.html" target="_self">SellingDeleteOneRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="305"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:305</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingDeleteOneRequest.html" target="_self" >SellingDeleteOneRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="excelDownloadMany"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>excelDownloadMany</b></span>
+                        <a href="#excelDownloadMany"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>excelDownloadMany(res: Response, query: <a href="../interfaces/SellingFindManyRequest.html" target="_self">SellingFindManyRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="82"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:82</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>res</td>
+                                            <td>
+                                                        <code>Response</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingFindManyRequest.html" target="_self" >SellingFindManyRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="excelDownloadOne"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>excelDownloadOne</b></span>
+                        <a href="#excelDownloadOne"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>excelDownloadOne(res: Response, query: <a href="../interfaces/SellingFindOneRequest.html" target="_self">SellingFindOneRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="103"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:103</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>res</td>
+                                            <td>
+                                                        <code>Response</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingFindOneRequest.html" target="_self" >SellingFindOneRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="findMany"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>findMany</b></span>
+                        <a href="#findMany"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>findMany(query: <a href="../interfaces/SellingFindManyRequest.html" target="_self">SellingFindManyRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="37"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:37</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingFindManyRequest.html" target="_self" >SellingFindManyRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="findOne"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>findOne</b></span>
+                        <a href="#findOne"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>findOne(query: <a href="../interfaces/SellingFindOneRequest.html" target="_self">SellingFindOneRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="86"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:86</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingFindOneRequest.html" target="_self" >SellingFindOneRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getMany"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getMany</b></span>
+                        <a href="#getMany"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getMany(query: <a href="../interfaces/SellingGetManyRequest.html" target="_self">SellingGetManyRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="107"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:107</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingGetManyRequest.html" target="_self" >SellingGetManyRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getOne"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getOne</b></span>
+                        <a href="#getOne"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getOne(query: <a href="../interfaces/SellingGetOneRequest.html" target="_self">SellingGetOneRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="122"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:122</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingGetOneRequest.html" target="_self" >SellingGetOneRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getPeriodStats"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getPeriodStats</b></span>
+                        <a href="#getPeriodStats"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getPeriodStats(query: <a href="../interfaces/SellingGetPeriodStatsRequest.html" target="_self">SellingGetPeriodStatsRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="449"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:449</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingGetPeriodStatsRequest.html" target="_self" >SellingGetPeriodStatsRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getSupplierStatsInArrival"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getSupplierStatsInArrival</b></span>
+                        <a href="#getSupplierStatsInArrival"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getSupplierStatsInArrival()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="421"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:421</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getTotalStats"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getTotalStats</b></span>
+                        <a href="#getTotalStats"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getTotalStats(query: <a href="../interfaces/SellingGetTotalStatsRequest.html" target="_self">SellingGetTotalStatsRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="325"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:325</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingGetTotalStatsRequest.html" target="_self" >SellingGetTotalStatsRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateOne"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>updateOne</b></span>
+                        <a href="#updateOne"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateOne(query: <a href="../interfaces/SellingGetOneRequest.html" target="_self">SellingGetOneRequest</a>, body: <a href="../interfaces/SellingUpdateOneRequest.html" target="_self">SellingUpdateOneRequest</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="215"
+                                    class="link-to-prism">src/modules/selling/selling.service.ts:215</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>query</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingGetOneRequest.html" target="_self" >SellingGetOneRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>body</td>
+                                            <td>
+                                                            <code><a href="../interfaces/SellingUpdateOneRequest.html" target="_self" >SellingUpdateOneRequest</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { BadRequestException, forwardRef, Inject, Injectable } from &#x27;@nestjs/common&#x27;
+import { SellingRepository } from &#x27;./selling.repository&#x27;
+import { createResponse, CRequest, DeleteMethodEnum } from &#x27;@common&#x27;
+import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from &#x27;@prisma/client&#x27;
+import {
+	SellingGetOneRequest,
+	SellingCreateOneRequest,
+	SellingUpdateOneRequest,
+	SellingGetManyRequest,
+	SellingFindManyRequest,
+	SellingFindOneRequest,
+	SellingDeleteOneRequest,
+	SellingGetTotalStatsRequest,
+	SellingGetPeriodStatsRequest,
+} from &#x27;./interfaces&#x27;
+import { Decimal } from &#x27;@prisma/client/runtime/library&#x27;
+import { ArrivalService } from &#x27;../arrival&#x27;
+import { ClientService } from &#x27;../client&#x27;
+import { ExcelService } from &#x27;../shared/excel&#x27;
+import { Response } from &#x27;express&#x27;
+import { BotService } from &#x27;../bot&#x27;
+import { BotSellingProductTitleEnum, BotSellingTitleEnum } from &#x27;./enums&#x27;
+import { PrismaService } from &#x27;../shared&#x27;
+import pLimit from &#x27;p-limit&#x27;
+
+@Injectable()
+export class SellingService {
+	constructor(
+		private readonly sellingRepository: SellingRepository,
+		@Inject(forwardRef(() &#x3D;&gt; ArrivalService)) private readonly arrivalService: ArrivalService,
+		private readonly clientService: ClientService,
+		private readonly excelService: ExcelService,
+		private readonly botService: BotService,
+		private readonly prisma: PrismaService,
+	) {}
+
+	async findMany(query: SellingFindManyRequest) {
+		const sellings &#x3D; await this.sellingRepository.findMany(query)
+		const sellingsCount &#x3D; await this.sellingRepository.countFindMany(query)
+
+		const calc &#x3D; {
+			totalPrice: new Decimal(0),
+			totalPayment: new Decimal(0),
+			totalCardPayment: new Decimal(0),
+			totalCashPayment: new Decimal(0),
+			totalOtherPayment: new Decimal(0),
+			totalTransferPayment: new Decimal(0),
+			totalDebt: new Decimal(0),
+		}
+
+		const mappedSellings &#x3D; sellings.map((selling) &#x3D;&gt; {
+			calc.totalPrice &#x3D; calc.totalPrice.plus(selling.totalPrice)
+			calc.totalPayment &#x3D; calc.totalPayment.plus(selling.payment.total)
+			calc.totalDebt &#x3D; calc.totalDebt.plus(selling.totalPrice.minus(selling.payment.total))
+			calc.totalCardPayment &#x3D; calc.totalCardPayment.plus(selling.payment.card)
+			calc.totalCashPayment &#x3D; calc.totalCashPayment.plus(selling.payment.cash)
+			calc.totalOtherPayment &#x3D; calc.totalOtherPayment.plus(selling.payment.other)
+			calc.totalTransferPayment &#x3D; calc.totalTransferPayment.plus(selling.payment.transfer)
+
+			return {
+				...selling,
+				payment: selling.payment.total.toNumber() ? selling.payment : null,
+				debt: selling.totalPrice.minus(selling.payment.total),
+				totalPayment: selling.payment.total,
+				totalPrice: selling.totalPrice,
+			}
+		})
+
+		const result &#x3D; query.pagination
+			? {
+					totalCount: sellingsCount,
+					pagesCount: Math.ceil(sellingsCount / query.pageSize),
+					pageSize: sellings.length,
+					data: mappedSellings,
+					calc: calc,
+				}
+			: { data: mappedSellings, calc: calc }
+
+		return createResponse({ data: result, success: { messages: [&#x27;find many success&#x27;] } })
+	}
+
+	async excelDownloadMany(res: Response, query: SellingFindManyRequest) {
+		return this.excelService.sellingDownloadMany(res, query)
+	}
+
+	async findOne(query: SellingFindOneRequest) {
+		const selling &#x3D; await this.sellingRepository.findOne(query)
+
+		if (!selling) {
+			throw new BadRequestException(&#x27;selling not found&#x27;)
+		}
+
+		const totalPrice &#x3D; selling.products.reduce((acc, product) &#x3D;&gt; {
+			return acc.plus(new Decimal(product.count).mul(product.price))
+		}, new Decimal(0))
+
+		return createResponse({
+			data: { ...selling, debt: totalPrice.minus(selling.payment.total), totalPayment: selling.payment.total, totalPrice: totalPrice },
+			success: { messages: [&#x27;find one success&#x27;] },
+		})
+	}
+
+	async excelDownloadOne(res: Response, query: SellingFindOneRequest) {
+		return this.excelService.sellingDownloadOne(res, query)
+	}
+
+	async getMany(query: SellingGetManyRequest) {
+		const sellings &#x3D; await this.sellingRepository.getMany(query)
+		const sellingsCount &#x3D; await this.sellingRepository.countGetMany(query)
+
+		const result &#x3D; query.pagination
+			? {
+					pagesCount: Math.ceil(sellingsCount / query.pageSize),
+					pageSize: sellings.length,
+					data: sellings,
+				}
+			: { data: sellings }
+
+		return createResponse({ data: result, success: { messages: [&#x27;get many success&#x27;] } })
+	}
+
+	async getOne(query: SellingGetOneRequest) {
+		const selling &#x3D; await this.sellingRepository.getOne(query)
+
+		if (!selling) {
+			throw new BadRequestException(&#x27;selling not found&#x27;)
+		}
+
+		return createResponse({ data: selling, success: { messages: [&#x27;get one success&#x27;] } })
+	}
+
+	async createOne(request: CRequest, body: SellingCreateOneRequest) {
+		let client &#x3D; await this.clientService.findOne({ id: body.clientId })
+
+		let total &#x3D; new Decimal(0)
+		if (body.payment) {
+			if (Object.values(body.payment).some((value) &#x3D;&gt; value !&#x3D;&#x3D; 0)) {
+				body.status &#x3D; SellingStatusEnum.accepted
+				if (body.date) {
+					const inputDate &#x3D; new Date(body.date)
+					const now &#x3D; new Date()
+
+					const isToday &#x3D; inputDate.getFullYear() &#x3D;&#x3D;&#x3D; now.getFullYear() &amp;&amp; inputDate.getMonth() &#x3D;&#x3D;&#x3D; now.getMonth() &amp;&amp; inputDate.getDate() &#x3D;&#x3D;&#x3D; now.getDate()
+
+					if (isToday) {
+						body.date &#x3D; now
+					} else {
+						body.date &#x3D; new Date(inputDate.setHours(0, 0, 0, 0))
+					}
+				} else {
+					body.date &#x3D; new Date()
+				}
+			}
+
+			total &#x3D; new Decimal(body.payment.card ?? 0)
+				.plus(body.payment.cash ?? 0)
+				.plus(body.payment.other ?? 0)
+				.plus(body.payment.transfer ?? 0)
+		}
+
+		if (body.status &#x3D;&#x3D;&#x3D; SellingStatusEnum.accepted) {
+			body.date &#x3D; new Date()
+		}
+
+		let totalPrice &#x3D; new Decimal(0)
+		body &#x3D; {
+			...body,
+			staffId: request.user.id,
+			payment: { ...body.payment, total: total },
+			products: body.products.map((product) &#x3D;&gt; {
+				const productTotalPrice &#x3D; new Decimal(product.price ?? 0).mul(product.count)
+
+				totalPrice &#x3D; totalPrice.plus(productTotalPrice)
+
+				return {
+					...product,
+					totalPrice: productTotalPrice,
+				}
+			}),
+		}
+
+		const selling &#x3D; await this.sellingRepository.createOne({ ...body, totalPrice: totalPrice })
+
+		if (body.send) {
+			if (selling.status &#x3D;&#x3D;&#x3D; SellingStatusEnum.accepted) {
+				client &#x3D; await this.clientService.findOne({ id: body.clientId })
+				const sellingInfo &#x3D; {
+					...selling,
+					client: client.data,
+					title: BotSellingTitleEnum.new,
+					totalPayment: total,
+					totalPrice: body.totalPrice,
+					debt: body.totalPrice.minus(total),
+					products: selling.products.map((p) &#x3D;&gt; ({ ...p, status: BotSellingProductTitleEnum.new })),
+				}
+
+				if (client.data.telegram?.id) {
+					await this.botService.sendSellingToClient(sellingInfo).catch((e) &#x3D;&gt; {
+						console.log(&#x27;user&#x27;, e)
+					})
+				}
+				await this.botService.sendSellingToChannel(sellingInfo).catch((e) &#x3D;&gt; {
+					console.log(&#x27;channel&#x27;, e)
+				})
+
+				if (!total.isZero()) {
+					await this.botService.sendPaymentToChannel(sellingInfo.payment, false, client.data)
+				}
+			}
+		}
+
+		return createResponse({ data: selling, success: { messages: [&#x27;create one success&#x27;] } })
+	}
+
+	async updateOne(query: SellingGetOneRequest, body: SellingUpdateOneRequest) {
+		const selling &#x3D; await this.getOne(query)
+
+		// accepted bo‘lsa, date o‘zgartirilmaydi
+		if (selling.data.status &#x3D;&#x3D;&#x3D; SellingStatusEnum.accepted) {
+			body.date &#x3D; undefined
+		}
+
+		let total &#x3D; new Decimal(0)
+		let shouldSend &#x3D; false
+		let isFirstSend &#x3D; false
+
+		// Faqat status accepted bo‘lmagan bo‘lsa va paymentda haqiqiy qiymatlar bo‘lsa
+		const hasValidPayment &#x3D; body.payment &amp;&amp; [&#x27;card&#x27;, &#x27;cash&#x27;, &#x27;other&#x27;, &#x27;transfer&#x27;].some((key) &#x3D;&gt; !!body.payment?.[key] &amp;&amp; +body.payment[key] !&#x3D;&#x3D; 0)
+
+		if (body.status !&#x3D;&#x3D; SellingStatusEnum.accepted) {
+			if (hasValidPayment) {
+				body.status &#x3D; SellingStatusEnum.accepted
+				body.date &#x3D; new Date()
+				// total hisoblash
+				total &#x3D; new Decimal(body.payment?.card ?? 0)
+					.plus(body.payment?.cash ?? 0)
+					.plus(body.payment?.other ?? 0)
+					.plus(body.payment?.transfer ?? 0)
+			}
+		} else {
+			// status accepted deb kelyapti
+			if (selling.data.status !&#x3D;&#x3D; SellingStatusEnum.accepted) {
+				isFirstSend &#x3D; true
+			}
+			body.date &#x3D; new Date()
+			shouldSend &#x3D; true
+
+			// total hisoblash (agar bor bo‘lsa)
+			total &#x3D; new Decimal(body.payment?.card ?? 0)
+				.plus(body.payment?.cash ?? 0)
+				.plus(body.payment?.other ?? 0)
+				.plus(body.payment?.transfer ?? 0)
+		}
+
+		// body ni tozalab, safe qilib joylashtiramiz
+		body &#x3D; {
+			...body,
+			status: body.status,
+			staffId: selling.data.staff.id,
+			payment: hasValidPayment
+				? {
+						...body.payment,
+						total: total,
+					}
+				: selling.data.payment, // agar payment yo‘q bo‘lsa, eskisini saqlaymiz
+		}
+
+		const updatedSelling &#x3D; await this.sellingRepository.updateOne(query, body)
+
+		// Clientni yangilaymiz
+		const client &#x3D; await this.clientService.findOne({ id: body.clientId })
+
+		const sellingInfo &#x3D; {
+			...updatedSelling,
+			client: client.data,
+			title: isFirstSend ? BotSellingTitleEnum.new : undefined,
+			totalPayment: total,
+			totalPrice: updatedSelling.totalPrice,
+			debt: updatedSelling.totalPrice.minus(total),
+			products: updatedSelling.products.map((p) &#x3D;&gt; ({
+				...p,
+				status: BotSellingProductTitleEnum.new,
+			})),
+		}
+
+		// clientga yuborish
+		if (body.send) {
+			if (updatedSelling.client?.telegram?.id) {
+				await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
+			}
+		}
+
+		// channelga yuborish
+		if (shouldSend) {
+			await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
+
+			if (!total.isZero()) {
+				await this.botService.sendPaymentToChannel(sellingInfo.payment, !isFirstSend, client.data)
+			}
+		}
+
+		return createResponse({ data: null, success: { messages: [&#x27;update one success&#x27;] } })
+	}
+
+	async deleteOne(query: SellingDeleteOneRequest) {
+		const selling &#x3D; await this.findOne(query)
+		if (query.method &#x3D;&#x3D;&#x3D; DeleteMethodEnum.hard) {
+			await this.sellingRepository.deleteOne(query)
+			const client &#x3D; await this.clientService.findOne({ id: selling.data.client.id })
+			const sellingInfo &#x3D; {
+				...selling.data,
+				client: client.data,
+			}
+			await this.botService.sendDeletedSellingToChannel(sellingInfo)
+			const totalPayment &#x3D; selling.data.payment.card.plus(selling.data.payment.cash).plus(selling.data.payment.other).plus(selling.data.payment.transfer)
+			if (totalPayment.toNumber()) {
+				await this.botService.sendDeletedPaymentToChannel(selling.data.payment, client.data)
+			}
+		} else {
+			// await this.sellingRepository.updateOne(query, { deletedAt: new Date() })
+		}
+		return createResponse({ data: null, success: { messages: [&#x27;delete one success&#x27;] } })
+	}
+
+	async getTotalStats(query: SellingGetTotalStatsRequest) {
+		const now &#x3D; new Date()
+
+		const getDateRange &#x3D; (type: &#x27;daily&#x27; | &#x27;weekly&#x27; | &#x27;monthly&#x27; | &#x27;yearly&#x27;) &#x3D;&gt; {
+			const start &#x3D; new Date(now)
+			const end &#x3D; new Date(now)
+
+			if (type &#x3D;&#x3D;&#x3D; &#x27;weekly&#x27;) {
+				start.setDate(now.getDate() - now.getDay())
+				end.setDate(start.getDate() + 6)
+			} else if (type &#x3D;&#x3D;&#x3D; &#x27;monthly&#x27;) {
+				start.setDate(1)
+				end.setMonth(start.getMonth() + 1, 0)
+			} else if (type &#x3D;&#x3D;&#x3D; &#x27;yearly&#x27;) {
+				start.setMonth(0, 1)
+				end.setMonth(11, 31)
+			}
+
+			return { startDate: start, endDate: end }
+		}
+
+		const statTypes &#x3D; [&#x27;daily&#x27;, &#x27;weekly&#x27;, &#x27;monthly&#x27;, &#x27;yearly&#x27;] as const
+		const limit &#x3D; pLimit(2)
+
+		const statsPromises &#x3D; statTypes.map((type) &#x3D;&gt;
+			limit(async () &#x3D;&gt; {
+				const { startDate, endDate } &#x3D; getDateRange(type)
+				const result &#x3D; await this.prisma.sellingModel.aggregate({
+					where: {
+						date: {
+							gte: startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : undefined,
+							lte: endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : undefined,
+						},
+						client: { deletedAt: null },
+						status: SellingStatusEnum.accepted,
+					},
+					_sum: { totalPrice: true },
+				})
+
+				return new Decimal(result._sum.totalPrice || 0)
+			}),
+		)
+
+		// ✅ Promise.all natijalarini to‘g‘ri tartibda ajratib olamiz
+		const [daily, weekly, monthly, yearly] &#x3D; await Promise.all(statsPromises)
+
+		// ✅ Yetkazib beruvchilar uchun qarzdorlik
+		const supplierDebt &#x3D; await this.getSupplierStatsInArrival()
+
+		// ✅ Umumiy sotuv, to‘lov va mijoz balanslari
+		const [sellingsAgg, paymentsAgg, clientsAgg, clientReturningBalanceAgg] &#x3D; await Promise.all([
+			this.prisma.sellingModel.aggregate({
+				where: { status: SellingStatusEnum.accepted, client: { deletedAt: null } },
+				_sum: { totalPrice: true },
+			}),
+			this.prisma.paymentModel.aggregate({
+				where: {
+					selling: { status: SellingStatusEnum.accepted },
+					type: ServiceTypeEnum.selling,
+					user: { deletedAt: null },
+				},
+				_sum: { total: true },
+			}),
+			this.prisma.userModel.aggregate({
+				where: { type: UserTypeEnum.client, deletedAt: null },
+				_sum: { balance: true },
+			}),
+			this.prisma.paymentModel.aggregate({
+				where: { type: ServiceTypeEnum.returning, user: { deletedAt: null } },
+				_sum: { fromBalance: true },
+			}),
+		])
+
+		const totalSellings &#x3D; new Decimal(sellingsAgg._sum.totalPrice || 0)
+		const totalPayments &#x3D; new Decimal(paymentsAgg._sum.total || 0)
+		const totalBalance &#x3D; new Decimal(clientsAgg._sum.balance || 0).plus(clientReturningBalanceAgg._sum.fromBalance)
+
+		const ourDebt &#x3D; totalPayments.plus(totalBalance).minus(totalSellings)
+		const theirDebt &#x3D; totalSellings.minus(totalPayments.plus(totalBalance))
+
+		const finalOurDebt &#x3D; ourDebt.lt(0) ? new Decimal(0) : ourDebt
+		const finalTheirDebt &#x3D; theirDebt.lt(0) ? new Decimal(0) : theirDebt
+
+		return createResponse({
+			data: {
+				daily,
+				weekly,
+				monthly,
+				yearly,
+				client: { ourDebt: finalOurDebt, theirDebt: finalTheirDebt },
+				supplier: supplierDebt,
+			},
+			success: { messages: [&#x27;get total stats success&#x27;] },
+		})
+	}
+
+	async getSupplierStatsInArrival() {
+		const [arrivalsAgg, paymentsAgg, suppliersAgg] &#x3D; await Promise.all([
+			this.prisma.arrivalModel.aggregate({
+				_sum: { totalCost: true },
+				where: { supplier: { deletedAt: null } },
+			}),
+			this.prisma.paymentModel.aggregate({
+				where: { type: ServiceTypeEnum.arrival, user: { deletedAt: null } },
+				_sum: { total: true },
+			}),
+			this.prisma.userModel.aggregate({
+				where: { type: UserTypeEnum.supplier, deletedAt: null },
+				_sum: { balance: true },
+			}),
+		])
+
+		const totalCost &#x3D; new Decimal(arrivalsAgg._sum.totalCost || 0)
+		const totalPayment &#x3D; new Decimal(paymentsAgg._sum.total || 0)
+		const totalBalance &#x3D; new Decimal(suppliersAgg._sum.balance || 0)
+
+		const net &#x3D; totalPayment.plus(totalBalance).minus(totalCost)
+
+		return {
+			ourDebt: net.lt(0) ? net.abs() : new Decimal(0),
+			theirDebt: net.gt(0) ? net : new Decimal(0),
+		}
+	}
+
+	async getPeriodStats(query: SellingGetPeriodStatsRequest) {
+		const result &#x3D; await this.sellingRepository.getPeriodStats(query)
+
+		return createResponse({ data: result, success: { messages: [&#x27;get period stats success&#x27;] } })
+	}
+}
+</code></pre>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
+            var COMPODOC_CURRENT_PAGE_URL = 'SellingService.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>
