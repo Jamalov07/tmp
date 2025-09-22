@@ -4,23 +4,11 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { appConfig } from '@config'
 import { AppModule } from './app.module'
-import {
-	RequestResponseInterceptor,
-	AuthGuard,
-	AllExceptionFilter,
-	BigIntInterceptor,
-	DecimalToNumberInterceptor,
-	TimezoneInterceptor,
-	RequestQueryTimezoneInterceptor,
-} from '@common'
+import { RequestResponseInterceptor, AuthGuard, AllExceptionFilter, DecimalToNumberInterceptor, TimezoneInterceptor, RequestQueryTimezoneInterceptor } from '@common'
 import compression from 'compression'
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
-// import compression from '@fastify/compress'
 
 async function bootstrap() {
 	const app = await NestFactory.create<INestApplication>(AppModule, { forceCloseConnections: true })
-	// const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter())
-	// app.register(compression)
 
 	await repl(AppModule)
 
@@ -33,7 +21,6 @@ async function bootstrap() {
 	app.useGlobalPipes(new ValidationPipe({ whitelist: true }))
 
 	app.useGlobalGuards(app.get(AuthGuard))
-	// app.useGlobalInterceptors(new BigIntInterceptor())
 	app.useGlobalInterceptors(new DecimalToNumberInterceptor())
 	app.useGlobalInterceptors(new RequestQueryTimezoneInterceptor())
 	app.useGlobalInterceptors(new TimezoneInterceptor())

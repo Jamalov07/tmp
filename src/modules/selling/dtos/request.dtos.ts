@@ -62,19 +62,6 @@ export class SellingUpdateOneRequestDto
 	@ValidateNested()
 	@Type(() => SellingPaymentDto)
 	payment?: SellingPayment
-
-	@ApiPropertyOptional({ type: SellingProductDto, isArray: true })
-	@IsOptional()
-	@IsArray()
-	@ValidateNested({ each: true })
-	@Type(() => SellingProductDto)
-	products?: SellingProduct[]
-
-	@ApiPropertyOptional({ type: String, isArray: true })
-	@IsOptional()
-	@IsArray()
-	@IsUUID('4', { each: true })
-	productIdsToRemove?: string[]
 }
 
 export class SellingDeleteOneRequestDto

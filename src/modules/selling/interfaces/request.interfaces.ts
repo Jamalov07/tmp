@@ -1,7 +1,7 @@
 import { PaginationRequest, RequestOtherFields } from '@common'
 import { SellingOptional, SellingRequired } from './fields.interfaces'
 import { ClientPaymentOptional, ClientPaymentRequired } from '../../client-payment'
-import { ProductMVRequired } from '../../product-mv'
+import { ProductMVOptional, ProductMVRequired } from '../../product-mv'
 import { StatsTypeEnum } from '../enums'
 
 export declare interface SellingFindManyRequest
@@ -17,7 +17,7 @@ export declare interface SellingGetOneRequest extends SellingOptional, Pick<Requ
 
 export declare interface SellingPayment extends Pick<ClientPaymentRequired, 'card' | 'cash' | 'other' | 'transfer'>, Pick<ClientPaymentOptional, 'description' | 'total'> {}
 
-export declare interface SellingProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId' | 'totalPrice'> {}
+export declare interface SellingProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'productId'>, Pick<ProductMVOptional, 'totalPrice'> {}
 
 export declare interface SellingCreateOneRequest extends Pick<SellingRequired, 'clientId' | 'date'>, Pick<SellingOptional, 'staffId' | 'status' | 'totalPrice'> {
 	payment?: SellingPayment
@@ -27,8 +27,6 @@ export declare interface SellingCreateOneRequest extends Pick<SellingRequired, '
 
 export declare interface SellingUpdateOneRequest extends Pick<SellingOptional, 'deletedAt' | 'clientId' | 'date' | 'status' | 'staffId' | 'totalPrice'> {
 	payment?: SellingPayment
-	products?: SellingProduct[]
-	productIdsToRemove?: string[]
 	send?: boolean
 }
 
