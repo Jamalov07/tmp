@@ -31,7 +31,7 @@ export class ClientService {
 
 		const mappedClients = clients.map((c) => {
 			const sellingPayment = c.sellings.reduce((acc, sel) => {
-				return acc.plus(sel.totalPrice).plus(sel.payment.total)
+				return acc.plus(sel.totalPrice).minus(sel.payment.total)
 			}, new Decimal(0))
 
 			c.returnings.map((returning) => {
