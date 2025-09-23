@@ -110,6 +110,11 @@ export class Syncronize3Service implements OnModuleInit {
 			}
 		})
 
+		let mainStaff = Object.values(staffs).find((staff) => staff.phone === this.phone)
+		if (!mainStaff) {
+			mainStaff = Object.values(staffs)[0]
+		}
+
 		const suppliers: Record<string, Supplier> = {}
 		suppliersRemote.forEach((supplier) => {
 			suppliers[supplier.id] = {
@@ -180,11 +185,6 @@ export class Syncronize3Service implements OnModuleInit {
 				createdAt: product.createdAt,
 			}
 		})
-
-		let mainStaff = Object.values(staffs).find((staff) => staff.phone === this.phone)
-		if (!mainStaff) {
-			mainStaff = Object.values(staffs)[0]
-		}
 
 		const newStaffs = await this.prisma.userModel.createMany({
 			skipDuplicates: false,
