@@ -10,7 +10,7 @@ import compression from 'compression'
 async function bootstrap() {
 	const app = await NestFactory.create<INestApplication>(AppModule, { forceCloseConnections: true })
 
-	await repl(AppModule)
+	// await repl(AppModule)
 
 	app.use(compression())
 
