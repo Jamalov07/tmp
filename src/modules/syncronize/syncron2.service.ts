@@ -124,7 +124,7 @@ export class Syncronize3Service implements OnModuleInit {
 				password: bcrypt.hashSync(supplier.phone.trim(), 7),
 				type: UserTypeEnum.supplier,
 				createdAt: supplier.createdAt,
-				balance: new Decimal(0),
+				balance: new Decimal(supplier.debt),
 				debt: new Decimal(0),
 				payments: [
 					{
@@ -153,7 +153,7 @@ export class Syncronize3Service implements OnModuleInit {
 				password: bcrypt.hashSync(client.phone.trim(), 7),
 				type: UserTypeEnum.client,
 				createdAt: client.createdAt,
-				balance: new Decimal(0),
+				balance: new Decimal(client.debt),
 				debt: new Decimal(0),
 				payments: [
 					{
