@@ -418,7 +418,7 @@ export class SellingService {
 		})
 	}
 
-	async getSupplierStatsInArrival() {
+	async getSupplierStatsInArrival2() {
 		const [arrivalsAgg, paymentsAgg, suppliersAgg] = await Promise.all([
 			this.prisma.arrivalModel.aggregate({
 				_sum: { totalCost: true },
@@ -443,6 +443,43 @@ export class SellingService {
 		return {
 			ourDebt: net.lt(0) ? net.abs() : new Decimal(0),
 			theirDebt: net.gt(0) ? net : new Decimal(0),
+		}
+	}
+
+	async getSupplierStatsInArrival() {
+		const [arrivalsAgg, paymentsAgg, suppliers] = await Promise.all([
+			this.prisma.arrivalModel.aggregate({
+				_sum: { totalCost: true },
+				where: { supplier: { deletedAt: null } },
+			}),
+			this.prisma.paymentModel.aggregate({
+				where: { type: ServiceTypeEnum.arrival, user: { deletedAt: null } },
+				_sum: { total: true },
+			}),
+			this.prisma.userModel.findMany({
+				where: { type: UserTypeEnum.supplier, deletedAt: null },
+				select: { balance: true },
+			}),
+		])
+
+		const totalCost = new Decimal(arrivalsAgg._sum.totalCost ?? 0)
+		const totalPayment = new Decimal(paymentsAgg._sum.total ?? 0)
+
+		let positiveBalance = new Decimal(0) // biz ularga qarz
+		let negativeBalance = new Decimal(0) // ular bizga qarz
+
+		for (const s of suppliers) {
+			const bal = new Decimal(s.balance ?? 0)
+			if (bal.gt(0)) positiveBalance = positiveBalance.plus(bal)
+			else negativeBalance = negativeBalance.plus(bal.abs())
+		}
+
+		const ourDebt = totalCost.minus(totalPayment).plus(positiveBalance)
+		const theirDebt = totalPayment.minus(totalCost).plus(negativeBalance)
+
+		return {
+			ourDebt: ourDebt.gt(0) ? ourDebt : new Decimal(0),
+			theirDebt: theirDebt.gt(0) ? theirDebt : new Decimal(0),
 		}
 	}
 
