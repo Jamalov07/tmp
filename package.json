@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "eslint src --fix && prettier src --write",
-    "build:swc": "nest start -b swc",
+    "build:swc": "nest build -b swc",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

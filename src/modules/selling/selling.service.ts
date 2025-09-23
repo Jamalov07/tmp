@@ -397,7 +397,7 @@ export class SellingService {
 
 		const totalSellings = new Decimal(sellingsAgg._sum.totalPrice || 0)
 		const totalPayments = new Decimal(paymentsAgg._sum.total || 0)
-		const totalBalance = new Decimal(clientsAgg._sum.balance || 0).plus(clientReturningBalanceAgg._sum.fromBalance)
+		const totalBalance = new Decimal(clientsAgg._sum.balance || 0).plus(clientReturningBalanceAgg._sum.fromBalance || 0)
 
 		const ourDebt = totalPayments.plus(totalBalance).minus(totalSellings)
 		const theirDebt = totalSellings.minus(totalPayments.plus(totalBalance))
