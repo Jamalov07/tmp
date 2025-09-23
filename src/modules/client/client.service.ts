@@ -45,7 +45,7 @@ export class ClientService {
 				actions: c.actions,
 				createdAt: c.createdAt,
 				phone: c.phone,
-				debt: sellingPayment.plus(c.balance),
+				debt: c.balance.gt(0) ? sellingPayment.minus(c.balance) : sellingPayment.plus(c.balance),
 				lastSellingDate: c.sellings?.length ? c.sellings[0].date : null,
 			}
 		})
