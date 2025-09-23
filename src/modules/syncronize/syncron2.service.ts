@@ -202,6 +202,24 @@ export class Syncronize3Service implements OnModuleInit {
 				})),
 		})
 
+		const newStaffPayments = await this.prisma.paymentModel.createMany({
+			skipDuplicates: false,
+			data: Object.values(staffs)
+				.filter((u) => u.phone && u.fullname)
+				.flatMap((staff) =>
+					staff.payments.map((payment) => ({
+						id: payment.id,
+						type: ServiceTypeEnum.staff,
+						userId: payment.userId,
+						staffId: payment.staffId,
+						sum: payment.sum,
+						total: payment.total,
+						createdAt: payment.createdAt,
+						description: payment.description,
+					})),
+				),
+		})
+
 		const newSuppliers = await this.prisma.userModel.createMany({
 			skipDuplicates: false,
 			data: Object.values(suppliers)
@@ -216,6 +234,27 @@ export class Syncronize3Service implements OnModuleInit {
 					createdAt: supplier.createdAt,
 					deletedAt: supplier.deletedAt,
 				})),
+		})
+
+		const newSupplierPayments = await this.prisma.paymentModel.createMany({
+			skipDuplicates: false,
+			data: Object.values(suppliers)
+				.filter((u) => u.phone && u.fullname)
+				.flatMap((supplier) =>
+					supplier.payments.map((payment) => ({
+						id: payment.id,
+						type: ServiceTypeEnum.supplier,
+						userId: payment.userId,
+						staffId: payment.staffId,
+						cash: payment.cash,
+						card: payment.card,
+						other: payment.other,
+						transfer: payment.transfer,
+						total: payment.total,
+						createdAt: payment.createdAt,
+						description: payment.description,
+					})),
+				),
 		})
 
 		const newClients = await this.prisma.userModel.createMany({
@@ -234,6 +273,27 @@ export class Syncronize3Service implements OnModuleInit {
 				})),
 		})
 
+		const newClientPayments = await this.prisma.paymentModel.createMany({
+			skipDuplicates: false,
+			data: Object.values(clients)
+				.filter((u) => u.phone && u.fullname)
+				.flatMap((client) =>
+					client.payments.map((payment) => ({
+						id: payment.id,
+						type: ServiceTypeEnum.client,
+						userId: payment.userId,
+						staffId: payment.staffId,
+						cash: payment.cash,
+						card: payment.card,
+						other: payment.other,
+						transfer: payment.transfer,
+						total: payment.total,
+						createdAt: payment.createdAt,
+						description: payment.description,
+					})),
+				),
+		})
+
 		const newProducts = await this.prisma.productModel.createMany({
 			skipDuplicates: false,
 			data: Object.values(products).map((product) => ({
@@ -248,6 +308,7 @@ export class Syncronize3Service implements OnModuleInit {
 		})
 
 		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count)
+		console.log(newStaffPayments.count, newSupplierPayments.count, newClientPayments.count)
 
 		return createResponse({ data: {}, success: { messages: ['syncronize success'] } })
 	}
