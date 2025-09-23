@@ -31,7 +31,7 @@ export class ClientService {
 
 		const mappedClients = clients.map((c) => {
 			const sellingPayment = c.sellings.reduce((acc, sel) => {
-				return acc.plus(sel.totalPrice).minus(sel.payment.total)
+				return acc.plus(sel.totalPrice).plus(sel.payment.total)
 			}, new Decimal(0))
 
 			c.returnings.map((returning) => {
@@ -45,7 +45,7 @@ export class ClientService {
 				actions: c.actions,
 				createdAt: c.createdAt,
 				phone: c.phone,
-				debt: sellingPayment.minus(c.balance),
+				debt: sellingPayment.plus(c.balance),
 				lastSellingDate: c.sellings?.length ? c.sellings[0].date : null,
 			}
 		})
