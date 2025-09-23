@@ -372,7 +372,7 @@ export class SellingService {
 		const supplierDebt = await this.getSupplierStatsInArrival()
 
 		// ✅ Umumiy sotuv, to‘lov va mijoz balanslari
-		const [sellingsAgg, paymentsAgg, clientsAgg, clientReturningBalanceAgg] = await Promise.all([
+		const [sellingsAgg, paymentsAgg, clients, clientReturningBalanceAgg] = await Promise.all([
 			this.prisma.sellingModel.aggregate({
 				where: { status: SellingStatusEnum.accepted, client: { deletedAt: null } },
 				_sum: { totalPrice: true },
@@ -385,9 +385,9 @@ export class SellingService {
 				},
 				_sum: { total: true },
 			}),
-			this.prisma.userModel.aggregate({
+			this.prisma.userModel.findMany({
 				where: { type: UserTypeEnum.client, deletedAt: null },
-				_sum: { balance: true },
+				select: { balance: true },
 			}),
 			this.prisma.paymentModel.aggregate({
 				where: { type: ServiceTypeEnum.returning, user: { deletedAt: null } },
@@ -395,15 +395,27 @@ export class SellingService {
 			}),
 		])
 
-		const totalSellings = new Decimal(sellingsAgg._sum.totalPrice || 0)
-		const totalPayments = new Decimal(paymentsAgg._sum.total || 0)
-		const totalBalance = new Decimal(clientsAgg._sum.balance || 0).plus(clientReturningBalanceAgg._sum.fromBalance || 0)
+		const totalSellings = new Decimal(sellingsAgg._sum.totalPrice ?? 0)
+		const totalPayments = new Decimal(paymentsAgg._sum.total ?? 0)
 
-		const ourDebt = totalPayments.plus(totalBalance).minus(totalSellings)
-		const theirDebt = totalSellings.minus(totalPayments.plus(totalBalance))
+		// ⚡️Mijozlarning balansini ikki tomonga ajratish
+		let positiveBalance = new Decimal(0) // biz ularga qarz
+		let negativeBalance = new Decimal(0) // ular bizga qarz
 
-		const finalOurDebt = ourDebt.lt(0) ? new Decimal(0) : ourDebt
-		const finalTheirDebt = theirDebt.lt(0) ? new Decimal(0) : theirDebt
+		for (const c of clients) {
+			const bal = new Decimal(c.balance ?? 0)
+			if (bal.gt(0)) positiveBalance = positiveBalance.plus(bal)
+			else negativeBalance = negativeBalance.plus(bal.abs())
+		}
+		// ⚡️Qaytarilgan mablag‘ (clientReturningBalance) ni ulash
+		positiveBalance = positiveBalance.plus(clientReturningBalanceAgg._sum.fromBalance ?? 0)
+
+		// 🟢 Hisoblash (supplierdagi mantiqqa o‘xshash)
+		const ourDebt = totalPayments.minus(totalSellings).plus(positiveBalance) // biz ularga qarz
+		const theirDebt = totalSellings.minus(totalPayments).plus(negativeBalance) // ular bizga qarz
+
+		const finalOurDebt = ourDebt.gt(0) ? ourDebt : new Decimal(0)
+		const finalTheirDebt = theirDebt.gt(0) ? theirDebt : new Decimal(0)
 
 		return createResponse({
 			data: {
