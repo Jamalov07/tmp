@@ -474,9 +474,8 @@ export class SellingService {
 			else negativeBalance = negativeBalance.plus(bal.abs())
 		}
 
-		// 🔑 Balanslarni to‘g‘ri yo‘nalishda ishlatamiz
-		const ourDebt = totalCost.minus(totalPayment).minus(negativeBalance).plus(positiveBalance)
-		const theirDebt = totalPayment.minus(totalCost).minus(positiveBalance).plus(negativeBalance)
+		const ourDebt = totalCost.minus(totalPayment).plus(positiveBalance)
+		const theirDebt = totalPayment.minus(totalCost).plus(negativeBalance)
 
 		return {
 			ourDebt: ourDebt.gt(0) ? ourDebt : new Decimal(0),
