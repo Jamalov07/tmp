@@ -195,12 +195,13 @@ export class Syncronize3Service implements OnModuleInit {
 			totalPrice: Decimal
 			totalCost: Decimal
 			type: ServiceTypeEnum
-			arrivalId: string
 			staffId: string
 			count: number
 			createdAt: Date
 			productId: string
+			arrivalId: string
 		}[] = []
+
 		const payments: {
 			id: string
 			total: Decimal
@@ -213,6 +214,7 @@ export class Syncronize3Service implements OnModuleInit {
 			type: ServiceTypeEnum
 			staffId: string
 			userId: string
+			arrivalId: string
 		}[] = []
 
 		const products: Record<string, Product> = {}
@@ -248,6 +250,7 @@ export class Syncronize3Service implements OnModuleInit {
 				createdAt: defaultDate,
 				type: ServiceTypeEnum.arrival,
 				staffId: mainStaff.id,
+				arrivalId: arrivalId,
 				userId: systemSupplier.id,
 			})
 
@@ -427,6 +430,7 @@ export class Syncronize3Service implements OnModuleInit {
 					transfer: p.transfer,
 					description: p.description,
 					createdAt: p.createdAt,
+					arrivalId: p.arrivalId,
 					type: p.type,
 					staffId: p.staffId,
 					userId: p.userId,
