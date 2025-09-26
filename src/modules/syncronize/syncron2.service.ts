@@ -201,6 +201,19 @@ export class Syncronize3Service implements OnModuleInit {
 			createdAt: Date
 			productId: string
 		}[] = []
+		const payments: {
+			id: string
+			total: Decimal
+			card: Decimal
+			cash: Decimal
+			other: Decimal
+			transfer: Decimal
+			description: string
+			createdAt: Date
+			type: ServiceTypeEnum
+			staffId: string
+			userId: string
+		}[] = []
 
 		const products: Record<string, Product> = {}
 		productsRemote.forEach((product) => {
@@ -222,6 +235,20 @@ export class Syncronize3Service implements OnModuleInit {
 				supplierId: systemSupplier.id,
 				createdAt: defaultDate,
 				date: defaultDate,
+			})
+
+			payments.push({
+				id: uuidv4(),
+				total: new Decimal(0),
+				card: new Decimal(0),
+				cash: new Decimal(0),
+				other: new Decimal(0),
+				transfer: new Decimal(0),
+				description: 'boshlangich qiymat uchun',
+				createdAt: defaultDate,
+				type: ServiceTypeEnum.arrival,
+				staffId: mainStaff.id,
+				userId: systemSupplier.id,
 			})
 
 			productMVs.push({
@@ -360,7 +387,7 @@ export class Syncronize3Service implements OnModuleInit {
 			})),
 		})
 
-		const [newArrivals, newProductMVs] = await this.prisma.$transaction([
+		const [newArrivals, newProductMVs, newPayments] = await this.prisma.$transaction([
 			this.prisma.arrivalModel.createMany({
 				skipDuplicates: false,
 				data: arrivals.map((a) => ({
@@ -389,9 +416,25 @@ export class Syncronize3Service implements OnModuleInit {
 					productId: mv.productId,
 				})),
 			}),
+			this.prisma.paymentModel.createMany({
+				skipDuplicates: false,
+				data: payments.map((p) => ({
+					id: p.id,
+					total: p.total,
+					card: p.card,
+					cash: p.cash,
+					other: p.other,
+					transfer: p.transfer,
+					description: p.description,
+					createdAt: p.createdAt,
+					type: p.type,
+					staffId: p.staffId,
+					userId: p.userId,
+				})),
+			}),
 		] as const)
 
-		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count, newArrivals.count, newProductMVs.count)
+		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count, newArrivals.count, newProductMVs.count, newPayments.count)
 		console.log(newStaffPayments.count, newSupplierPayments.count, newClientPayments.count)
 
 		return createResponse({ data: {}, success: { messages: ['syncronize success'] } })
