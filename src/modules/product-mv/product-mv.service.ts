@@ -16,14 +16,13 @@ import {
 } from './interfaces'
 import { createResponse } from '../../common'
 import { BotService } from '../bot'
-import { SellingStatusEnum } from '@prisma/client'
+import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
 import { ClientService } from '../client'
 import { BotSellingProductTitleEnum, BotSellingTitleEnum } from '../selling/enums'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ArrivalService } from '../arrival'
 import { SellingService } from '../selling'
 import { ReturningService } from '../returning'
-import { ProductRepository } from '../product'
 
 @Injectable()
 export class ProductMVService {
@@ -33,7 +32,6 @@ export class ProductMVService {
 		private readonly clientService: ClientService,
 		private readonly arrivalService: ArrivalService,
 		private readonly returningService: ReturningService,
-		// private readonly productRepository: ProductRepository,
 		@Inject(forwardRef(() => SellingService)) private readonly sellingService: SellingService,
 	) {}
 
@@ -51,6 +49,25 @@ export class ProductMVService {
 			: { data: products }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
+	}
+
+	async findManyProductStats(query: ProductMVFindManyRequest) {
+		const products = await this.productMVRepository.findMany(query)
+
+		let actualCount = new Decimal(0)
+
+		for (const product of products) {
+			if (product.type === ServiceTypeEnum.selling) {
+				actualCount = actualCount.minus(product.count)
+			}
+			if (product.type === ServiceTypeEnum.arrival) {
+				actualCount = actualCount.plus(product.count)
+			}
+			if (product.type === ServiceTypeEnum.returning) {
+				actualCount = actualCount.plus(product.count)
+			}
+		}
+		return createResponse({ data: { products: products, actualCount: actualCount }, success: { messages: ['find many success'] } })
 	}
 
 	async findOne(query: ProductMVFindOneRequest) {
