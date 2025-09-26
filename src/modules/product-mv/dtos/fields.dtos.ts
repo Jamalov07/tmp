@@ -50,6 +50,16 @@ export class ProductMVRequiredDto extends DefaultRequiredFieldsDto implements Pr
 	@IsNotEmpty()
 	@IsEnum(ServiceTypeEnum)
 	type: $Enums.ServiceTypeEnum
+
+	@ApiProperty({ type: Number })
+	@IsNotEmpty()
+	@IsDecimalIntOrBigInt()
+	totalCost: Decimal
+
+	@ApiProperty({ type: Number })
+	@IsNotEmpty()
+	@IsDecimalIntOrBigInt()
+	totalPrice: Decimal
 }
 
 export class ProductMVOptionalDto extends DefaultOptionalFieldsDto implements ProductMVOptional {
