@@ -175,20 +175,7 @@ export class Syncronize3Service implements OnModuleInit {
 			}
 		})
 
-		const systemSupplier = await this.prisma.userModel.create({
-			data: {
-				id: uuidv4(),
-				fullname: 'SYSTEM SUPPLIER',
-				phone: '998900000000',
-				type: UserTypeEnum.supplier,
-				password: '998900000000',
-				balance: new Decimal(0),
-				createdAt: defaultDate,
-			},
-		})
-
-		const arrivals: Arrival[] = []
-		const productMVs: {
+		const arrivalProducts: {
 			id?: string
 			cost: Decimal
 			price: Decimal
@@ -199,22 +186,6 @@ export class Syncronize3Service implements OnModuleInit {
 			count: number
 			createdAt: Date
 			productId: string
-			arrivalId: string
-		}[] = []
-
-		const payments: {
-			id: string
-			total: Decimal
-			card: Decimal
-			cash: Decimal
-			other: Decimal
-			transfer: Decimal
-			description: string
-			createdAt: Date
-			type: ServiceTypeEnum
-			staffId: string
-			userId: string
-			arrivalId: string
 		}[] = []
 
 		const products: Record<string, Product> = {}
@@ -228,33 +199,8 @@ export class Syncronize3Service implements OnModuleInit {
 				minAmount: product.min_amount,
 				createdAt: product.createdAt,
 			}
-			const arrivalId = uuidv4()
-			arrivals.push({
-				id: arrivalId,
-				totalCost: new Decimal(0),
-				totalPrice: new Decimal(0),
-				staffId: mainStaff.id,
-				supplierId: systemSupplier.id,
-				createdAt: defaultDate,
-				date: defaultDate,
-			})
 
-			payments.push({
-				id: uuidv4(),
-				total: new Decimal(0),
-				card: new Decimal(0),
-				cash: new Decimal(0),
-				other: new Decimal(0),
-				transfer: new Decimal(0),
-				description: 'boshlangich qiymat uchun',
-				createdAt: defaultDate,
-				type: ServiceTypeEnum.arrival,
-				staffId: mainStaff.id,
-				arrivalId: arrivalId,
-				userId: systemSupplier.id,
-			})
-
-			productMVs.push({
+			arrivalProducts.push({
 				id: uuidv4(),
 				cost: new Decimal(product.cost),
 				count: product.count,
@@ -262,9 +208,8 @@ export class Syncronize3Service implements OnModuleInit {
 				createdAt: defaultDate,
 				productId: product.id,
 				staffId: mainStaff.id,
-				totalCost: new Decimal(0),
-				totalPrice: new Decimal(0),
-				arrivalId: arrivalId,
+				totalCost: new Decimal(product.cost).mul(product.count),
+				totalPrice: new Decimal(product.selling_price).mul(product.count),
 				type: ServiceTypeEnum.arrival,
 			})
 		})
@@ -390,55 +335,23 @@ export class Syncronize3Service implements OnModuleInit {
 			})),
 		})
 
-		const [newArrivals, newProductMVs, newPayments] = await this.prisma.$transaction([
-			this.prisma.arrivalModel.createMany({
-				skipDuplicates: false,
-				data: arrivals.map((a) => ({
-					id: a.id,
-					totalCost: a.totalCost,
-					totalPrice: a.totalPrice,
-					staffId: a.staffId,
-					supplierId: a.supplierId,
-					createdAt: a.createdAt,
-					date: a.date,
-				})),
-			}),
-			this.prisma.productMVModel.createMany({
-				skipDuplicates: false,
-				data: productMVs.map((mv) => ({
-					id: mv.id,
-					cost: mv.cost,
-					price: mv.price,
-					totalPrice: mv.totalPrice,
-					totalCost: mv.totalCost,
-					type: mv.type,
-					arrivalId: mv.arrivalId,
-					staffId: mv.staffId,
-					count: mv.count,
-					createdAt: mv.createdAt,
-					productId: mv.productId,
-				})),
-			}),
-			this.prisma.paymentModel.createMany({
-				skipDuplicates: false,
-				data: payments.map((p) => ({
-					id: p.id,
-					total: p.total,
-					card: p.card,
-					cash: p.cash,
-					other: p.other,
-					transfer: p.transfer,
-					description: p.description,
-					createdAt: p.createdAt,
-					arrivalId: p.arrivalId,
-					type: p.type,
-					staffId: p.staffId,
-					userId: p.userId,
-				})),
-			}),
-		] as const)
+		const newProductMVs = await this.prisma.productMVModel.createMany({
+			skipDuplicates: false,
+			data: arrivalProducts.map((mv) => ({
+				id: mv.id,
+				cost: mv.cost,
+				price: mv.price,
+				totalPrice: mv.totalPrice,
+				totalCost: mv.totalCost,
+				type: mv.type,
+				staffId: mv.staffId,
+				count: mv.count,
+				createdAt: mv.createdAt,
+				productId: mv.productId,
+			})),
+		})
 
-		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count, newArrivals.count, newProductMVs.count, newPayments.count)
+		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count, newProductMVs.count)
 		console.log(newStaffPayments.count, newSupplierPayments.count, newClientPayments.count)
 
 		return createResponse({ data: {}, success: { messages: ['syncronize success'] } })
