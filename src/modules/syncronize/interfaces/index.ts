@@ -230,14 +230,14 @@ export declare interface IArrival {
 }
 
 export declare interface Arrival {
-	id: string
+	id?: string
 	supplierId: string
 	date: Date
 	staffId: string
 	totalCost: Decimal
 	totalPrice: Decimal
 	createdAt: Date
-	payment: {
+	payment?: {
 		id: string
 		total: Decimal
 		card: Decimal
@@ -250,8 +250,8 @@ export declare interface Arrival {
 		staffId: string
 		userId: string
 	}
-	products: {
-		id: string
+	products?: {
+		id?: string
 		cost: Decimal
 		price: Decimal
 		totalPrice: Decimal

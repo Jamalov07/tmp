@@ -7,7 +7,7 @@ import { createResponse } from '../../common'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
-import { Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
+import { Arrival, Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
@@ -93,6 +93,8 @@ export class Syncronize3Service implements OnModuleInit {
 			this.fetchAllPages<IProduct>('/product'),
 		])
 
+		const defaultDate = new Date()
+
 		console.log('get all success')
 
 		const staffs: Record<string, Staff> = {}
@@ -138,7 +140,7 @@ export class Syncronize3Service implements OnModuleInit {
 						card: new Decimal(0),
 						transfer: new Decimal(0),
 						description: `import qilingan boshlang'ich qiymat ${new Decimal(supplier.debt).toFixed(2)}`,
-						createdAt: new Date('01-01-2025'),
+						createdAt: defaultDate,
 					},
 				],
 			}
@@ -167,11 +169,38 @@ export class Syncronize3Service implements OnModuleInit {
 						card: new Decimal(0),
 						transfer: new Decimal(0),
 						description: `import qilingan boshlang'ich qiymat ${new Decimal(client.debt).toFixed(2)}`,
-						createdAt: new Date('01-01-2025'),
+						createdAt: defaultDate,
 					},
 				],
 			}
 		})
+
+		const systemSupplier = await this.prisma.userModel.create({
+			data: {
+				id: uuidv4(),
+				fullname: 'SYSTEM SUPPLIER',
+				phone: '998900000000',
+				type: UserTypeEnum.supplier,
+				password: '998900000000',
+				balance: new Decimal(0),
+				createdAt: defaultDate,
+			},
+		})
+
+		const arrivals: Arrival[] = []
+		const productMVs: {
+			id?: string
+			cost: Decimal
+			price: Decimal
+			totalPrice: Decimal
+			totalCost: Decimal
+			type: ServiceTypeEnum
+			arrivalId: string
+			staffId: string
+			count: number
+			createdAt: Date
+			productId: string
+		}[] = []
 
 		const products: Record<string, Product> = {}
 		productsRemote.forEach((product) => {
@@ -184,6 +213,30 @@ export class Syncronize3Service implements OnModuleInit {
 				minAmount: product.min_amount,
 				createdAt: product.createdAt,
 			}
+			const arrivalId = uuidv4()
+			arrivals.push({
+				id: arrivalId,
+				totalCost: new Decimal(0),
+				totalPrice: new Decimal(0),
+				staffId: mainStaff.id,
+				supplierId: systemSupplier.id,
+				createdAt: defaultDate,
+				date: defaultDate,
+			})
+
+			productMVs.push({
+				id: uuidv4(),
+				cost: new Decimal(product.cost),
+				count: product.count,
+				price: new Decimal(product.selling_price),
+				createdAt: defaultDate,
+				productId: product.id,
+				staffId: mainStaff.id,
+				totalCost: new Decimal(0),
+				totalPrice: new Decimal(0),
+				arrivalId: arrivalId,
+				type: ServiceTypeEnum.arrival,
+			})
 		})
 
 		const newStaffs = await this.prisma.userModel.createMany({
@@ -307,7 +360,38 @@ export class Syncronize3Service implements OnModuleInit {
 			})),
 		})
 
-		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count)
+		const [newArrivals, newProductMVs] = await this.prisma.$transaction([
+			this.prisma.arrivalModel.createMany({
+				skipDuplicates: false,
+				data: arrivals.map((a) => ({
+					id: a.id,
+					totalCost: a.totalCost,
+					totalPrice: a.totalPrice,
+					staffId: a.staffId,
+					supplierId: a.supplierId,
+					createdAt: a.createdAt,
+					date: a.date,
+				})),
+			}),
+			this.prisma.productMVModel.createMany({
+				skipDuplicates: false,
+				data: productMVs.map((mv) => ({
+					id: mv.id,
+					cost: mv.cost,
+					price: mv.price,
+					totalPrice: mv.totalPrice,
+					totalCost: mv.totalCost,
+					type: mv.type,
+					arrivalId: mv.arrivalId,
+					staffId: mv.staffId,
+					count: mv.count,
+					createdAt: mv.createdAt,
+					productId: mv.productId,
+				})),
+			}),
+		] as const)
+
+		console.log(newStaffs.count, newSuppliers.count, newClients.count, newProducts.count, newArrivals.count, newProductMVs.count)
 		console.log(newStaffPayments.count, newSupplierPayments.count, newClientPayments.count)
 
 		return createResponse({ data: {}, success: { messages: ['syncronize success'] } })

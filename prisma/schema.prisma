@@ -311,4 +311,11 @@ model ProductModel {
   @@map("product")
 }
 
+model DayCloseLog {
+  id         String    @map("id")          @db.Uuid            @default(dbgenerated("GEN_RANDOM_UUID()"))
+  closedDate DateTime  @db.Date 
+  createdAt  DateTime  @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
 
+  @@id([ id ])
+  @@map("day_close_log")
+}
