@@ -37,7 +37,7 @@ export class ProductMVController {
 	@ApiOperation({ summary: 'get all products stats' })
 	@AuthOptions(false, false)
 	async findManyProductStats(@Query() query: ProductMVFindManyRequestDto): Promise<any> {
-		return this.productMVService.findManyProductStats({ ...query, isDeleted: false })
+		return this.productMVService.findManyProductStats({ ...query, pagination: false, isDeleted: false })
 	}
 
 	@Get('one')
