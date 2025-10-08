@@ -27,6 +27,21 @@ export class ProductMVRepository {
 		}
 
 		const productMVs = await this.prisma.productMVModel.findMany({
+			select: {
+				id: true,
+				price: true,
+				cost: true,
+				count: true,
+				product: { select: { id: true, name: true, createdAt: true } },
+				totalCost: true,
+				totalPrice: true,
+				type: true,
+				selling: { select: { publicId: true, id: true, createdAt: true, date: true, status: true } },
+				arrival: { select: { id: true } },
+				returning: { select: { id: true } },
+				createdAt: true,
+				staff: { select: { id: true, fullname: true } },
+			},
 			where: {
 				sellingId: query.sellingId,
 				arrivalId: query.arrivalId,

@@ -174,6 +174,17 @@ export class SellingRepository implements OnModuleInit {
 	}
 
 	async createOne(body: SellingCreateOneRequest) {
+		const today = new Date()
+		const dayClose = await this.prisma.dayCloseLog.findFirst({ where: { closedDate: today } })
+
+		if (dayClose) {
+			const tomorrow = new Date(today)
+			tomorrow.setDate(today.getDate() + 1)
+			tomorrow.setHours(0, 0, 0, 0)
+
+			body.date = tomorrow
+		}
+
 		const selling = await this.prisma.sellingModel.create({
 			data: {
 				status: body.status,
