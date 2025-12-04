@@ -1,6 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { SellingRepository } from './selling.repository'
-import { createResponse, CRequest, DeleteMethodEnum } from '@common'
+import { createResponse, CRequest, DeleteMethodEnum, ERROR_MSG } from '@common'
 import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import {
 	SellingGetOneRequest,
@@ -87,7 +87,7 @@ export class SellingService {
 		const selling = await this.sellingRepository.findOne(query)
 
 		if (!selling) {
-			throw new BadRequestException('selling not found')
+			throw new BadRequestException(ERROR_MSG.SELLING.NOT_FOUND.UZ)
 		}
 
 		const totalPrice = selling.products.reduce((acc, product) => {
@@ -123,7 +123,7 @@ export class SellingService {
 		const selling = await this.sellingRepository.getOne(query)
 
 		if (!selling) {
-			throw new BadRequestException('selling not found')
+			throw new BadRequestException(ERROR_MSG.SELLING.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: selling, success: { messages: ['get one success'] } })

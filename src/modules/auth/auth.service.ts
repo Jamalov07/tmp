@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common'
 import * as bcrypt from 'bcryptjs'
-import { createResponse } from '@common'
+import { createResponse, ERROR_MSG } from '@common'
 import { AuthGetStaffProfile, AuthGetValidTokensRequest, AuthSignOutRequest, StaffSignInRequest } from './interfaces'
 import { JsonWebTokenService } from './jwt.service'
 import { AuthRepository } from './auth.repository'
@@ -22,16 +22,16 @@ export class AuthService {
 		const staff = await this.authRepository.findOneStaff(body)
 
 		if (!staff) {
-			throw new UnauthorizedException('staff unauthorized')
+			throw new UnauthorizedException(ERROR_MSG.AUTH.UNAUTHORIZED.UZ)
 		}
 
 		if (staff.deletedAt) {
-			throw new BadRequestException('staff was deleted')
+			throw new BadRequestException(ERROR_MSG.AUTH.DELETED.UZ)
 		}
 
 		const isCorrect = await bcrypt.compare(body.password, staff.password)
 		if (!isCorrect) {
-			throw new UnauthorizedException('wrong password')
+			throw new UnauthorizedException(ERROR_MSG.AUTH.WRONG_PASSWORD.UZ)
 		}
 		delete staff.password
 
@@ -56,7 +56,7 @@ export class AuthService {
 		const staff = await this.staffRepository.getOne({ id: body.user.id, token: body.user.token, isDeleted: false })
 
 		if (!staff) {
-			throw new UnauthorizedException('staff not found')
+			throw new UnauthorizedException(ERROR_MSG.STAFF.NOT_FOUND.UZ)
 		}
 
 		const tokens = await this.jwtService.getTokens({ id: body.user.id })
@@ -68,7 +68,7 @@ export class AuthService {
 		const staff = await this.staffRepository.getOne({ id: body.user.id, token: body.user.token, isDeleted: false })
 
 		if (!staff) {
-			throw new UnauthorizedException('staff not found')
+			throw new UnauthorizedException(ERROR_MSG.STAFF.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: staff, success: { messages: ['staff get profile success'] } })

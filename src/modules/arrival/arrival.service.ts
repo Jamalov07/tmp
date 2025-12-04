@@ -1,6 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { ArrivalRepository } from './arrival.repository'
-import { createResponse, CRequest, DeleteMethodEnum } from '@common'
+import { createResponse, CRequest, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	ArrivalGetOneRequest,
 	ArrivalCreateOneRequest,
@@ -87,7 +87,7 @@ export class ArrivalService {
 		const arrival = await this.arrivalRepository.findOne(query)
 
 		if (!arrival) {
-			throw new BadRequestException('arrival not found')
+			throw new BadRequestException(ERROR_MSG.ARRIVAL.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: { ...arrival }, success: { messages: ['find one success'] } })
@@ -112,7 +112,7 @@ export class ArrivalService {
 		const arrival = await this.arrivalRepository.getOne(query)
 
 		if (!arrival) {
-			throw new BadRequestException('arrival not found')
+			throw new BadRequestException(ERROR_MSG.ARRIVAL.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: arrival, success: { messages: ['get one success'] } })

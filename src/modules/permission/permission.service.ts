@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { PermissionRepository } from './permission.repository'
-import { createResponse, DeleteMethodEnum } from '@common'
+import { createResponse, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	PermissionGetOneRequest,
 	PermissionCreateOneRequest,
@@ -39,7 +39,7 @@ export class PermissionService {
 		const permission = await this.permissionRepository.findOne(query)
 
 		if (!permission) {
-			throw new BadRequestException('permission not found')
+			throw new BadRequestException(ERROR_MSG.PERMISSION.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: permission, success: { messages: ['find one success'] } })
@@ -64,7 +64,7 @@ export class PermissionService {
 		const permission = await this.permissionRepository.getOne(query)
 
 		if (!permission) {
-			throw new BadRequestException('permission not found')
+			throw new BadRequestException(ERROR_MSG.PERMISSION.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: permission, success: { messages: ['get one success'] } })
@@ -73,7 +73,7 @@ export class PermissionService {
 	async createOne(body: PermissionCreateOneRequest) {
 		const candidate = await this.permissionRepository.getOne({ name: body.name })
 		if (candidate) {
-			throw new BadRequestException('name already exists')
+			throw new BadRequestException(ERROR_MSG.PERMISSION.NAME_EXISTS.UZ)
 		}
 
 		await this.permissionRepository.createOne({ ...body })
@@ -86,7 +86,7 @@ export class PermissionService {
 
 		const candidate = await this.permissionRepository.getOne({ name: body.name })
 		if (candidate && candidate.id !== query.id) {
-			throw new BadRequestException('name already exists')
+			throw new BadRequestException(ERROR_MSG.PERMISSION.NAME_EXISTS.UZ)
 		}
 
 		await this.permissionRepository.updateOne(query, { ...body })

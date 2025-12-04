@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { Reflector } from '@nestjs/core'
 import { cyan } from 'colors'
+import { ERROR_MSG } from '../constants'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -33,7 +34,7 @@ export class AuthGuard implements CanActivate {
 
 		if (isStaffRequired) {
 			if (!token) {
-				throw new UnauthorizedException('Token not provided')
+				throw new UnauthorizedException(ERROR_MSG.AUTH.TOKEN_NOT_PROVIDED.UZ)
 			} else {
 				const user = await this.parseTokenWithJwt(token, isStaffRequired)
 				request['user'] = user
@@ -60,7 +61,7 @@ export class AuthGuard implements CanActivate {
 
 		if (isAuthRequired) {
 			if (!authorizationHeader) {
-				throw new UnauthorizedException('Authorization header not provided')
+				throw new UnauthorizedException(ERROR_MSG.AUTH.AUTHORIZATION_NOT_PROVIDED.UZ)
 			}
 
 			const [type, token] = authorizationHeader.split(' ') ?? []
@@ -80,7 +81,7 @@ export class AuthGuard implements CanActivate {
 
 			if (!payload || !payload?.id) {
 				if (isStaffRequired) {
-					throw new UnauthorizedException('invalid token')
+					throw new UnauthorizedException(ERROR_MSG.AUTH.INVALID_TOKEN.UZ)
 				}
 			}
 			let user: Partial<StaffOptional>
@@ -90,10 +91,10 @@ export class AuthGuard implements CanActivate {
 
 			if (isStaffRequired) {
 				if (!user) {
-					throw new UnauthorizedException('user not found with this token')
+					throw new UnauthorizedException(ERROR_MSG.AUTH.USER_NOT_FOUND_WITH_THIS_TOKEN.UZ)
 				}
 				if (user.deletedAt) {
-					throw new UnauthorizedException('user was deleted')
+					throw new UnauthorizedException(ERROR_MSG.AUTH.USER_WAS_DELETED.UZ)
 				}
 			}
 

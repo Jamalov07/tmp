@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ActionRepository } from './action.repository'
 import { ActionFindManyRequest, ActionFindOneRequest, ActionGetManyRequest, ActionGetOneRequest, ActionUpdateOneRequest } from './interfaces'
-import { createResponse } from '../../common'
+import { createResponse, ERROR_MSG } from '../../common'
 
 @Injectable()
 export class ActionService {
@@ -29,7 +29,7 @@ export class ActionService {
 		const action = await this.actionRepository.findOne(query)
 
 		if (!action) {
-			throw new BadRequestException('action not found')
+			throw new BadRequestException(ERROR_MSG.ACTION.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: action, success: { messages: ['find one success'] } })
@@ -54,7 +54,7 @@ export class ActionService {
 		const action = await this.actionRepository.getOne(query)
 
 		if (!action) {
-			throw new BadRequestException('action not found')
+			throw new BadRequestException(ERROR_MSG.ACTION.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: action, success: { messages: ['get one success'] } })

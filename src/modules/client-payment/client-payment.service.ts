@@ -1,6 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { ClientPaymentRepository } from './client-payment.repository'
-import { createResponse, CRequest, DeleteMethodEnum } from '@common'
+import { createResponse, CRequest, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	ClientPaymentGetOneRequest,
 	ClientPaymentCreateOneRequest,
@@ -75,7 +75,7 @@ export class ClientPaymentService {
 		const clientPayment = await this.clientPaymentRepository.findOne(query)
 
 		if (!clientPayment) {
-			throw new BadRequestException('client payment not found')
+			throw new BadRequestException(ERROR_MSG.CLIENT_PAYMENT.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: { ...clientPayment }, success: { messages: ['find one success'] } })
@@ -100,7 +100,7 @@ export class ClientPaymentService {
 		const clientPayment = await this.clientPaymentRepository.getOne(query)
 
 		if (!clientPayment) {
-			throw new BadRequestException('client payment not found')
+			throw new BadRequestException(ERROR_MSG.CLIENT_PAYMENT.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: clientPayment, success: { messages: ['get one success'] } })

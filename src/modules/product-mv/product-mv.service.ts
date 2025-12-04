@@ -1,4 +1,4 @@
-import { CRequest } from '@common'
+import { CRequest, ERROR_MSG } from '@common'
 import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common'
 import { ProductMVRepository } from './product-mv.repository'
 import {
@@ -74,7 +74,7 @@ export class ProductMVService {
 		const product = await this.productMVRepository.findOne(query)
 
 		if (!product) {
-			throw new BadRequestException('product mv not found')
+			throw new BadRequestException(ERROR_MSG.PRODUCT_MV.NOT_FOUND.UZ)
 		}
 
 		return createResponse({
@@ -102,7 +102,7 @@ export class ProductMVService {
 		const product = await this.productMVRepository.getOne(query)
 
 		if (!product) {
-			throw new BadRequestException('product mv not found')
+			throw new BadRequestException(ERROR_MSG.PRODUCT_MV.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: product, success: { messages: ['get one success'] } })

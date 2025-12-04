@@ -11,14 +11,10 @@ import {
 } from './interfaces'
 import { ArrivalController } from './arrival.controller'
 import { ServiceTypeEnum } from '@prisma/client'
-import { ProductMVRepository } from '../product-mv'
 
 @Injectable()
 export class ArrivalRepository implements OnModuleInit {
-	constructor(
-		private readonly prisma: PrismaService,
-		// private readonly productMVRepository: ProductMVRepository,
-	) {}
+	constructor(private readonly prisma: PrismaService) {}
 
 	async findMany(query: ArrivalFindManyRequest) {
 		console.log(query)
@@ -149,6 +145,16 @@ export class ArrivalRepository implements OnModuleInit {
 	}
 
 	async createOne(body: ArrivalCreateOneRequest) {
+		const today = new Date()
+		const dayClose = await this.prisma.dayCloseLog.findFirst({ where: { closedDate: today } })
+
+		if (dayClose) {
+			const tomorrow = new Date(today)
+			tomorrow.setDate(today.getDate() + 1)
+			tomorrow.setHours(0, 0, 0, 0)
+
+			body.date = tomorrow
+		}
 		const arrival = await this.prisma.arrivalModel.create({
 			data: {
 				supplierId: body.supplierId,
@@ -167,6 +173,7 @@ export class ArrivalRepository implements OnModuleInit {
 						userId: body.supplierId,
 						staffId: body.staffId,
 						type: ServiceTypeEnum.arrival,
+						createdAt: dayClose ? body.date : undefined,
 					},
 				},
 				products: {

@@ -16,8 +16,8 @@ export class CommonRepository {
 	}
 
 	async getDayClose(query: DayCloseGetOneRequest) {
-		const dayClose = await this.prisma.dayCloseLog.findFirst({ where: { closedDate: query.closedDate } })
+		const dayClose = await this.prisma.dayCloseLog.findFirst({ where: { closedDate: new Date() } })
 
-		return dayClose
+		return { isClosed: dayClose ? true : false }
 	}
 }

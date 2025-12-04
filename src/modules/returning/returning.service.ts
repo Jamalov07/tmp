@@ -1,7 +1,7 @@
 import { Decimal } from '@prisma/client/runtime/library'
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ReturningRepository } from './returning.repository'
-import { createResponse, CRequest, DeleteMethodEnum } from '@common'
+import { createResponse, CRequest, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	ReturningGetOneRequest,
 	ReturningCreateOneRequest,
@@ -60,7 +60,7 @@ export class ReturningService {
 		const returning = await this.returningRepository.findOne(query)
 
 		if (!returning) {
-			throw new BadRequestException('returning not found')
+			throw new BadRequestException(ERROR_MSG.RETURNING.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: { ...returning }, success: { messages: ['find one success'] } })
@@ -89,7 +89,7 @@ export class ReturningService {
 		const returning = await this.returningRepository.getOne(query)
 
 		if (!returning) {
-			throw new BadRequestException('returning not found')
+			throw new BadRequestException(ERROR_MSG.RETURNING.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: returning, success: { messages: ['get one success'] } })

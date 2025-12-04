@@ -11,7 +11,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 import { ClientPaymentFindManyRequest } from '../../client-payment'
 import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import { ClientDeed, ClientFindManyRequest, ClientFindOneRequest } from '../../client'
-import { DebtTypeEnum } from '../../../common'
+import { DebtTypeEnum, ERROR_MSG } from '../../../common'
 import { StaffPaymentFindManyRequest } from '../../staff-payment'
 @Injectable()
 export class ExcelService {
@@ -899,7 +899,7 @@ export class ExcelService {
 			},
 		})
 
-		if (!client) throw new BadRequestException('client not found')
+		if (!client) throw new BadRequestException(ERROR_MSG.CLIENT.NOT_FOUND.UZ)
 
 		const deeds: ClientDeed[] = []
 		let totalDebit: Decimal = new Decimal(0)
@@ -1098,7 +1098,7 @@ export class ExcelService {
 			},
 		})
 
-		if (!client) throw new BadRequestException('client not found')
+		if (!client) throw new BadRequestException(ERROR_MSG.CLIENT.NOT_FOUND.UZ)
 
 		const deeds: (ClientDeed & { quantity: number; price: Decimal; cost: Decimal; name?: string })[] = []
 		let totalDebit = new Decimal(0)
@@ -1297,7 +1297,7 @@ export class ExcelService {
 			},
 		})
 
-		if (!supplier) throw new BadRequestException('supplier not found')
+		if (!supplier) throw new BadRequestException(ERROR_MSG.SUPPLIER.NOT_FOUND.UZ)
 
 		const deeds: ClientDeed[] = []
 		let totalDebit = new Decimal(0)
@@ -1475,7 +1475,7 @@ export class ExcelService {
 			},
 		})
 
-		if (!supplier) throw new BadRequestException('client not found')
+		if (!supplier) throw new BadRequestException(ERROR_MSG.SUPPLIER.NOT_FOUND.UZ)
 
 		const deeds: (ClientDeed & { quantity: number; price: Decimal; cost: Decimal; name?: string })[] = []
 		let totalDebit = new Decimal(0)

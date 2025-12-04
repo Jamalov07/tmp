@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { StaffPaymentRepository } from './staff-payment.repository'
-import { createResponse, CRequest, DeleteMethodEnum } from '@common'
+import { createResponse, CRequest, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	StaffPaymentGetOneRequest,
 	StaffPaymentCreateOneRequest,
@@ -56,7 +56,7 @@ export class StaffPaymentService {
 		const staffPayment = await this.staffPaymentRepository.findOne(query)
 
 		if (!staffPayment) {
-			throw new BadRequestException('staff payment not found')
+			throw new BadRequestException(ERROR_MSG.STAFF_PAYMENT.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: { ...staffPayment }, success: { messages: ['find one success'] } })
@@ -81,7 +81,7 @@ export class StaffPaymentService {
 		const staffPayment = await this.staffPaymentRepository.getOne(query)
 
 		if (!staffPayment) {
-			throw new BadRequestException('staff payment not found')
+			throw new BadRequestException(ERROR_MSG.STAFF_PAYMENT.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: staffPayment, success: { messages: ['get one success'] } })

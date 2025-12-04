@@ -203,6 +203,7 @@ export class SellingRepository implements OnModuleInit {
 						userId: body.clientId,
 						staffId: body.staffId,
 						type: ServiceTypeEnum.selling,
+						createdAt: dayClose ? body.date : undefined,
 					},
 				},
 				products: {

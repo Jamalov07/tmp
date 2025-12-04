@@ -7,10 +7,14 @@ export declare interface DayCloseOptional extends Partial<DayCloseLog> {}
 
 export declare interface DayCloseCreateOneRequest {}
 
-export declare interface DayCloseGetOneRequest extends Pick<DayCloseRequired, 'closedDate'> {}
+export declare interface DayCloseGetOneRequest {}
 
 export declare interface DayCloseGetOneResponse extends GlobalResponse {
-	data: DayCloseOptional
+	data: DayCloseGetOneData
+}
+
+export declare interface DayCloseGetOneData {
+	isClosed: boolean
 }
 
 export declare interface DayCloseModifyResponse extends GlobalResponse {

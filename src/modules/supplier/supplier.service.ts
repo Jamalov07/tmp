@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { SupplierRepository } from './supplier.repository'
-import { createResponse, DebtTypeEnum, DeleteMethodEnum } from '@common'
+import { createResponse, DebtTypeEnum, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	SupplierGetOneRequest,
 	SupplierCreateOneRequest,
@@ -82,7 +82,7 @@ export class SupplierService {
 		const supplier = await this.supplierRepository.findOne(query)
 
 		if (!supplier) {
-			throw new BadRequestException('supplier not found')
+			throw new BadRequestException(ERROR_MSG.SUPPLIER.NOT_FOUND.UZ)
 		}
 
 		const deeds: SupplierDeed[] = []
@@ -171,7 +171,7 @@ export class SupplierService {
 		const supplier = await this.supplierRepository.getOne(query)
 
 		if (!supplier) {
-			throw new BadRequestException('supplier not found')
+			throw new BadRequestException(ERROR_MSG.SUPPLIER.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: supplier, success: { messages: ['get one success'] } })
@@ -180,7 +180,7 @@ export class SupplierService {
 	async createOne(body: SupplierCreateOneRequest) {
 		const candidate = await this.supplierRepository.getOne({ phone: body.phone })
 		if (candidate) {
-			throw new BadRequestException('phone already exists')
+			throw new BadRequestException(ERROR_MSG.SUPPLIER.PHONE_EXISTS.UZ)
 		}
 
 		const supplier = await this.supplierRepository.createOne({ ...body })
@@ -194,7 +194,7 @@ export class SupplierService {
 		if (body.phone) {
 			const candidate = await this.supplierRepository.getOne({ phone: body.phone })
 			if (candidate && candidate.id !== query.id) {
-				throw new BadRequestException('phone already exists')
+				throw new BadRequestException(ERROR_MSG.SUPPLIER.PHONE_EXISTS.UZ)
 			}
 		}
 

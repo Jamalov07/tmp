@@ -1,5 +1,5 @@
 import { GlobalResponse, PaginationResponse } from '@common'
-import { ClientPaymentRequired } from './fields.interfaces'
+import { ClientPaymentOptional, ClientPaymentRequired } from './fields.interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 
 export declare interface ClientPaymentCalc {
@@ -13,7 +13,7 @@ export declare interface ClientPaymentFindManyData extends PaginationResponse<Cl
 	calc: ClientPaymentCalc
 }
 
-export declare interface ClientPaymentFindOneData extends Pick<ClientPaymentRequired, 'id' | 'description' | 'total'> {}
+export declare interface ClientPaymentFindOneData extends Pick<ClientPaymentRequired, 'id' | 'description'>, Pick<ClientPaymentOptional, 'total'> {}
 
 export declare interface ClientPaymentFindManyResponse extends GlobalResponse {
 	data: ClientPaymentFindManyData

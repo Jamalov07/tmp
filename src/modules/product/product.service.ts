@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ProductRepository } from './product.repository'
-import { createResponse } from '@common'
+import { createResponse, ERROR_MSG } from '@common'
 import { ProductGetOneRequest, ProductCreateOneRequest, ProductUpdateOneRequest, ProductGetManyRequest, ProductFindManyRequest, ProductFindOneRequest } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -47,6 +47,13 @@ export class ProductService {
 			return product
 		})
 
+		const sortedProducts = mappedProducts.sort((a, b) => {
+			if (!a.lastSellingDate && !b.lastSellingDate) return 0
+			if (!a.lastSellingDate) return 1 // a → oxiriga
+			if (!b.lastSellingDate) return -1 // b → oxiriga
+			return new Date(b.lastSellingDate).getTime() - new Date(a.lastSellingDate).getTime()
+		})
+
 		const allProducts = await this.productRepository.findMany({ pagination: false })
 
 		allProducts.map((pro) => {
@@ -59,11 +66,11 @@ export class ProductService {
 			? {
 					totalCount: productsCount,
 					pagesCount: Math.ceil(productsCount / query.pageSize),
-					pageSize: products.length,
-					data: mappedProducts,
+					pageSize: sortedProducts.length,
+					data: sortedProducts,
 					calc: { calcPage, calcTotal },
 				}
-			: { data: mappedProducts, calc: { calcPage, calcTotal } }
+			: { data: sortedProducts, calc: { calcPage, calcTotal } }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
@@ -72,7 +79,7 @@ export class ProductService {
 		const product = await this.productRepository.findOne(query)
 
 		if (!product) {
-			throw new BadRequestException('product not found')
+			throw new BadRequestException(ERROR_MSG.PRODUCT.NOT_FOUND.UZ)
 		}
 
 		const pro = {
@@ -108,7 +115,7 @@ export class ProductService {
 		const product = await this.productRepository.getOne(query)
 
 		if (!product) {
-			throw new BadRequestException('product not found')
+			throw new BadRequestException(ERROR_MSG.PRODUCT.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: product, success: { messages: ['get one success'] } })
@@ -117,7 +124,7 @@ export class ProductService {
 	async createOne(body: ProductCreateOneRequest) {
 		const candidate = await this.productRepository.getOne({ name: body.name })
 		if (candidate) {
-			throw new BadRequestException('name already exists')
+			throw new BadRequestException(ERROR_MSG.PRODUCT.NAME_EXISTS.UZ)
 		}
 
 		await this.productRepository.createOne({ ...body })
@@ -130,7 +137,7 @@ export class ProductService {
 
 		const candidate = await this.productRepository.getOne({ name: body.name })
 		if (candidate && candidate.id !== query.id) {
-			throw new BadRequestException('name already exists')
+			throw new BadRequestException(ERROR_MSG.PRODUCT.NAME_EXISTS.UZ)
 		}
 
 		await this.productRepository.updateOne(query, { ...body })

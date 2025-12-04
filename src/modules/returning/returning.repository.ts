@@ -125,6 +125,16 @@ export class ReturningRepository implements OnModuleInit {
 	}
 
 	async createOne(body: ReturningCreateOneRequest) {
+		const today = new Date()
+		const dayClose = await this.prisma.dayCloseLog.findFirst({ where: { closedDate: today } })
+
+		if (dayClose) {
+			const tomorrow = new Date(today)
+			tomorrow.setDate(today.getDate() + 1)
+			tomorrow.setHours(0, 0, 0, 0)
+
+			body.date = tomorrow
+		}
 		const returning = await this.prisma.returningModel.create({
 			data: {
 				status: body.status,
@@ -140,6 +150,7 @@ export class ReturningRepository implements OnModuleInit {
 						userId: body.clientId,
 						staffId: body.staffId,
 						type: ServiceTypeEnum.returning,
+						createdAt: dayClose ? body.date : undefined,
 					},
 				},
 				products: {

@@ -4,7 +4,6 @@ import { ArrivalController } from './arrival.controller'
 import { ArrivalService } from './arrival.service'
 import { ArrivalRepository } from './arrival.repository'
 import { SupplierModule } from '../supplier'
-import { ProductModule } from '../product'
 
 @Module({
 	imports: [PrismaModule, ExcelModule, forwardRef(() => SupplierModule)],

@@ -126,6 +126,17 @@ export class SupplierPaymentRepository implements OnModuleInit {
 	}
 
 	async createOne(body: SupplierPaymentCreateOneRequest) {
+		const today = new Date()
+		const dayClose = await this.prisma.dayCloseLog.findFirst({ where: { closedDate: today } })
+		let date = new Date()
+
+		if (dayClose) {
+			const tomorrow = new Date(today)
+			tomorrow.setDate(today.getDate() + 1)
+			tomorrow.setHours(0, 0, 0, 0)
+
+			date = tomorrow
+		}
 		const supplierPayment = await this.prisma.paymentModel.create({
 			data: {
 				total: body.total,
@@ -137,6 +148,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 				staffId: body.staffId,
 				description: body.description,
 				type: ServiceTypeEnum.supplier,
+				createdAt: dayClose ? date : undefined,
 			},
 			select: {
 				id: true,

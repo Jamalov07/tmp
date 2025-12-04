@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { StaffRepository } from './staff.repository'
 import * as bcrypt from 'bcryptjs'
-import { createResponse, DeleteMethodEnum } from '@common'
+import { createResponse, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	StaffGetOneRequest,
 	StaffCreateOneRequest,
@@ -40,7 +40,7 @@ export class StaffService {
 		const staff = await this.staffRepository.findOne(query)
 
 		if (!staff) {
-			throw new BadRequestException('staff not found')
+			throw new BadRequestException(ERROR_MSG.STAFF.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: { ...staff, actionIds: staff.actions.map((a) => a.id) }, success: { messages: ['find one success'] } })
@@ -65,7 +65,7 @@ export class StaffService {
 		const staff = await this.staffRepository.getOne(query)
 
 		if (!staff) {
-			throw new BadRequestException('staff not found')
+			throw new BadRequestException(ERROR_MSG.STAFF.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: staff, success: { messages: ['get one success'] } })
@@ -74,7 +74,7 @@ export class StaffService {
 	async createOne(body: StaffCreateOneRequest) {
 		const candidate = await this.staffRepository.getOne({ phone: body.phone })
 		if (candidate) {
-			throw new BadRequestException('phone already exists')
+			throw new BadRequestException(ERROR_MSG.STAFF.PHONE_EXISTS.UZ)
 		}
 
 		const password = await bcrypt.hash(body.password, 7)
@@ -90,7 +90,7 @@ export class StaffService {
 		if (body.phone) {
 			const candidate = await this.staffRepository.getOne({ phone: body.phone })
 			if (candidate && candidate.id !== query.id) {
-				throw new BadRequestException('phone already exists')
+				throw new BadRequestException(ERROR_MSG.STAFF.PHONE_EXISTS.UZ)
 			}
 		}
 

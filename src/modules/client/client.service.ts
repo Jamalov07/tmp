@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ClientRepository } from './client.repository'
-import { createResponse, DebtTypeEnum, DeleteMethodEnum } from '@common'
+import { createResponse, DebtTypeEnum, DeleteMethodEnum, ERROR_MSG } from '@common'
 import {
 	ClientGetOneRequest,
 	ClientCreateOneRequest,
@@ -67,12 +67,18 @@ export class ClientService {
 			return true
 		})
 
-		const paginatedClients = query.pagination ? filteredClients.slice((query.pageNumber - 1) * query.pageSize, query.pageNumber * query.pageSize) : filteredClients
+		const sortedClients = filteredClients.sort((a, b) => {
+			const da = a.lastSellingDate ? new Date(a.lastSellingDate).getTime() : 0
+			const db = b.lastSellingDate ? new Date(b.lastSellingDate).getTime() : 0
+			return db - da
+		})
+
+		const paginatedClients = query.pagination ? sortedClients.slice((query.pageNumber - 1) * query.pageSize, query.pageNumber * query.pageSize) : sortedClients
 
 		const result = query.pagination
 			? {
-					totalCount: filteredClients.length,
-					pagesCount: Math.ceil(filteredClients.length / query.pageSize),
+					totalCount: sortedClients.length,
+					pagesCount: Math.ceil(sortedClients.length / query.pageSize),
 					pageSize: paginatedClients.length,
 					data: paginatedClients,
 				}
@@ -92,7 +98,7 @@ export class ClientService {
 		const client = await this.clientRepository.findOne(query)
 
 		if (!client) {
-			throw new BadRequestException('client not found')
+			throw new BadRequestException(ERROR_MSG.CLIENT.NOT_FOUND.UZ)
 		}
 		const deeds: ClientDeed[] = []
 		let totalDebit: Decimal = new Decimal(0)
@@ -181,7 +187,7 @@ export class ClientService {
 		const client = await this.clientRepository.getOne(query)
 
 		if (!client) {
-			throw new BadRequestException('client not found')
+			throw new BadRequestException(ERROR_MSG.CLIENT.NOT_FOUND.UZ)
 		}
 
 		return createResponse({ data: client, success: { messages: ['get one success'] } })
@@ -190,7 +196,7 @@ export class ClientService {
 	async createOne(body: ClientCreateOneRequest) {
 		const candidate = await this.clientRepository.getOne({ phone: body.phone })
 		if (candidate) {
-			throw new BadRequestException('phone already exists')
+			throw new BadRequestException(ERROR_MSG.CLIENT.PHONE_EXISTS.UZ)
 		}
 
 		const client = await this.clientRepository.createOne({ ...body })
@@ -204,7 +210,7 @@ export class ClientService {
 		if (body.phone) {
 			const candidate = await this.clientRepository.getOne({ phone: body.phone })
 			if (candidate && candidate.id !== query.id) {
-				throw new BadRequestException('phone already exists')
+				throw new BadRequestException(ERROR_MSG.CLIENT.PHONE_EXISTS.UZ)
 			}
 		}
 

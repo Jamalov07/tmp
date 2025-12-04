@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { CommonRepository } from './common.repository'
-import { createResponse } from '../../common'
+import { createResponse, ERROR_MSG } from '../../common'
 import { DayCloseGetOneRequest } from './interfaces'
 
 @Injectable()
@@ -14,7 +14,7 @@ export class CommonService {
 		const dayClose = await this.commonRepository.getDayClose({ closedDate: new Date() })
 
 		if (dayClose) {
-			throw new BadRequestException('the day already closed')
+			throw new BadRequestException(ERROR_MSG.DAY_CLOSE.CLOSED.UZ)
 		}
 
 		await this.commonRepository.createDayClose()
