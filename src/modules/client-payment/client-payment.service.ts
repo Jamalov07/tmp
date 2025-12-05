@@ -162,14 +162,14 @@ export class ClientPaymentService {
 		if (payment.data.type === ServiceTypeEnum.selling) {
 			await this.clientPaymentRepository.updateOne(query, { card: new Decimal(0), cash: new Decimal(0), other: new Decimal(0), transfer: new Decimal(0), description: '' })
 		} else {
-			if (query.method === DeleteMethodEnum.hard) {
-				if (!payment.data.total.isZero()) {
-					await this.clientService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
-				}
-				await this.clientPaymentRepository.deleteOne(query)
-			} else {
-				await this.clientPaymentRepository.updateOne(query, { deletedAt: new Date() })
+			// if (query.method === DeleteMethodEnum.hard) {
+			if (!payment.data.total.isZero()) {
+				await this.clientService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
 			}
+			await this.clientPaymentRepository.deleteOne(query)
+			// } else {
+			// 	await this.clientPaymentRepository.updateOne(query, { deletedAt: new Date() })
+			// }
 		}
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}

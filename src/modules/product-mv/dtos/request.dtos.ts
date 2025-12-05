@@ -33,7 +33,10 @@ export class ReturningProductMVCreateOneRequestDto
 
 export class SellingProductMVUpdateOneRequestDto
 	extends IntersectionType(PickType(ProductMVOptionalDto, ['price', 'sellingId', 'count', 'productId']))
-	implements SellingProductMVUpdateOneRequest {}
+	implements SellingProductMVUpdateOneRequest
+{
+	send?: boolean
+}
 
 export class ArrivalProductMVUpdateOneRequestDto
 	extends IntersectionType(PickType(ProductMVOptionalDto, ['price', 'arrivalId', 'cost', 'count', 'productId']))

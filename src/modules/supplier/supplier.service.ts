@@ -31,7 +31,7 @@ export class SupplierService {
 
 		const mappedSuppliers = suppliers.map((s) => {
 			const arrivalPayment = s.arrivals.reduce((acc, arr) => {
-				return acc.plus(arr.totalCost).minus(arr.payment.total)
+				return acc.plus(arr.totalCost).minus(arr.payment?.total || 0)
 			}, new Decimal(0))
 			return {
 				...s,

@@ -23,8 +23,12 @@ export declare interface ReturningProductMVCreateOneRequest
 	extends Pick<ProductMVRequired, 'count' | 'price' | 'productId' | 'returningId'>,
 		Pick<ProductMVOptional, 'staffId' | 'totalPrice'> {}
 
-export declare interface SellingProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'count' | 'price' | 'productId' | 'sellingId' | 'totalPrice'> {}
+export declare interface SellingProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'count' | 'price' | 'productId' | 'sellingId' | 'totalPrice'> {
+	send?: boolean
+}
 export declare interface ArrivalProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'cost' | 'count' | 'price' | 'arrivalId' | 'productId' | 'totalCost' | 'totalPrice'> {}
 export declare interface ReturningProductMVUpdateOneRequest extends Pick<ProductMVOptional, 'count' | 'price' | 'productId' | 'returningId' | 'totalPrice'> {}
 
-export declare interface ProductMVDeleteOneRequest extends Pick<ProductMVOptional, 'id'> {}
+export declare interface ProductMVDeleteOneRequest extends Pick<ProductMVOptional, 'id'> {
+	send?: boolean
+}

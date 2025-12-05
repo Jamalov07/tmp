@@ -29,6 +29,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 		const supplierPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				staffId: query.staffId,
+				userId: query.userId,
 				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: { gte: query.startDate, lte: query.endDate },

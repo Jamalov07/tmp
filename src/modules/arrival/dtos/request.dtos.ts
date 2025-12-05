@@ -12,7 +12,7 @@ import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { ArrivalOptionalDto, ArrivalRequiredDto } from './fields.dtos'
 import { Type } from 'class-transformer'
 import { IsArray, IsOptional, IsUUID, ValidateNested } from 'class-validator'
-import { SupplierPaymentRequiredDto } from '../../supplier-payment'
+import { SupplierPaymentOptionalDto, SupplierPaymentRequiredDto } from '../../supplier-payment'
 import { ProductMVRequiredDto } from '../../product-mv'
 
 export class ArrivalFindManyRequestDto
@@ -21,7 +21,9 @@ export class ArrivalFindManyRequestDto
 
 export class ArrivalFindOneRequestDto extends IntersectionType(PickType(ArrivalRequiredDto, ['id'])) implements ArrivalFindOneRequest {}
 
-export class ArrivalPaymentDto extends IntersectionType(PickType(SupplierPaymentRequiredDto, ['card', 'cash', 'other', 'transfer', 'description'])) implements ArrivalPayment {}
+export class ArrivalPaymentDto
+	extends IntersectionType(PickType(SupplierPaymentRequiredDto, ['card', 'cash', 'other', 'transfer']), PickType(SupplierPaymentOptionalDto, ['description']))
+	implements ArrivalPayment {}
 
 export class ArrivalProductDto extends PickType(ProductMVRequiredDto, ['count', 'price', 'cost', 'productId']) implements ArrivalProduct {}
 

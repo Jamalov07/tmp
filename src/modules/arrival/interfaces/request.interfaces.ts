@@ -14,7 +14,7 @@ export declare interface ArrivalGetManyRequest extends ArrivalOptional, Paginati
 
 export declare interface ArrivalGetOneRequest extends ArrivalOptional, Pick<RequestOtherFields, 'isDeleted'> {}
 
-export declare interface ArrivalPayment extends Pick<SupplierPaymentRequired, 'card' | 'cash' | 'other' | 'transfer' | 'description'>, Pick<SupplierPaymentOptional, 'total'> {}
+export declare interface ArrivalPayment extends Pick<SupplierPaymentRequired, 'card' | 'cash' | 'other' | 'transfer'>, Pick<SupplierPaymentOptional, 'total' | 'description'> {}
 
 export declare interface ArrivalProduct extends Pick<ProductMVRequired, 'price' | 'count' | 'cost' | 'productId'>, Pick<ProductMVOptional, 'totalCost' | 'totalPrice'> {}
 

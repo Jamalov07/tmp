@@ -4,6 +4,7 @@ import { ProductMVRepository } from './product-mv.repository'
 import {
 	ArrivalProductMVCreateOneRequest,
 	ArrivalProductMVUpdateOneRequest,
+	ProductMVDeleteOneRequest,
 	ProductMVFindManyRequest,
 	ProductMVFindOneData,
 	ProductMVFindOneRequest,
@@ -118,7 +119,7 @@ export class ProductMVService {
 		await this.sellingService.updateOne({ id: productmv.selling.id }, { totalPrice: productmv.selling.totalPrice.plus(productmv.totalPrice) })
 
 		if (productmv.selling.status === SellingStatusEnum.accepted) {
-			await this.sendSellingNotifications(productmv)
+			await this.sendSellingNotifications(productmv, false)
 		}
 
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
@@ -192,10 +193,12 @@ export class ProductMVService {
 				products: sellingProducts,
 			}
 
-			if (client.data.telegram?.id) {
-				await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
-					console.log('user', e)
-				})
+			if (body.send) {
+				if (client.data.telegram?.id) {
+					await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
+						console.log('user', e)
+					})
+				}
 			}
 
 			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
@@ -248,7 +251,7 @@ export class ProductMVService {
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}
 
-	async deleteOne(query: ProductMVGetOneRequest) {
+	async deleteOne(query: ProductMVDeleteOneRequest) {
 		const productmv = await this.getOne(query)
 
 		const sellingProduct = await this.productMVRepository.deleteOne(query)
@@ -277,10 +280,12 @@ export class ProductMVService {
 				products: sellingProducts,
 			}
 
-			if (client.data.telegram?.id) {
-				await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
-					console.log('user', e)
-				})
+			if (query.send) {
+				if (client.data.telegram?.id) {
+					await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
+						console.log('user', e)
+					})
+				}
 			}
 
 			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
@@ -291,7 +296,7 @@ export class ProductMVService {
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}
 
-	private async sendSellingNotifications(productmv: ProductMVFindOneData) {
+	private async sendSellingNotifications(productmv: ProductMVFindOneData, send: boolean = false) {
 		const client = await this.clientService.findOne({ id: productmv.selling.client.id })
 
 		const sellingProducts = productmv.selling.products.map((pro) => ({
@@ -309,11 +314,13 @@ export class ProductMVService {
 			products: sellingProducts,
 		}
 
-		if (client.data.telegram?.id) {
-			try {
-				await this.botService.sendSellingToClient(sellingInfo)
-			} catch (e) {
-				console.log('user', e)
+		if (send) {
+			if (client.data.telegram?.id) {
+				try {
+					await this.botService.sendSellingToClient(sellingInfo)
+				} catch (e) {
+					console.log('user', e)
+				}
 			}
 		}
 

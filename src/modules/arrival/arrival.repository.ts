@@ -17,7 +17,6 @@ export class ArrivalRepository implements OnModuleInit {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async findMany(query: ArrivalFindManyRequest) {
-		console.log(query)
 		let paginationOptions = {}
 		if (query.pagination) {
 			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }

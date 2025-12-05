@@ -212,6 +212,6 @@ export const ERROR_MSG = {
 	INTERNAL_SERVER_ERROR: {
 		EN: 'internal server error',
 		RU: 'internal server error',
-		UZ: "tizimda no'malum xatolik",
+		UZ: "tizimda noma'lum xatolik",
 	},
 }
