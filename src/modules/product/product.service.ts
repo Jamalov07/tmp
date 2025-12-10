@@ -3,14 +3,15 @@ import { ProductRepository } from './product.repository'
 import { createResponse, ERROR_MSG } from '@common'
 import { ProductGetOneRequest, ProductCreateOneRequest, ProductUpdateOneRequest, ProductGetManyRequest, ProductFindManyRequest, ProductFindOneRequest } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
+import { ExcelService } from '../shared'
+import { Response } from 'express'
 
 @Injectable()
 export class ProductService {
-	private readonly productRepository: ProductRepository
-
-	constructor(productRepository: ProductRepository) {
-		this.productRepository = productRepository
-	}
+	constructor(
+		private readonly productRepository: ProductRepository,
+		private readonly excelService: ExcelService,
+	) {}
 
 	async findMany(query: ProductFindManyRequest) {
 		const products = await this.productRepository.findMany(query)
@@ -73,6 +74,10 @@ export class ProductService {
 			: { data: sortedProducts, calc: { calcPage, calcTotal } }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
+	}
+
+	async excelDownloadMany(res: Response, query: ProductFindManyRequest) {
+		return this.excelService.productDownloadMany(res, query)
 	}
 
 	async findOne(query: ProductFindOneRequest) {

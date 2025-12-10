@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Res, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { ProductService } from './product.service'
 import { AuthOptions, CheckPermissionGuard } from '@common'
@@ -11,16 +11,13 @@ import {
 	ProductFindOneResponseDto,
 	ProductModifyResponseDto,
 } from './dtos'
+import { Response } from 'express'
 
 @ApiTags('Product')
 // @UseGuards(CheckPermissionGuard)
 @Controller('product')
 export class ProductController {
-	private readonly productService: ProductService
-
-	constructor(productService: ProductService) {
-		this.productService = productService
-	}
+	constructor(private readonly productService: ProductService) {}
 
 	@Get('many')
 	@ApiOkResponse({ type: ProductFindManyResponseDto })
@@ -28,6 +25,12 @@ export class ProductController {
 	@AuthOptions(false, false)
 	async findMany(@Query() query: ProductFindManyRequestDto): Promise<ProductFindManyResponseDto> {
 		return this.productService.findMany({ ...query, isDeleted: false })
+	}
+
+	@Get('excel-download/many')
+	@ApiOperation({ summary: 'download many clients' })
+	async excelDownloadMany(@Res() res: Response, @Query() query: ProductFindManyRequestDto) {
+		return this.productService.excelDownloadMany(res, query)
 	}
 
 	@Get('one')

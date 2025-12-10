@@ -13,6 +13,7 @@ import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client
 import { ClientDeed, ClientFindManyRequest, ClientFindOneRequest } from '../../client'
 import { DebtTypeEnum, ERROR_MSG } from '../../../common'
 import { StaffPaymentFindManyRequest } from '../../staff-payment'
+import { ProductFindManyRequest } from '../../product'
 @Injectable()
 export class ExcelService {
 	private readonly prisma: PrismaService
@@ -1773,6 +1774,98 @@ export class ExcelService {
 
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		res.setHeader('Content-Disposition', 'attachment; filename="client-debt-report.xlsx"')
+
+		await workbook.xlsx.write(res)
+		res.end()
+	}
+
+	async productDownloadMany(res: Response, query: ProductFindManyRequest) {
+		let nameFilter: any = {}
+		if (query.search) {
+			const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
+
+			nameFilter = {
+				[searchWords.length > 1 ? 'AND' : 'OR']: searchWords.map((word) => ({
+					name: {
+						contains: word,
+						mode: 'insensitive',
+					},
+				})),
+			}
+		}
+
+		const products = await this.prisma.productModel.findMany({
+			where: {
+				...nameFilter,
+			},
+			select: {
+				id: true,
+				cost: true,
+				price: true,
+				count: true,
+				createdAt: true,
+				name: true,
+				minAmount: true,
+				productMVs: {
+					where: { type: ServiceTypeEnum.selling },
+					orderBy: { selling: { date: 'desc' } },
+					take: 1,
+					select: { selling: { select: { date: true } } },
+				},
+			},
+		})
+
+		const workbook = new ExcelJS.Workbook()
+		const worksheet = workbook.addWorksheet('Клиенты с долгом')
+
+		worksheet.columns = [
+			{ header: '№', key: 'no', width: 5 },
+			{ header: 'name', key: 'name', width: 40 },
+			{ header: 'cost', key: 'cost', width: 20 },
+			{ header: 'price', key: 'price', width: 20 },
+			{ header: 'count', key: 'count', width: 20 },
+			{ header: 'min amount', key: 'minAmount', width: 20 },
+			{ header: 'created at', key: 'createdAt', width: 30 },
+		]
+
+		worksheet.getRow(1).eachCell((cell) => {
+			cell.font = { bold: true }
+			cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			cell.fill = {
+				type: 'pattern',
+				pattern: 'solid',
+				fgColor: { argb: 'FFB6D7A8' },
+			}
+			cell.border = this.allBorder()
+		})
+
+		products.forEach((product, index) => {
+			const row = worksheet.addRow({
+				no: index + 1,
+				name: product.name,
+				count: product.count,
+				minAmount: product.minAmount,
+				cost: product.cost.toFixed(2),
+				price: product.price.toFixed(2),
+				createdAt: product.createdAt
+					? new Date(product.createdAt).toLocaleString('ru-RU', {
+							year: 'numeric',
+							month: '2-digit',
+							day: '2-digit',
+							hour: '2-digit',
+							minute: '2-digit',
+						})
+					: '',
+			})
+
+			row.eachCell((cell) => {
+				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+				cell.border = this.allBorder()
+			})
+		})
+
+		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+		res.setHeader('Content-Disposition', 'attachment; filename="products.xlsx"')
 
 		await workbook.xlsx.write(res)
 		res.end()
