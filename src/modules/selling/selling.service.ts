@@ -284,14 +284,14 @@ export class SellingService {
 		}
 
 		// clientga yuborish
-		if ((selling.data.status || body.status) === SellingStatusEnum.accepted) {
+		if (selling.data.status === SellingStatusEnum.accepted || body.status === SellingStatusEnum.accepted) {
 			if (body.send) {
 				if (updatedSelling.client?.telegram?.id) {
 					await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
 				}
 			}
 
-			// channelga yuborish
+			// chdfannelga yuborish
 			if (shouldSend) {
 				await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
 
