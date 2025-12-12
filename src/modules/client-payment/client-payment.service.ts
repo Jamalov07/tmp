@@ -164,7 +164,7 @@ export class ClientPaymentService {
 		} else {
 			// if (query.method === DeleteMethodEnum.hard) {
 			if (!payment.data.total.isZero()) {
-				await this.clientService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+				await this.clientService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
 			}
 			await this.clientPaymentRepository.deleteOne(query)
 			// } else {

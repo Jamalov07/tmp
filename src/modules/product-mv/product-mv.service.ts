@@ -173,40 +173,40 @@ export class ProductMVService {
 
 		await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: newSellingTotalPrice })
 
-		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
-			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
+		// if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
+		// const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
 
-			const sellingProducts = sellingProduct.selling.products.map((pro) => {
-				const status = pro.id === sellingProduct.id ? BotSellingProductTitleEnum.updated : undefined
-				const price = pro.id === sellingProduct.id ? sellingProduct.price : pro.price
-				const count = pro.id === sellingProduct.id ? sellingProduct.count : pro.count
-				return { ...pro, price, count, status }
-			})
+		// const sellingProducts = sellingProduct.selling.products.map((pro) => {
+		// 	const status = pro.id === sellingProduct.id ? BotSellingProductTitleEnum.updated : undefined
+		// 	const price = pro.id === sellingProduct.id ? sellingProduct.price : pro.price
+		// 	const count = pro.id === sellingProduct.id ? sellingProduct.count : pro.count
+		// 	return { ...pro, price, count, status }
+		// })
 
-			const sellingInfo = {
-				...sellingProduct.selling,
-				client: client.data,
-				title: BotSellingTitleEnum.updated,
-				totalPayment: sellingProduct.selling.payment.total,
-				totalPrice: newSellingTotalPrice,
-				debt: newSellingTotalPrice.minus(sellingProduct.selling.payment.total),
-				products: sellingProducts,
-			}
+		// const sellingInfo = {
+		// 	...sellingProduct.selling,
+		// 	client: client.data,
+		// 	title: BotSellingTitleEnum.updated,
+		// 	totalPayment: sellingProduct.selling.payment.total,
+		// 	totalPrice: newSellingTotalPrice,
+		// 	debt: newSellingTotalPrice.minus(sellingProduct.selling.payment.total),
+		// 	products: sellingProducts,
+		// }
 
-			if (productmv.data.selling.status === SellingStatusEnum.accepted) {
-				if (body.send) {
-					if (client.data.telegram?.id) {
-						await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
-							console.log('user', e)
-						})
-					}
-				}
+		// if (productmv.data.selling.status === SellingStatusEnum.accepted) {
+		// 	if (body.send) {
+		// 		if (client.data.telegram?.id) {
+		// 			await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
+		// 				console.log('user', e)
+		// 			})
+		// 		}
+		// 	}
 
-				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
-					console.log('channel', e)
-				})
-			}
-		}
+		// 	await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+		// 		console.log('channel', e)
+		// 	})
+		// }
+		// }
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
 	}
