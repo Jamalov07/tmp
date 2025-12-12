@@ -14,6 +14,7 @@ import { SupplierService } from '../supplier/'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ExcelService } from '../shared'
 import { Response } from 'express'
+import { ServiceTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class SupplierPaymentService {
@@ -151,15 +152,19 @@ export class SupplierPaymentService {
 
 	async deleteOne(query: SupplierPaymentDeleteOneRequest) {
 		const payment = await this.getOne(query)
-		// if (query.method === DeleteMethodEnum.hard) {
-		if (!payment.data.total.isZero()) {
-			await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
-		}
+		if (payment.data.type === ServiceTypeEnum.arrival) {
+			await this.supplierPaymentRepository.updateOne(query, { card: new Decimal(0), cash: new Decimal(0), other: new Decimal(0), transfer: new Decimal(0), description: '' })
+		} else {
+			// if (query.method === DeleteMethodEnum.hard) {
+			if (!payment.data.total.isZero()) {
+				await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+			}
 
-		await this.supplierPaymentRepository.deleteOne(query)
-		// } else {
-		// 	await this.supplierPaymentRepository.updateOne(query, { deletedAt: new Date() })
-		// }
+			await this.supplierPaymentRepository.deleteOne(query)
+			// } else {
+			// 	await this.supplierPaymentRepository.updateOne(query, { deletedAt: new Date() })
+			// }
+		}
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}
 }

@@ -115,7 +115,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 	async getOne(query: SupplierPaymentGetOneRequest) {
 		const supplierPayment = await this.prisma.paymentModel.findFirst({
 			where: { id: query.id, staffId: query.staffId },
-			select: { id: true, user: true, total: true },
+			select: { id: true, user: true, total: true, type: true },
 		})
 
 		return supplierPayment
