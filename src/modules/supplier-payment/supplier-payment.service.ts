@@ -153,7 +153,7 @@ export class SupplierPaymentService {
 		const payment = await this.getOne(query)
 		// if (query.method === DeleteMethodEnum.hard) {
 		if (!payment.data.total.isZero()) {
-			await this.supplierService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+			await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
 		}
 
 		await this.supplierPaymentRepository.deleteOne(query)
