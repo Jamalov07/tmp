@@ -193,17 +193,19 @@ export class ProductMVService {
 				products: sellingProducts,
 			}
 
-			if (body.send) {
-				if (client.data.telegram?.id) {
-					await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
-						console.log('user', e)
-					})
+			if (productmv.data.selling.status === SellingStatusEnum.accepted) {
+				if (body.send) {
+					if (client.data.telegram?.id) {
+						await this.botService.sendSellingToClient(sellingInfo).catch((e) => {
+							console.log('user', e)
+						})
+					}
 				}
-			}
 
-			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
-				console.log('channel', e)
-			})
+				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+					console.log('channel', e)
+				})
+			}
 		}
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
@@ -280,17 +282,19 @@ export class ProductMVService {
 				products: sellingProducts,
 			}
 
-			if (query.send) {
-				if (client.data.telegram?.id) {
-					await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
-						console.log('user', e)
-					})
+			if (productmv.data.selling.status === SellingStatusEnum.accepted) {
+				if (query.send) {
+					if (client.data.telegram?.id) {
+						await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
+							console.log('user', e)
+						})
+					}
 				}
-			}
 
-			await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
-				console.log('channel', e)
-			})
+				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+					console.log('channel', e)
+				})
+			}
 		}
 
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
@@ -314,12 +318,14 @@ export class ProductMVService {
 			products: sellingProducts,
 		}
 
-		if (send) {
-			if (client.data.telegram?.id) {
-				try {
-					await this.botService.sendSellingToClient(sellingInfo)
-				} catch (e) {
-					console.log('user', e)
+		if (productmv.selling.status === SellingStatusEnum.accepted) {
+			if (send) {
+				if (client.data.telegram?.id) {
+					try {
+						await this.botService.sendSellingToClient(sellingInfo)
+					} catch (e) {
+						console.log('user', e)
+					}
 				}
 			}
 		}

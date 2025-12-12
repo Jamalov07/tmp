@@ -28,10 +28,10 @@ export class ClientPaymentRepository implements OnModuleInit {
 		const clientPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				staffId: query.staffId,
+				userId: query.userId,
 				type: { in: [ServiceTypeEnum.client, ServiceTypeEnum.selling] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: { gte: query.startDate, lte: query.endDate },
-				userId: query.userId,
 				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 			select: {

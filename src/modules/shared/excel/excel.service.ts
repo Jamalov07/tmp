@@ -1780,6 +1780,11 @@ export class ExcelService {
 	}
 
 	async productDownloadMany(res: Response, query: ProductFindManyRequest) {
+		let paginationOptions = {}
+		if (query.pagination) {
+			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }
+		}
+
 		let nameFilter: any = {}
 		if (query.search) {
 			const searchWords = query.search?.split(/\s+/).filter(Boolean) ?? []
@@ -1813,6 +1818,7 @@ export class ExcelService {
 					select: { selling: { select: { date: true } } },
 				},
 			},
+			...paginationOptions,
 		})
 
 		const workbook = new ExcelJS.Workbook()

@@ -284,18 +284,20 @@ export class SellingService {
 		}
 
 		// clientga yuborish
-		if (body.send) {
-			if (updatedSelling.client?.telegram?.id) {
-				await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
+		if ((selling.data.status || body.status) === SellingStatusEnum.accepted) {
+			if (body.send) {
+				if (updatedSelling.client?.telegram?.id) {
+					await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
+				}
 			}
-		}
 
-		// channelga yuborish
-		if (shouldSend) {
-			await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
+			// channelga yuborish
+			if (shouldSend) {
+				await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
 
-			if (!total.isZero()) {
-				await this.botService.sendPaymentToChannel(sellingInfo.payment, !isFirstSend, client.data)
+				if (!total.isZero()) {
+					await this.botService.sendPaymentToChannel(sellingInfo.payment, !isFirstSend, client.data)
+				}
 			}
 		}
 
@@ -311,10 +313,12 @@ export class SellingService {
 				...selling.data,
 				client: client.data,
 			}
-			await this.botService.sendDeletedSellingToChannel(sellingInfo)
-			const totalPayment = selling.data.payment.card.plus(selling.data.payment.cash).plus(selling.data.payment.other).plus(selling.data.payment.transfer)
-			if (totalPayment.toNumber()) {
-				await this.botService.sendDeletedPaymentToChannel(selling.data.payment, client.data)
+			if (selling.data.status === SellingStatusEnum.accepted) {
+				await this.botService.sendDeletedSellingToChannel(sellingInfo)
+				const totalPayment = selling.data.payment.card.plus(selling.data.payment.cash).plus(selling.data.payment.other).plus(selling.data.payment.transfer)
+				if (totalPayment.toNumber()) {
+					await this.botService.sendDeletedPaymentToChannel(selling.data.payment, client.data)
+				}
 			}
 		} else {
 			// await this.sellingRepository.updateOne(query, { deletedAt: new Date() })

@@ -33,6 +33,7 @@ export class SupplierPaymentRepository implements OnModuleInit {
 				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: { gte: query.startDate, lte: query.endDate },
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 			select: {
 				id: true,
@@ -55,7 +56,11 @@ export class SupplierPaymentRepository implements OnModuleInit {
 
 	async findOne(query: SupplierPaymentFindOneRequest) {
 		const supplierPayment = await this.prisma.paymentModel.findFirst({
-			where: { id: query.id, type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] } },
+			where: {
+				id: query.id,
+				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
+			},
 			select: {
 				id: true,
 				user: { select: { id: true, fullname: true, phone: true } },
@@ -78,9 +83,11 @@ export class SupplierPaymentRepository implements OnModuleInit {
 		const supplierPaymentsCount = await this.prisma.paymentModel.count({
 			where: {
 				staffId: query.staffId,
+				userId: query.userId,
 				type: { in: [ServiceTypeEnum.supplier, ServiceTypeEnum.arrival] },
 				OR: [{ user: { fullname: { contains: query.search, mode: 'insensitive' } } }, { user: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: { gte: query.startDate, lte: query.endDate },
+				NOT: { AND: [{ card: 0 }, { cash: 0 }, { transfer: 0 }, { other: 0 }] },
 			},
 		})
 

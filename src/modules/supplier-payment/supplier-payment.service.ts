@@ -151,15 +151,15 @@ export class SupplierPaymentService {
 
 	async deleteOne(query: SupplierPaymentDeleteOneRequest) {
 		const payment = await this.getOne(query)
-		if (query.method === DeleteMethodEnum.hard) {
-			if (!payment.data.total.isZero()) {
-				await this.supplierService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
-			}
-
-			await this.supplierPaymentRepository.deleteOne(query)
-		} else {
-			await this.supplierPaymentRepository.updateOne(query, { deletedAt: new Date() })
+		// if (query.method === DeleteMethodEnum.hard) {
+		if (!payment.data.total.isZero()) {
+			await this.supplierService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
 		}
+
+		await this.supplierPaymentRepository.deleteOne(query)
+		// } else {
+		// 	await this.supplierPaymentRepository.updateOne(query, { deletedAt: new Date() })
+		// }
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}
 }
