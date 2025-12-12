@@ -13,7 +13,7 @@ export class CommonService {
 	async createDayClose() {
 		const dayClose = await this.commonRepository.getDayClose({ closedDate: new Date() })
 
-		if (dayClose) {
+		if (dayClose.isClosed) {
 			throw new BadRequestException(ERROR_MSG.DAY_CLOSE.CLOSED.UZ)
 		}
 
