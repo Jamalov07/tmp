@@ -140,6 +140,7 @@ export class ReturningRepository implements OnModuleInit {
 				status: body.status,
 				clientId: body.clientId,
 				date: new Date(body.date),
+				createdAt: dayClose ? body.date : undefined,
 				staffId: body.staffId,
 				totalPrice: body.totalPrice,
 				payment: {

@@ -192,6 +192,7 @@ export class SellingRepository implements OnModuleInit {
 				date: new Date(body.date),
 				staffId: body.staffId,
 				totalPrice: body.totalPrice,
+				createdAt: dayClose ? body.date : undefined,
 				payment: {
 					create: {
 						total: body.payment.total,
