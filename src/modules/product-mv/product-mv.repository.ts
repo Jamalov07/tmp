@@ -52,6 +52,7 @@ export class ProductMVRepository {
 				staffId: query.staffId,
 				type: query.type,
 			},
+			orderBy: [{ createdAt: 'asc' }],
 			...paginationOptions,
 		})
 

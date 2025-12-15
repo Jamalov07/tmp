@@ -1028,6 +1028,13 @@ export class ExcelService {
 			row.eachCell((cell) => {
 				cell.alignment = { vertical: 'middle', horizontal: 'center' }
 				cell.border = borderAll()
+				if (deed.type === 'debit') {
+					cell.fill = this.fillLightGreen()
+				}
+
+				if (deed.type === 'credit') {
+					cell.fill = this.fillLightRed()
+				}
 			})
 		})
 
@@ -2083,6 +2090,22 @@ export class ExcelService {
 			left: { style: 'thin', color: { argb: 'FF000000' } },
 			bottom: { style: 'thin', color: { argb: 'FF000000' } },
 			right: { style: 'thin', color: { argb: 'FF000000' } },
+		}
+	}
+
+	fillLightGreen(): ExcelJS.Fill {
+		return {
+			type: 'pattern',
+			pattern: 'solid',
+			fgColor: { argb: 'FFDFF0D8' }, // och yashil
+		}
+	}
+
+	fillLightRed(): ExcelJS.Fill {
+		return {
+			type: 'pattern',
+			pattern: 'solid',
+			fgColor: { argb: 'FFF2DEDE' }, // och qizil
 		}
 	}
 }

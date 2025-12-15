@@ -56,19 +56,28 @@ export class ProductMVService {
 		const products = await this.productMVRepository.findMany(query)
 
 		let actualCount = new Decimal(0)
+		let totalSellingCount = new Decimal(0)
+		let totalArrivalCount = new Decimal(0)
+		let totalReturningCount = new Decimal(0)
 
 		for (const product of products) {
 			if (product.type === ServiceTypeEnum.selling) {
 				actualCount = actualCount.minus(product.count)
+				totalSellingCount = totalSellingCount.plus(product.count)
 			}
 			if (product.type === ServiceTypeEnum.arrival) {
 				actualCount = actualCount.plus(product.count)
+				totalArrivalCount = totalArrivalCount.plus(product.count)
 			}
 			if (product.type === ServiceTypeEnum.returning) {
 				actualCount = actualCount.plus(product.count)
+				totalReturningCount = totalReturningCount.plus(product.count)
 			}
 		}
-		return createResponse({ data: { products: products, actualCount: actualCount }, success: { messages: ['find many success'] } })
+		return createResponse({
+			data: { products: products, actualCount: actualCount, totalSellingCount: totalSellingCount, totalArrivalCount: totalArrivalCount, totalReturningCount: totalReturningCount },
+			success: { messages: ['find many success'] },
+		})
 	}
 
 	async findOne(query: ProductMVFindOneRequest) {
