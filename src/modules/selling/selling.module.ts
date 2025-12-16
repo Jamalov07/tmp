@@ -6,9 +6,10 @@ import { SellingRepository } from './selling.repository'
 import { ArrivalModule } from '../arrival'
 import { ClientModule } from '../client'
 import { BotModule } from '../bot'
+import { CommonModule } from '../common'
 
 @Module({
-	imports: [PrismaModule, ExcelModule, forwardRef(() => ArrivalModule), ClientModule, BotModule],
+	imports: [PrismaModule, ExcelModule, forwardRef(() => ArrivalModule), ClientModule, BotModule, CommonModule],
 	controllers: [SellingController],
 	providers: [SellingService, SellingRepository],
 	exports: [SellingService, SellingRepository],

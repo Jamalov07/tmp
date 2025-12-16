@@ -165,6 +165,7 @@ export class ReturningRepository implements OnModuleInit {
 									price: p.price,
 									totalPrice: p.totalPrice,
 									staffId: body.staffId,
+									createdAt: dayClose ? body.date : undefined,
 								}))
 							: [],
 					},

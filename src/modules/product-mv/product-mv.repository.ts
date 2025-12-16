@@ -59,6 +59,48 @@ export class ProductMVRepository {
 		return productMVs
 	}
 
+	async findManyForStats(query: ProductMVFindManyRequest) {
+		let paginationOptions = {}
+		if (query.pagination) {
+			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }
+		}
+
+		const productMVs = await this.prisma.productMVModel.findMany({
+			select: {
+				id: true,
+				price: true,
+				cost: true,
+				count: true,
+				product: { select: { id: true, name: true, createdAt: true } },
+				totalCost: true,
+				totalPrice: true,
+				type: true,
+				selling: {
+					select: { publicId: true, id: true, createdAt: true, date: true, status: true, client: { select: { id: true, fullname: true, phone: true, createdAt: true } } },
+				},
+				arrival: { select: { id: true, date: true, supplier: { select: { id: true, fullname: true, phone: true, createdAt: true } } } },
+				returning: { select: { id: true, date: true, client: { select: { id: true, fullname: true, phone: true, createdAt: true } } } },
+				createdAt: true,
+				staff: { select: { id: true, fullname: true } },
+			},
+			where: {
+				createdAt: { gte: query.startDate, lte: query.endDate },
+				selling: { status: SellingStatusEnum.accepted },
+				returning: { status: SellingStatusEnum.accepted },
+				sellingId: query.sellingId,
+				arrivalId: query.arrivalId,
+				productId: query.productId,
+				returningId: query.returningId,
+				staffId: query.staffId,
+				type: query.type,
+			},
+			orderBy: [{ createdAt: 'asc' }],
+			...paginationOptions,
+		})
+
+		return productMVs
+	}
+
 	async findOne(query: ProductMVFindOneRequest) {
 		const product = await this.prisma.productMVModel.findFirst({
 			where: { id: query.id },

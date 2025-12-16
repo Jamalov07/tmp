@@ -188,6 +188,7 @@ export class ArrivalRepository implements OnModuleInit {
 							totalCost: p.totalCost,
 							totalPrice: p.totalPrice,
 							staffId: body.staffId,
+							createdAt: dayClose ? body.date : undefined,
 						})),
 					},
 				},

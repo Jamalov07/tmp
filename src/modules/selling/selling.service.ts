@@ -22,6 +22,7 @@ import { BotService } from '../bot'
 import { BotSellingProductTitleEnum, BotSellingTitleEnum } from './enums'
 import { PrismaService } from '../shared'
 import pLimit from 'p-limit'
+import { CommonService } from '../common'
 
 @Injectable()
 export class SellingService {
@@ -29,6 +30,7 @@ export class SellingService {
 		private readonly sellingRepository: SellingRepository,
 		@Inject(forwardRef(() => ArrivalService)) private readonly arrivalService: ArrivalService,
 		private readonly clientService: ClientService,
+		private readonly commonService: CommonService,
 		private readonly excelService: ExcelService,
 		private readonly botService: BotService,
 		private readonly prisma: PrismaService,
@@ -159,7 +161,16 @@ export class SellingService {
 		}
 
 		if (body.status === SellingStatusEnum.accepted) {
-			body.date = new Date()
+			const dayClose = await this.commonService.getDayClose({})
+			if (dayClose.data.isClosed) {
+				const tomorrow = new Date()
+				tomorrow.setDate(tomorrow.getDate() + 1)
+				tomorrow.setHours(0, 0, 0, 0)
+
+				body.date = tomorrow
+			} else {
+				body.date = new Date()
+			}
 		}
 
 		let totalPrice = new Decimal(0)

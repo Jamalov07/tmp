@@ -217,6 +217,7 @@ export class SellingRepository implements OnModuleInit {
 							count: p.count,
 							price: p.price,
 							staffId: body.staffId,
+							createdAt: dayClose ? body.date : undefined,
 						})),
 					},
 				},

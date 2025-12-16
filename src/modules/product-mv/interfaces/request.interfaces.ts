@@ -4,7 +4,7 @@ import { ProductMVOptional, ProductMVRequired } from './fields.interfaces'
 export declare interface ProductMVFindManyRequest
 	extends Pick<ProductMVOptional, 'type' | 'arrivalId' | 'productId' | 'returningId' | 'sellingId' | 'staffId'>,
 		PaginationRequest,
-		Pick<RequestOtherFields, 'isDeleted'> {}
+		Pick<RequestOtherFields, 'isDeleted' | 'startDate' | 'endDate'> {}
 
 export declare interface ProductMVFindOneRequest extends Pick<ProductMVRequired, 'id'> {}
 

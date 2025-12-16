@@ -53,7 +53,7 @@ export class ProductMVService {
 	}
 
 	async findManyProductStats(query: ProductMVFindManyRequest) {
-		const products = await this.productMVRepository.findMany(query)
+		const products = await this.productMVRepository.findManyForStats(query)
 
 		let actualCount = new Decimal(0)
 		let totalSellingCount = new Decimal(0)
@@ -128,7 +128,7 @@ export class ProductMVService {
 		await this.sellingService.updateOne({ id: productmv.selling.id }, { totalPrice: productmv.selling.totalPrice.plus(productmv.totalPrice) })
 
 		if (productmv.selling.status === SellingStatusEnum.accepted) {
-			await this.sendSellingNotifications(productmv, false)
+			// await this.sendSellingNotifications(productmv, false)
 		}
 
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
@@ -268,42 +268,42 @@ export class ProductMVService {
 		const sellingProduct = await this.productMVRepository.deleteOne(query)
 
 		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
-			const sellingProducts = sellingProduct.selling.products.map((pro) => {
-				let status: BotSellingProductTitleEnum = undefined
-				if (pro.id === sellingProduct.id) {
-					status = BotSellingProductTitleEnum.deleted
-				}
-				return { ...pro, status: status }
-			})
+			// const sellingProducts = sellingProduct.selling.products.map((pro) => {
+			// 	let status: BotSellingProductTitleEnum = undefined
+			// 	if (pro.id === sellingProduct.id) {
+			// 		status = BotSellingProductTitleEnum.deleted
+			// 	}
+			// 	return { ...pro, status: status }
+			// })
 
 			const totalPrice = sellingProduct.selling.totalPrice.minus(productmv.data.price.mul(productmv.data.count))
 
 			await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: totalPrice })
 
-			const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
-			const sellingInfo = {
-				...sellingProduct.selling,
-				client: client.data,
-				title: BotSellingTitleEnum.deleted,
-				totalPayment: sellingProduct.selling.payment.total,
-				totalPrice: totalPrice,
-				debt: totalPrice.minus(sellingProduct.selling.payment.total),
-				products: sellingProducts,
-			}
+			// const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
+			// const sellingInfo = {
+			// 	...sellingProduct.selling,
+			// 	client: client.data,
+			// 	title: BotSellingTitleEnum.deleted,
+			// 	totalPayment: sellingProduct.selling.payment.total,
+			// 	totalPrice: totalPrice,
+			// 	debt: totalPrice.minus(sellingProduct.selling.payment.total),
+			// 	products: sellingProducts,
+			// }
 
-			if (productmv.data.selling.status === SellingStatusEnum.accepted) {
-				if (query.send) {
-					if (client.data.telegram?.id) {
-						await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
-							console.log('user', e)
-						})
-					}
-				}
+			// if (productmv.data.selling.status === SellingStatusEnum.accepted) {
+			// 	if (query.send) {
+			// 		if (client.data.telegram?.id) {
+			// 			await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
+			// 				console.log('user', e)
+			// 			})
+			// 		}
+			// 	}
 
-				await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
-					console.log('channel', e)
-				})
-			}
+			// 	await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+			// 		console.log('channel', e)
+			// 	})
+			// }
 		}
 
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })

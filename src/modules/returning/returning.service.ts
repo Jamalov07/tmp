@@ -16,6 +16,7 @@ import { ProductService } from '../product'
 import { SellingStatusEnum } from '@prisma/client'
 import { ExcelService } from '../shared'
 import { Response } from 'express'
+import { CommonService } from '../common'
 
 @Injectable()
 export class ReturningService {
@@ -23,6 +24,7 @@ export class ReturningService {
 		private readonly returningRepository: ReturningRepository,
 		private readonly clientService: ClientService,
 		private readonly productService: ProductService,
+		private readonly commonService: CommonService,
 		private readonly excelService: ExcelService,
 	) {}
 
@@ -122,7 +124,16 @@ export class ReturningService {
 		}
 
 		if (body.status === SellingStatusEnum.accepted) {
-			body.date = new Date()
+			const dayClose = await this.commonService.getDayClose({})
+			if (dayClose.data.isClosed) {
+				const tomorrow = new Date()
+				tomorrow.setDate(tomorrow.getDate() + 1)
+				tomorrow.setHours(0, 0, 0, 0)
+
+				body.date = tomorrow
+			} else {
+				body.date = new Date()
+			}
 		}
 
 		let totalPrice = new Decimal(0)
