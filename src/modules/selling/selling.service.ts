@@ -474,41 +474,43 @@ export class SellingService {
 	}
 
 	async getSupplierStatsInArrival() {
-		const [arrivalsAgg, paymentsAgg, suppliers] = await Promise.all([
-			this.prisma.arrivalModel.aggregate({
-				_sum: { totalCost: true },
-				where: { supplier: { deletedAt: null } },
-			}),
-			this.prisma.paymentModel.aggregate({
-				where: { type: ServiceTypeEnum.arrival, user: { deletedAt: null } },
-				_sum: { total: true },
-			}),
-			this.prisma.userModel.findMany({
-				where: { type: UserTypeEnum.supplier, deletedAt: null },
-				select: { balance: true },
-			}),
-		])
+		const suppliersInfo = await this.getSuppliersInfo()
 
-		const totalCost = new Decimal(arrivalsAgg._sum.totalCost ?? 0)
-		const totalPayment = new Decimal(paymentsAgg._sum.total ?? 0)
+		const positiveArrival = new Decimal(suppliersInfo.arrivalAgg[0].positive_sum ?? 0)
+		const negativeArrival = new Decimal(suppliersInfo.arrivalAgg[0].negative_sum ?? 0)
 
-		let positiveBalance = new Decimal(0) // biz ularga qarz
-		let negativeBalance = new Decimal(0) // ular bizga qarz
+		const positiveBalance = new Decimal(suppliersInfo.positiveBalanceAgg._sum.balance ?? 0)
+		const negativeBalance = new Decimal(suppliersInfo.negativeBalanceAgg._sum.balance ?? 0)
 
-		for (const s of suppliers) {
-			const bal = new Decimal(s.balance ?? 0)
-			if (bal.gt(0)) positiveBalance = positiveBalance.plus(bal)
-			else negativeBalance = negativeBalance.plus(bal.abs())
-		}
-		console.log(totalCost, totalPayment, positiveBalance, negativeBalance)
-
-		const ourDebt = positiveBalance.plus(totalCost.minus(totalPayment))
-		const theirDebt = negativeBalance.plus(totalPayment.minus(totalCost))
+		const ourDebt = positiveBalance.plus(positiveArrival)
+		const theirDebt = negativeBalance.plus(negativeArrival)
 
 		return {
 			theirDebt: theirDebt.gt(0) ? theirDebt : new Decimal(0),
 			ourDebt: ourDebt.gt(0) ? ourDebt : new Decimal(0),
 		}
+	}
+
+	async getSuppliersInfo() {
+		const [arrivalAgg, positiveBalanceAgg, negativeBalanceAgg] = await Promise.all([
+			this.prisma.$queryRaw<{ positive_sum: string; negative_sum: string }[]>`
+				SELECT
+					SUM(CASE WHEN a.total_cost - COALESCE(p.total,0) > 0 THEN a.total_cost - COALESCE(p.total,0) ELSE 0 END) AS positive_sum,
+					SUM(CASE WHEN a.total_cost - COALESCE(p.total,0) < 0 THEN -(a.total_cost - COALESCE(p.total,0)) ELSE 0 END) AS negative_sum
+				FROM arrival a
+				LEFT JOIN payment p ON a.id = p.arrival_id
+				WHERE a.deleted_at IS NULL
+			`,
+			this.prisma.userModel.aggregate({
+				where: { type: UserTypeEnum.supplier, deletedAt: null, balance: { gt: 0 } },
+				_sum: { balance: true },
+			}),
+			this.prisma.userModel.aggregate({
+				where: { type: UserTypeEnum.supplier, deletedAt: null, balance: { lt: 0 } },
+				_sum: { balance: true },
+			}),
+		])
+		return { arrivalAgg, positiveBalanceAgg, negativeBalanceAgg }
 	}
 
 	async getPeriodStats(query: SellingGetPeriodStatsRequest) {
