@@ -140,9 +140,9 @@ export class StaffRepository implements OnModuleInit {
 	async updateOne(query: StaffGetOneRequest, body: StaffUpdateOneRequest) {
 		const u = await this.getOne(query)
 
-		const pagesToConnect = Array.isArray(body.pagesToConnect) ? body.pagesToConnect : []
+		const pagesToConnect = body.pagesToConnect ? (Array.isArray(body.pagesToConnect) ? body.pagesToConnect : []) : []
 
-		const pagesToDisconnect = Array.isArray(body.pagesToDisconnect) ? body.pagesToDisconnect : []
+		const pagesToDisconnect = body.pagesToDisconnect ? (Array.isArray(body.pagesToDisconnect) ? body.pagesToDisconnect : []) : []
 
 		let pagesToSet: PageEnum[] = Array.isArray(u.pages) ? [...u.pages] : []
 
