@@ -133,7 +133,7 @@ export class SupplierPaymentService {
 				.plus(body.other ?? 0)
 				.plus(body.transfer ?? 0)
 
-			totalDiff = newTotal.minus(payment.data.total)
+			totalDiff = payment.data.total.minus(newTotal)
 
 			body = {
 				...body,
@@ -144,7 +144,7 @@ export class SupplierPaymentService {
 		await this.supplierPaymentRepository.updateOne(query, body)
 
 		if (!totalDiff.isZero()) {
-			await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.plus(totalDiff) })
+			await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(totalDiff) })
 		}
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
@@ -157,7 +157,7 @@ export class SupplierPaymentService {
 		} else {
 			// if (query.method === DeleteMethodEnum.hard) {
 			if (!payment.data.total.isZero()) {
-				await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+				await this.supplierService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.plus(payment.data.total) })
 			}
 
 			await this.supplierPaymentRepository.deleteOne(query)
