@@ -502,7 +502,7 @@ export class SellingService {
 		}
 
 		const ourDebt = totalCost.minus(totalPayment).plus(positiveBalance)
-		const theirDebt = totalCost.minus(totalCost).plus(negativeBalance)
+		const theirDebt = totalPayment.minus(totalCost).plus(negativeBalance)
 
 		return {
 			theirDebt: ourDebt.gt(0) ? ourDebt : new Decimal(0),
