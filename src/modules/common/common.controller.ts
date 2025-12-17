@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Query } from '@nestjs/common'
+import { Controller, Get, Post, Query, UseGuards } from '@nestjs/common'
 import { CommonService } from './common.service'
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger'
-import { AuthOptions } from '../../common'
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { AuthOptions, CheckPermissionGuard } from '../../common'
 import { DayCloseGetOneRequestDto, DayCloseGetOneResponseDto, DayCloseModifyResponseDto } from './dtos'
 
 @Controller('common')
+@ApiTags('Common')
+@UseGuards(CheckPermissionGuard)
 export class CommonController {
 	private readonly commonService: CommonService
 	constructor(commonService: CommonService) {

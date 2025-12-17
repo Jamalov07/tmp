@@ -22,6 +22,7 @@ enum UserTypeEnum {
   staff     @map("staff")
   client    @map("client")
   supplier  @map("supplier")
+  admin     @map("admin")
 
   @@map("user_type")
 }
@@ -39,7 +40,7 @@ enum ServiceTypeEnum {
   returning  @map("returning")
   staff      @map("staff")
   supplier   @map("supplier")
-  client   @map("client")
+  client     @map("client")
   none       @map("none")
 
   @@map("service_type")
@@ -49,6 +50,20 @@ enum BotLanguageEnum {
   uz
   ru
   en
+}
+
+enum PageEnum {
+  stat             @map("stat")
+  product          @map("product")
+  selling          @map("selling")
+  arrival          @map("arrival")
+  returning        @map("returning")
+  client           @map("client")
+  clientpayment    @map("clientpayment")
+  supplier         @map("supplier")
+  supplierpayment  @map("supplierpayment")
+  stuff            @map("stuff")
+  stuffpayment     @map("stuffpayment")
 }
 
 model ActionModel {
@@ -92,6 +107,8 @@ model UserModel {
   token     String?  @map("token")     @db.VarChar()  
   balance   Decimal  @map("balance")   @db.Decimal(10, 3)  @default(0)
   type      UserTypeEnum
+
+  pages     PageEnum[] @default([])
  
   createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
   updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt

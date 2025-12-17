@@ -85,14 +85,25 @@ export class ProductMVRepository {
 			},
 			where: {
 				createdAt: { gte: query.startDate, lte: query.endDate },
-				selling: { status: SellingStatusEnum.accepted },
-				returning: { status: SellingStatusEnum.accepted },
-				sellingId: query.sellingId,
-				arrivalId: query.arrivalId,
+				OR: [
+					{
+						type: ServiceTypeEnum.arrival,
+					},
+					{
+						type: ServiceTypeEnum.selling,
+						selling: { status: SellingStatusEnum.accepted },
+					},
+					{
+						type: ServiceTypeEnum.returning,
+						returning: { status: SellingStatusEnum.accepted },
+					},
+				],
+				// type: query.type,
+				// sellingId: query.sellingId,
+				// arrivalId: query.arrivalId,
+				// returningId: query.returningId,
 				productId: query.productId,
-				returningId: query.returningId,
 				staffId: query.staffId,
-				type: query.type,
 			},
 			orderBy: [{ createdAt: 'asc' }],
 			...paginationOptions,

@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Patch, Query } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Query, UseGuards } from '@nestjs/common'
 import { ActionService } from './action.service'
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger'
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { ActionFindManyRequestDto, ActionFindManyResponseDto, ActionFindOneRequestDto, ActionFindOneResponseDto, ActionModifyResponseDto, ActionUpdateOneRequestDto } from './dtos'
+import { CheckPermissionGuard } from '../../common'
 
 @Controller('action')
+@ApiTags('Action')
+@UseGuards(CheckPermissionGuard)
 export class ActionController {
 	private readonly actionService: ActionService
 	constructor(actionService: ActionService) {

@@ -14,7 +14,7 @@ import {
 import { Response } from 'express'
 
 @ApiTags('Product')
-// @UseGuards(CheckPermissionGuard)
+@UseGuards(CheckPermissionGuard)
 @Controller('product')
 export class ProductController {
 	constructor(private readonly productService: ProductService) {}

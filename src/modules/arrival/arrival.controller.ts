@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	ArrivalFindManyRequestDto,
@@ -12,11 +12,12 @@ import {
 	ArrivalCreateOneResponseDto,
 } from './dtos'
 import { ArrivalService } from './arrival.service'
-import { AuthOptions, CRequest } from '../../common'
+import { AuthOptions, CheckPermissionGuard, CRequest } from '../../common'
 import { Response } from 'express'
 
 @ApiTags('Arrival')
 @Controller('arrival')
+@UseGuards(CheckPermissionGuard)
 export class ArrivalController {
 	private readonly arrivalService: ArrivalService
 

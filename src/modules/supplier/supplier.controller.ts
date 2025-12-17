@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Res, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	SupplierFindManyRequestDto,
@@ -13,9 +13,11 @@ import {
 } from './dtos'
 import { SupplierService } from './supplier.service'
 import { Response } from 'express'
+import { CheckPermissionGuard } from '../../common'
 
 @ApiTags('Supplier')
 @Controller('supplier')
+@UseGuards(CheckPermissionGuard)
 export class SupplierController {
 	private readonly supplierService: SupplierService
 

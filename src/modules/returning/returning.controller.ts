@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	ReturningFindManyRequestDto,
@@ -12,11 +12,12 @@ import {
 	ReturningCreateOneResponseDto,
 } from './dtos'
 import { ReturningService } from './returning.service'
-import { CRequest } from '../../common'
+import { CheckPermissionGuard, CRequest } from '../../common'
 import { Response } from 'express'
 
 @ApiTags('Returning')
 @Controller('returning')
+@UseGuards(CheckPermissionGuard)
 export class ReturningController {
 	private readonly returningService: ReturningService
 

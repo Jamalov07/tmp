@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { PermissionService } from './permission.service'
-import { AuthOptions } from '@common'
+import { AuthOptions, CheckPermissionGuard } from '@common'
 import {
 	PermissionFindManyRequestDto,
 	PermissionCreateOneRequestDto,
@@ -14,6 +14,7 @@ import {
 
 @ApiTags('Permission')
 @Controller('permission')
+@UseGuards(CheckPermissionGuard)
 export class PermissionController {
 	private readonly permissionService: PermissionService
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	ClientPaymentFindManyRequestDto,
@@ -12,11 +12,12 @@ import {
 	ClientPaymentCreateOneResponseDto,
 } from './dtos'
 import { ClientPaymentService } from './client-payment.service'
-import { AuthOptions, CRequest } from '../../common'
+import { AuthOptions, CheckPermissionGuard, CRequest } from '../../common'
 import { Response } from 'express'
 
 @ApiTags('ClientPayment')
 @Controller('client-payment')
+@UseGuards(CheckPermissionGuard)
 export class ClientPaymentController {
 	private readonly clientPaymentService: ClientPaymentService
 

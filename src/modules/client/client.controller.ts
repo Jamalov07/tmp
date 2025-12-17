@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Res, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	ClientFindManyRequestDto,
@@ -13,9 +13,11 @@ import {
 } from './dtos'
 import { ClientService } from './client.service'
 import { Response } from 'express'
+import { CheckPermissionGuard } from '../../common'
 
 @ApiTags('Client')
 @Controller('client')
+@UseGuards(CheckPermissionGuard)
 export class ClientController {
 	private readonly clientService: ClientService
 

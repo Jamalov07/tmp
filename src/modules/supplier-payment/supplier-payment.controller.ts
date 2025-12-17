@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import {
 	SupplierPaymentFindManyRequestDto,
@@ -12,11 +12,12 @@ import {
 	SupplierPaymentCreateOneResponseDto,
 } from './dtos'
 import { SupplierPaymentService } from './supplier-payment.service'
-import { AuthOptions, CRequest } from '../../common'
+import { AuthOptions, CheckPermissionGuard, CRequest } from '../../common'
 import { Response } from 'express'
 
-@ApiTags('SupplierPayment')
+@ApiTags('Supplier Payment')
 @Controller('supplier-payment')
+@UseGuards(CheckPermissionGuard)
 export class SupplierPaymentController {
 	private readonly supplierPaymentService: SupplierPaymentService
 
