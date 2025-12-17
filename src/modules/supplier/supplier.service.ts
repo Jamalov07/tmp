@@ -35,7 +35,7 @@ export class SupplierService {
 			}, new Decimal(0))
 			return {
 				...s,
-				debt: s.balance.minus(arrivalPayment),
+				debt: s.balance.plus(arrivalPayment),
 				lastArrivalDate: s.arrivals?.length ? s.arrivals[0].date : null,
 			}
 		})
