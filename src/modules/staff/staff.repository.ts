@@ -138,7 +138,14 @@ export class StaffRepository implements OnModuleInit {
 	async updateOne(query: StaffGetOneRequest, body: StaffUpdateOneRequest) {
 		const u = await this.getOne(query)
 
-		let pagesToSet = [...u.pages, ...body.pagesToConnect]
+		body.pagesToConnect = body.pagesToConnect ? (Array.isArray(body.pagesToConnect) ? body.pagesToConnect : []) : []
+		body.pagesToDisconnect = body.pagesToDisconnect ? (Array.isArray(body.pagesToDisconnect) ? body.pagesToDisconnect : []) : []
+
+		let pagesToSet = []
+
+		if (u.pages?.length && body.pagesToConnect?.length) {
+			pagesToSet = [...u.pages, ...body.pagesToConnect]
+		}
 
 		if (body.pagesToDisconnect.length) {
 			pagesToSet = pagesToSet.filter((p) => !body.pagesToDisconnect.includes(p))
