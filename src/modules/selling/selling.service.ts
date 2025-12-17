@@ -500,6 +500,7 @@ export class SellingService {
 			if (bal.gt(0)) positiveBalance = positiveBalance.plus(bal)
 			else negativeBalance = negativeBalance.plus(bal.abs())
 		}
+		console.log(totalCost, totalPayment, positiveBalance, negativeBalance)
 
 		const ourDebt = positiveBalance.plus(totalCost.minus(totalPayment))
 		const theirDebt = negativeBalance.plus(totalPayment.minus(totalCost))
