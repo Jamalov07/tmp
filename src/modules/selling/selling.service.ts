@@ -501,8 +501,8 @@ export class SellingService {
 			else negativeBalance = negativeBalance.plus(bal.abs())
 		}
 
-		const ourDebt = totalCost.minus(totalPayment).plus(positiveBalance)
-		const theirDebt = totalPayment.minus(totalCost).plus(negativeBalance)
+		const ourDebt = positiveBalance.plus(totalCost.minus(totalPayment))
+		const theirDebt = negativeBalance.plus(totalPayment.minus(totalCost))
 
 		return {
 			theirDebt: ourDebt.gt(0) ? ourDebt : new Decimal(0),
