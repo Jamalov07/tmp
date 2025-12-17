@@ -10,7 +10,7 @@ import {
 	StaffUpdateOneRequest,
 } from './interfaces'
 import { StaffController } from './staff.controller'
-import { UserTypeEnum } from '@prisma/client'
+import { PageEnum, UserTypeEnum } from '@prisma/client'
 
 @Injectable()
 export class StaffRepository implements OnModuleInit {
@@ -140,17 +140,20 @@ export class StaffRepository implements OnModuleInit {
 	async updateOne(query: StaffGetOneRequest, body: StaffUpdateOneRequest) {
 		const u = await this.getOne(query)
 
-		body.pagesToConnect = body.pagesToConnect ? (Array.isArray(body.pagesToConnect) ? body.pagesToConnect : []) : []
-		body.pagesToDisconnect = body.pagesToDisconnect ? (Array.isArray(body.pagesToDisconnect) ? body.pagesToDisconnect : []) : []
+		const pagesToConnect = Array.isArray(body.pagesToConnect) ? body.pagesToConnect : []
 
-		let pagesToSet = []
+		const pagesToDisconnect = Array.isArray(body.pagesToDisconnect) ? body.pagesToDisconnect : []
 
-		if (u.pages?.length && body.pagesToConnect?.length) {
-			pagesToSet = [...u.pages, ...body.pagesToConnect]
+		let pagesToSet: PageEnum[] = Array.isArray(u.pages) ? [...u.pages] : []
+
+		for (const page of pagesToConnect) {
+			if (!pagesToSet.includes(page)) {
+				pagesToSet.push(page)
+			}
 		}
 
-		if (body.pagesToDisconnect.length) {
-			pagesToSet = pagesToSet.filter((p) => !body.pagesToDisconnect.includes(p))
+		if (pagesToDisconnect.length) {
+			pagesToSet = pagesToSet.filter((page) => !pagesToDisconnect.includes(page))
 		}
 
 		const user = await this.prisma.userModel.update({
@@ -166,7 +169,7 @@ export class StaffRepository implements OnModuleInit {
 					connect: (body.actionsToConnect ?? []).map((r) => ({ id: r })),
 					disconnect: (body.actionsToDisconnect ?? []).map((r) => ({ id: r })),
 				},
-				pages: { set: pagesToSet },
+				pages: pagesToSet,
 			},
 		})
 
