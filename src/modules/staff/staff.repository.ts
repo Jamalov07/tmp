@@ -33,6 +33,7 @@ export class StaffRepository implements OnModuleInit {
 			},
 			select: {
 				id: true,
+				pages: true,
 				fullname: true,
 				phone: true,
 				actions: true,
@@ -52,6 +53,7 @@ export class StaffRepository implements OnModuleInit {
 			select: {
 				id: true,
 				fullname: true,
+				pages: true,
 				phone: true,
 				actions: true,
 				updatedAt: true,

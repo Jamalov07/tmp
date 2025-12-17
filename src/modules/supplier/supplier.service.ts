@@ -90,34 +90,26 @@ export class SupplierService {
 		let totalCredit: Decimal = new Decimal(0)
 
 		const payment = supplier.payments.reduce((acc, curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-
 			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
-				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-				totalDebit = totalDebit.plus(totalPayment)
+				deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
+				totalDebit = totalDebit.plus(curr.total)
 			}
 
-			return acc.plus(totalPayment)
+			return acc.plus(curr.total)
 		}, new Decimal(0))
 
 		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
-			const productsSum = arr.products.reduce((a, p) => {
-				return a.plus(p.cost.mul(p.count))
-			}, new Decimal(0))
-
 			if ((!deedStartDate || arr.date >= deedStartDate) && (!deedEndDate || arr.date <= deedEndDate)) {
-				deeds.push({ type: 'debit', action: 'arrival', value: productsSum, date: arr.date, description: '' })
-				totalCredit = totalCredit.plus(productsSum)
+				deeds.push({ type: 'debit', action: 'arrival', value: arr.totalCost, date: arr.date, description: '' })
+				totalCredit = totalCredit.plus(arr.totalCost)
 			}
-
-			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
 
 			if ((!deedStartDate || arr.payment.createdAt >= deedStartDate) && (!deedEndDate || arr.payment.createdAt <= deedEndDate)) {
-				deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
-				totalDebit = totalDebit.plus(totalPayment)
+				deeds.push({ type: 'credit', action: 'payment', value: arr.payment.total, date: arr.payment.createdAt, description: arr.payment.description })
+				totalDebit = totalDebit.plus(arr.payment.total)
 			}
 
-			return acc.plus(productsSum).minus(totalPayment)
+			return acc.plus(arr.totalCost).minus(arr.payment?.total || 0)
 		}, new Decimal(0))
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -131,7 +123,7 @@ export class SupplierService {
 				updatedAt: supplier.updatedAt,
 				deletedAt: supplier.deletedAt,
 				actionIds: supplier.actions.map((a) => a.id),
-				debt: payment.plus(arrivalPayment),
+				debt: supplier.balance.plus(arrivalPayment),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,

@@ -16,6 +16,7 @@ export class AuthRepository {
 			where: { phone: body.phone, type: UserTypeEnum.staff },
 			select: {
 				id: true,
+				pages: true,
 				fullname: true,
 				password: true,
 				phone: true,

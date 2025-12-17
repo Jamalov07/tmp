@@ -23,11 +23,7 @@ import { Response } from 'express'
 @Controller('selling')
 @UseGuards(CheckPermissionGuard)
 export class SellingController {
-	private readonly sellingService: SellingService
-
-	constructor(sellingService: SellingService) {
-		this.sellingService = sellingService
-	}
+	constructor(private readonly sellingService: SellingService) {}
 
 	@Get('many')
 	@ApiOkResponse({ type: SellingFindManyResponseDto })

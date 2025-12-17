@@ -265,6 +265,7 @@ export class SellingRepository implements OnModuleInit {
 						other: body.payment?.other,
 						transfer: body.payment?.transfer,
 						description: body.payment?.description,
+						createdAt: existSelling.payment.total ? undefined : new Date(),
 					},
 				},
 			},

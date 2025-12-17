@@ -62,7 +62,7 @@ export class ArrivalRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				staff: { select: { fullname: true, phone: true, id: true } },
-				payment: { select: { id: true, card: true, cash: true, other: true, transfer: true, description: true } },
+				payment: { select: { total: true, id: true, card: true, cash: true, other: true, transfer: true, description: true } },
 				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, cost: true, product: { select: { name: true } } } },
 			},
 		})
@@ -228,6 +228,8 @@ export class ArrivalRepository implements OnModuleInit {
 	}
 
 	async updateOne(query: ArrivalGetOneRequest, body: ArrivalUpdateOneRequest) {
+		const existArrival = await this.findOne(query)
+
 		const arrival = await this.prisma.arrivalModel.update({
 			where: { id: query.id },
 			data: {
@@ -244,6 +246,7 @@ export class ArrivalRepository implements OnModuleInit {
 						other: body.payment?.other,
 						transfer: body.payment?.transfer,
 						description: body.payment?.description,
+						createdAt: existArrival.payment.total ? undefined : new Date(),
 					},
 				},
 			},

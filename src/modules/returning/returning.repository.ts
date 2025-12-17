@@ -64,7 +64,7 @@ export class ReturningRepository implements OnModuleInit {
 				date: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-				payment: { select: { id: true, cash: true, fromBalance: true } },
+				payment: { select: { total: true, id: true, cash: true, fromBalance: true } },
 				products: { orderBy: [{ createdAt: 'desc' }], select: { id: true, price: true, count: true, product: { select: { name: true } } } },
 			},
 		})
@@ -225,6 +225,7 @@ export class ReturningRepository implements OnModuleInit {
 						total: body.payment.total,
 						cash: body.payment?.cash,
 						fromBalance: body.payment?.fromBalance,
+						createdAt: existReturning.payment.total ? undefined : new Date(),
 					},
 				},
 			},
