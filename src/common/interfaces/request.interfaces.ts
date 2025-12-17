@@ -1,5 +1,6 @@
 import { Request } from 'express'
 import { DebtTypeEnum, DeleteMethodEnum } from '../enums'
+import { PageEnum } from '@prisma/client'
 
 export declare interface RequestOtherFields {
 	ids?: string[]
@@ -10,6 +11,8 @@ export declare interface RequestOtherFields {
 	rolesToDisconnect?: string[]
 	actionsToConnect?: string[]
 	actionsToDisconnect?: string[]
+	pagesToConnect?: PageEnum[]
+	pagesToDisconnect?: PageEnum[]
 	startDate?: Date
 	endDate?: Date
 	debtValue?: number

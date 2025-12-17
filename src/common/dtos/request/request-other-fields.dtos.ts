@@ -3,6 +3,7 @@ import { RequestOtherFields } from '../../interfaces'
 import { ArrayUnique, IsArray, IsBoolean, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator'
 import { Transform } from 'class-transformer'
 import { DebtTypeEnum, DeleteMethodEnum } from '../../enums'
+import { PageEnum } from '@prisma/client'
 
 export class RequestOtherFieldsDto implements RequestOtherFields {
 	@ApiPropertyOptional({ type: String, isArray: true })
@@ -55,6 +56,17 @@ export class RequestOtherFieldsDto implements RequestOtherFields {
 	@IsUUID('4', { each: true })
 	@ArrayUnique({ message: 'UUIDs should be unique' })
 	actionsToDisconnect?: string[] = []
+
+	@ApiPropertyOptional({ enum: PageEnum, isArray: true })
+	@IsOptional()
+	@IsEnum(PageEnum, { each: true })
+	pagesToConnect?: PageEnum[]
+
+	@ApiPropertyOptional({ enum: PageEnum, isArray: true })
+	@IsOptional()
+	@IsArray()
+	@IsEnum(PageEnum, { each: true })
+	pagesToDisconnect?: PageEnum[]
 
 	@ApiPropertyOptional({ description: 'Start date in ISO format (YYYY-MM-DD)' })
 	@IsOptional()

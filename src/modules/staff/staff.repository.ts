@@ -96,7 +96,7 @@ export class StaffRepository implements OnModuleInit {
 	async getOne(query: StaffGetOneRequest) {
 		const user = await this.prisma.userModel.findFirst({
 			where: { id: query.id, fullname: query.fullname, phone: query.phone },
-			select: { id: true, fullname: true, phone: true, createdAt: true, deletedAt: true, password: true, token: true },
+			select: { id: true, fullname: true, phone: true, createdAt: true, deletedAt: true, password: true, token: true, pages: true },
 		})
 
 		return user
@@ -122,6 +122,7 @@ export class StaffRepository implements OnModuleInit {
 				phone: body.phone,
 				type: UserTypeEnum.staff,
 				actions: { connect: body.actionsToConnect.map((r) => ({ id: r })) },
+				pages: body.pagesToConnect,
 			},
 			select: {
 				id: true,
@@ -135,6 +136,14 @@ export class StaffRepository implements OnModuleInit {
 	}
 
 	async updateOne(query: StaffGetOneRequest, body: StaffUpdateOneRequest) {
+		const u = await this.getOne(query)
+
+		let pagesToSet = [...u.pages, ...body.pagesToConnect]
+
+		if (body.pagesToDisconnect.length) {
+			pagesToSet = pagesToSet.filter((p) => !body.pagesToDisconnect.includes(p))
+		}
+
 		const user = await this.prisma.userModel.update({
 			where: { id: query.id },
 			data: {
@@ -148,6 +157,7 @@ export class StaffRepository implements OnModuleInit {
 					connect: (body.actionsToConnect ?? []).map((r) => ({ id: r })),
 					disconnect: (body.actionsToDisconnect ?? []).map((r) => ({ id: r })),
 				},
+				pages: { set: pagesToSet },
 			},
 		})
 
