@@ -114,7 +114,7 @@ export class SupplierPaymentService {
 		const supplierPayment = await this.supplierPaymentRepository.createOne({ ...body, staffId: request.user.id, total: total })
 
 		if (!total.isZero()) {
-			await this.supplierService.updateOne({ id: supplierPayment.user.id }, { balance: total.plus(supplierPayment.user.balance) })
+			await this.supplierService.updateOne({ id: supplierPayment.user.id }, { balance: supplierPayment.user.balance.minus(total) })
 		}
 
 		return createResponse({ data: supplierPayment, success: { messages: ['create one success'] } })
