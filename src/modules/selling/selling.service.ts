@@ -482,8 +482,10 @@ export class SellingService {
 		const positiveBalance = new Decimal(suppliersInfo.positiveBalanceAgg._sum.balance ?? 0)
 		const negativeBalance = new Decimal(suppliersInfo.negativeBalanceAgg._sum.balance ?? 0)
 
+		console.log(positiveArrival, negativeArrival, positiveBalance, negativeBalance)
+
 		const ourDebt = positiveBalance.plus(positiveArrival)
-		const theirDebt = negativeBalance.plus(negativeArrival)
+		const theirDebt = negativeBalance.minus(negativeArrival).abs()
 
 		return {
 			theirDebt: theirDebt.gt(0) ? theirDebt : new Decimal(0),
