@@ -121,9 +121,13 @@ export class Syncronize3Service implements OnModuleInit {
 		// ])
 
 		const staffsRemote = await this.fetchAllPages<IStaff>('/admin')
+		console.log(staffsRemote.length)
 		const suppliersRemote = await this.fetchAllPages<ISupplier>('/user/supplier')
+		console.log(suppliersRemote.length)
 		const clientsRemote = await this.fetchAllPages<IClient>('/user/client')
+		console.log(clientsRemote.length)
 		const productsRemote = await this.fetchAllPages<IProduct>('/product')
+		console.log(productsRemote.length)
 
 		const defaultDate = new Date()
 
