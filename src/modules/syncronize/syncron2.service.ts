@@ -64,8 +64,9 @@ export class Syncronize3Service implements OnModuleInit {
 
 	private async fetchAllPages<T>(endpoint: string): Promise<T[]> {
 		const allData: T[] = []
-		await this.sleep(150) //
-		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=20&pageNumber=1`
+		const pageSize = 20
+		await this.sleep(150)
+		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=${pageSize}&pageNumber=1`
 		const firstPage = await axios.get(firstPageUrl, {
 			headers: this.getHeaders(),
 			timeout: 30000,
@@ -73,10 +74,12 @@ export class Syncronize3Service implements OnModuleInit {
 			proxy: false,
 			httpsAgent: this.agent,
 		})
+		console.log(`${this.baseUrl}${endpoint}?pageSize=${pageSize}&pageNumber=1`)
+		allData.push(...firstPage.data.data)
 
-		for (let i = 1; i <= firstPage.data.pageCount; i++) {
-			await this.sleep(150) //
-			const url = `${this.baseUrl}${endpoint}?pageSize=${20}&pageNumber=${i}`
+		for (let i = 2; i <= firstPage.data.pageCount; i++) {
+			await this.sleep(150)
+			const url = `${this.baseUrl}${endpoint}?pageSize=${pageSize}&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
 				timeout: 30000,
@@ -115,12 +118,16 @@ export class Syncronize3Service implements OnModuleInit {
 
 		const staffsRemote = await this.fetchAllPages<IStaff>('/admin')
 		console.log(staffsRemote.length)
+		await this.sleep(5000)
 		const suppliersRemote = await this.fetchAllPages<ISupplier>('/user/supplier')
 		console.log(suppliersRemote.length)
+		await this.sleep(5000)
 		const clientsRemote = await this.fetchAllPages<IClient>('/user/client')
 		console.log(clientsRemote.length)
+		await this.sleep(5000)
 		const productsRemote = await this.fetchAllPages<IProduct>('/product')
 		console.log(productsRemote.length)
+		await this.sleep(5000)
 
 		const defaultDate = new Date()
 
