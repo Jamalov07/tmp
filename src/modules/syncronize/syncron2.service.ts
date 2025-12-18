@@ -88,6 +88,7 @@ export class Syncronize3Service implements OnModuleInit {
 					maxSockets: 5,
 				}),
 			})
+			console.log(url)
 			allData.push(...res.data.data)
 		}
 
