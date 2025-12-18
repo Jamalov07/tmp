@@ -10,7 +10,7 @@ import { Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier 
 import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
-export class Syncronize3Service implements OnModuleInit {
+export class SyncronizeService implements OnModuleInit {
 	private baseUrl: string
 	private phone: string
 	private password: string

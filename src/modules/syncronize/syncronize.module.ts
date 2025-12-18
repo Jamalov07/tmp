@@ -1,15 +1,13 @@
-import { SyncronizeService } from './syncronize.service'
 import { Module } from '@nestjs/common'
 import { PrismaModule } from '../shared'
 import { SyncronizeController } from './syncronize.controller'
 import { SyncronizeRepository } from './syncronize.repository'
-import { Syncronize2Service } from './syncron.service'
-import { Syncronize3Service } from './syncron2.service'
+import { SyncronizeService } from './syncronize.service'
 
 @Module({
 	imports: [PrismaModule],
 	controllers: [SyncronizeController],
-	providers: [SyncronizeService, SyncronizeRepository, Syncronize2Service, Syncronize3Service],
-	exports: [SyncronizeService, SyncronizeRepository, Syncronize2Service, Syncronize3Service],
+	providers: [SyncronizeService, SyncronizeRepository, SyncronizeService],
+	exports: [SyncronizeService, SyncronizeRepository, SyncronizeService],
 })
 export class SyncronizeModule {}
