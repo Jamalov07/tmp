@@ -76,7 +76,7 @@ export class Syncronize3Service implements OnModuleInit {
 		})
 
 		for (let i = 1; i <= firstPage.data.pageCount; i++) {
-			await this.sleep(100) // 🔥 100–200 ms ideal
+			await this.sleep(150) // 🔥 100–200 ms ideal
 			const url = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
