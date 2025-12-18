@@ -64,6 +64,7 @@ export class Syncronize3Service implements OnModuleInit {
 
 	private async fetchAllPages<T>(endpoint: string): Promise<T[]> {
 		const allData: T[] = []
+		await this.sleep(150) //
 		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=20&pageNumber=1`
 		const firstPage = await axios.get(firstPageUrl, {
 			headers: this.getHeaders(),
