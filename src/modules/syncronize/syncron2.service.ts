@@ -1,5 +1,4 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { SyncronizeRepository } from './syncronize.repository'
 import axios from 'axios'
 import { PrismaService } from '../shared'
 import { ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
@@ -7,7 +6,7 @@ import { createResponse } from '../../common'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
-import { Arrival, Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
+import { Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 import https from 'https'
 import pLimit from 'p-limit'
@@ -76,8 +75,8 @@ export class Syncronize3Service implements OnModuleInit {
 		})
 
 		for (let i = 1; i <= firstPage.data.pageCount; i++) {
-			await this.sleep(150) // 🔥 100–200 ms ideal
-			const url = `${this.baseUrl}${endpoint}?pageSize=${endpoint === '/product' ? 200 : 100}&pageNumber=${i}`
+			await this.sleep(150) //
+			const url = `${this.baseUrl}${endpoint}?pageSize=${20}&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
 				timeout: 30000,
@@ -115,13 +114,6 @@ export class Syncronize3Service implements OnModuleInit {
 		// 	this.fetchAllPages<ISupplier>('/user/supplier'),
 		// 	this.fetchAllPages<IClient>('/user/client'),
 		// 	this.fetchAllPages<IProduct>('/product'),
-		// ])
-
-		// const [staffsRemote, suppliersRemote, clientsRemote, productsRemote] = await Promise.all([
-		// 	limit(() => this.fetchAllPages('/admin')),
-		// 	limit(() => this.fetchAllPages('/user/supplier')),
-		// 	limit(() => this.fetchAllPages('/user/client')),
-		// 	limit(() => this.fetchAllPages('/product')),
 		// ])
 
 		const staffsRemote = await this.fetchAllPages<IStaff>('/admin')
