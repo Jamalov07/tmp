@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import axios from 'axios'
-import { PrismaService } from '../shared'
+import { PrismaService } from '../shared/prisma'
 import { ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import { createResponse } from '../../common'
 import { ConfigService } from '@nestjs/config'
@@ -8,9 +8,6 @@ import * as bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import { Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
-import https from 'https'
-import pLimit from 'p-limit'
-const limit = pLimit(1)
 
 @Injectable()
 export class Syncronize3Service implements OnModuleInit {
@@ -29,12 +26,6 @@ export class Syncronize3Service implements OnModuleInit {
 		this.phone = this.configService.getOrThrow('old-service.user')
 		this.password = this.configService.getOrThrow('old-service.password')
 	}
-	private readonly agent = new https.Agent({
-		keepAlive: true,
-		maxSockets: 1, // products uchun juda muhim
-	})
-
-	sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 	round = (num: number, digits = 2) => Math.round((num + Number.EPSILON) * Math.pow(10, digits)) / Math.pow(10, digits)
 
@@ -43,13 +34,7 @@ export class Syncronize3Service implements OnModuleInit {
 		const response = await axios.post(
 			url,
 			{ phone: this.phone, password: this.password },
-			{
-				headers: { 'Content-Type': 'application/json' },
-				timeout: 30000,
-				maxRedirects: 1,
-				proxy: false,
-				httpsAgent: this.agent,
-			},
+			{ headers: { 'Content-Type': 'application/json' }, timeout: 5000, maxRedirects: 1, proxy: false },
 		)
 		this.accessToken = response.data.accessToken
 	}
@@ -58,36 +43,27 @@ export class Syncronize3Service implements OnModuleInit {
 		return {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${this.accessToken}`,
-			'Accept-Encoding': 'identity',
 		}
 	}
 
 	private async fetchAllPages<T>(endpoint: string): Promise<T[]> {
 		const allData: T[] = []
-		const pageSize = 50
-		await this.sleep(150)
-		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=${pageSize}&pageNumber=1`
+		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=1`
 		const firstPage = await axios.get(firstPageUrl, {
 			headers: this.getHeaders(),
-			timeout: 30000,
+			timeout: 5000,
 			maxRedirects: 1,
 			proxy: false,
-			httpsAgent: this.agent,
 		})
-		console.log(`${this.baseUrl}${endpoint}?pageSize=${pageSize}&pageNumber=1`)
-		allData.push(...firstPage.data.data)
 
-		for (let i = 2; i <= firstPage.data.pageCount; i++) {
-			await this.sleep(150)
-			const url = `${this.baseUrl}${endpoint}?pageSize=${pageSize}&pageNumber=${i}`
+		for (let i = 1; i <= firstPage.data.pageCount; i++) {
+			const url = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
-				timeout: 30000,
+				timeout: 5000,
 				maxRedirects: 1,
 				proxy: false,
-				httpsAgent: this.agent,
 			})
-			console.log(url)
 			allData.push(...res.data.data)
 		}
 
@@ -109,25 +85,12 @@ export class Syncronize3Service implements OnModuleInit {
 
 		console.log('started')
 
-		// const [staffsRemote, suppliersRemote, clientsRemote, productsRemote] = await Promise.all([
-		// 	this.fetchAllPages<IStaff>('/admin'),
-		// 	this.fetchAllPages<ISupplier>('/user/supplier'),
-		// 	this.fetchAllPages<IClient>('/user/client'),
-		// 	this.fetchAllPages<IProduct>('/product'),
-		// ])
-
-		const staffsRemote = await this.fetchAllPages<IStaff>('/admin')
-		console.log(staffsRemote.length)
-		await this.sleep(5000)
-		const suppliersRemote = await this.fetchAllPages<ISupplier>('/user/supplier')
-		console.log(suppliersRemote.length)
-		await this.sleep(10000)
-		const clientsRemote = await this.fetchAllPages<IClient>('/user/client')
-		console.log(clientsRemote.length)
-		await this.sleep(10000)
-		const productsRemote = await this.fetchAllPages<IProduct>('/product')
-		console.log(productsRemote.length)
-		await this.sleep(5000)
+		const [staffsRemote, suppliersRemote, clientsRemote, productsRemote] = await Promise.all([
+			this.fetchAllPages<IStaff>('/admin'),
+			this.fetchAllPages<ISupplier>('/user/supplier'),
+			this.fetchAllPages<IClient>('/user/client'),
+			this.fetchAllPages<IProduct>('/product'),
+		])
 
 		const defaultDate = new Date()
 
