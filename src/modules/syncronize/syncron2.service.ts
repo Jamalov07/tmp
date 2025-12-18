@@ -9,6 +9,9 @@ import * as bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import { Arrival, Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
+import https from 'https'
+import pLimit from 'p-limit'
+const limit = pLimit(1)
 
 @Injectable()
 export class Syncronize3Service implements OnModuleInit {
@@ -35,7 +38,16 @@ export class Syncronize3Service implements OnModuleInit {
 		const response = await axios.post(
 			url,
 			{ phone: this.phone, password: this.password },
-			{ headers: { 'Content-Type': 'application/json' }, timeout: 5000, maxRedirects: 1, proxy: false },
+			{
+				headers: { 'Content-Type': 'application/json' },
+				timeout: 30000,
+				maxRedirects: 1,
+				proxy: false,
+				httpsAgent: new https.Agent({
+					keepAlive: true,
+					maxSockets: 5,
+				}),
+			},
 		)
 		this.accessToken = response.data.accessToken
 	}
@@ -52,18 +64,26 @@ export class Syncronize3Service implements OnModuleInit {
 		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=1`
 		const firstPage = await axios.get(firstPageUrl, {
 			headers: this.getHeaders(),
-			timeout: 5000,
+			timeout: 30000,
 			maxRedirects: 1,
 			proxy: false,
+			httpsAgent: new https.Agent({
+				keepAlive: true,
+				maxSockets: 5,
+			}),
 		})
 
 		for (let i = 1; i <= firstPage.data.pageCount; i++) {
 			const url = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
-				timeout: 5000,
+				timeout: 30000,
 				maxRedirects: 1,
 				proxy: false,
+				httpsAgent: new https.Agent({
+					keepAlive: true,
+					maxSockets: 5,
+				}),
 			})
 			allData.push(...res.data.data)
 		}
@@ -92,6 +112,18 @@ export class Syncronize3Service implements OnModuleInit {
 			this.fetchAllPages<IClient>('/user/client'),
 			this.fetchAllPages<IProduct>('/product'),
 		])
+
+		// const [staffsRemote, suppliersRemote, clientsRemote, productsRemote] = await Promise.all([
+		// 	limit(() => this.fetchAllPages('/admin')),
+		// 	limit(() => this.fetchAllPages('/user/supplier')),
+		// 	limit(() => this.fetchAllPages('/user/client')),
+		// 	limit(() => this.fetchAllPages('/product')),
+		// ])
+
+		// const staffsRemote = await this.fetchAllPages<IStaff>('/admin')
+		// const suppliersRemote = await this.fetchAllPages<ISupplier>('/user/supplier')
+		// const clientsRemote = await this.fetchAllPages<IClient>('/user/client')
+		// const productsRemote = await this.fetchAllPages<IProduct>('/product')
 
 		const defaultDate = new Date()
 
