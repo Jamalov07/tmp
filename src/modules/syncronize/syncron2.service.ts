@@ -31,6 +31,8 @@ export class Syncronize3Service implements OnModuleInit {
 		this.password = this.configService.getOrThrow('old-service.password')
 	}
 
+	sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 	round = (num: number, digits = 2) => Math.round((num + Number.EPSILON) * Math.pow(10, digits)) / Math.pow(10, digits)
 
 	private async signIn() {
@@ -74,6 +76,7 @@ export class Syncronize3Service implements OnModuleInit {
 		})
 
 		for (let i = 1; i <= firstPage.data.pageCount; i++) {
+			await this.sleep(100) // 🔥 100–200 ms ideal
 			const url = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
