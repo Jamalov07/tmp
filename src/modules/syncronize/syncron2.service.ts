@@ -29,6 +29,10 @@ export class Syncronize3Service implements OnModuleInit {
 		this.phone = this.configService.getOrThrow('old-service.user')
 		this.password = this.configService.getOrThrow('old-service.password')
 	}
+	private readonly agent = new https.Agent({
+		keepAlive: true,
+		maxSockets: 1, // products uchun juda muhim
+	})
 
 	sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -44,10 +48,7 @@ export class Syncronize3Service implements OnModuleInit {
 				timeout: 30000,
 				maxRedirects: 1,
 				proxy: false,
-				httpsAgent: new https.Agent({
-					keepAlive: true,
-					maxSockets: 5,
-				}),
+				httpsAgent: this.agent,
 			},
 		)
 		this.accessToken = response.data.accessToken
@@ -57,6 +58,7 @@ export class Syncronize3Service implements OnModuleInit {
 		return {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${this.accessToken}`,
+			'Accept-Encoding': 'identity',
 		}
 	}
 
@@ -68,10 +70,7 @@ export class Syncronize3Service implements OnModuleInit {
 			timeout: 30000,
 			maxRedirects: 1,
 			proxy: false,
-			httpsAgent: new https.Agent({
-				keepAlive: true,
-				maxSockets: 5,
-			}),
+			httpsAgent: this.agent,
 		})
 
 		for (let i = 1; i <= firstPage.data.pageCount; i++) {
@@ -82,10 +81,7 @@ export class Syncronize3Service implements OnModuleInit {
 				timeout: 30000,
 				maxRedirects: 1,
 				proxy: false,
-				httpsAgent: new https.Agent({
-					keepAlive: true,
-					maxSockets: 5,
-				}),
+				httpsAgent: this.agent,
 			})
 			console.log(url)
 			allData.push(...res.data.data)
