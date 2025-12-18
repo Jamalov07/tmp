@@ -106,12 +106,12 @@ export class Syncronize3Service implements OnModuleInit {
 
 		console.log('started')
 
-		const [staffsRemote, suppliersRemote, clientsRemote, productsRemote] = await Promise.all([
-			this.fetchAllPages<IStaff>('/admin'),
-			this.fetchAllPages<ISupplier>('/user/supplier'),
-			this.fetchAllPages<IClient>('/user/client'),
-			this.fetchAllPages<IProduct>('/product'),
-		])
+		// const [staffsRemote, suppliersRemote, clientsRemote, productsRemote] = await Promise.all([
+		// 	this.fetchAllPages<IStaff>('/admin'),
+		// 	this.fetchAllPages<ISupplier>('/user/supplier'),
+		// 	this.fetchAllPages<IClient>('/user/client'),
+		// 	this.fetchAllPages<IProduct>('/product'),
+		// ])
 
 		// const [staffsRemote, suppliersRemote, clientsRemote, productsRemote] = await Promise.all([
 		// 	limit(() => this.fetchAllPages('/admin')),
@@ -120,10 +120,10 @@ export class Syncronize3Service implements OnModuleInit {
 		// 	limit(() => this.fetchAllPages('/product')),
 		// ])
 
-		// const staffsRemote = await this.fetchAllPages<IStaff>('/admin')
-		// const suppliersRemote = await this.fetchAllPages<ISupplier>('/user/supplier')
-		// const clientsRemote = await this.fetchAllPages<IClient>('/user/client')
-		// const productsRemote = await this.fetchAllPages<IProduct>('/product')
+		const staffsRemote = await this.fetchAllPages<IStaff>('/admin')
+		const suppliersRemote = await this.fetchAllPages<ISupplier>('/user/supplier')
+		const clientsRemote = await this.fetchAllPages<IClient>('/user/client')
+		const productsRemote = await this.fetchAllPages<IProduct>('/product')
 
 		const defaultDate = new Date()
 
