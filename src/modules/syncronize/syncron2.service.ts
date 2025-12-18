@@ -64,7 +64,7 @@ export class Syncronize3Service implements OnModuleInit {
 
 	private async fetchAllPages<T>(endpoint: string): Promise<T[]> {
 		const allData: T[] = []
-		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=1`
+		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=20&pageNumber=1`
 		const firstPage = await axios.get(firstPageUrl, {
 			headers: this.getHeaders(),
 			timeout: 30000,
@@ -75,7 +75,7 @@ export class Syncronize3Service implements OnModuleInit {
 
 		for (let i = 1; i <= firstPage.data.pageCount; i++) {
 			await this.sleep(150) //
-			const url = `${this.baseUrl}${endpoint}?pageSize=${100}&pageNumber=${i}`
+			const url = `${this.baseUrl}${endpoint}?pageSize=${20}&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
 				timeout: 30000,
