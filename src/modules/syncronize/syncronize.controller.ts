@@ -1,7 +1,8 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Query } from '@nestjs/common'
 import { AuthOptions } from '../../common'
 import { SyncronizeService } from './syncronize.service'
 import { SyncronizeService2 } from './syncronize2.service'
+import { SyncronizeDto } from './dtos'
 
 @Controller('syncronize')
 export class SyncronizeController {
@@ -9,7 +10,7 @@ export class SyncronizeController {
 
 	@Get()
 	// @AuthOptions(true, true)
-	async syncronize() {
-		return this.syncronizeService.sync()
+	async syncronize(@Query() query: SyncronizeDto) {
+		return this.syncronizeService.syncronize(query)
 	}
 }

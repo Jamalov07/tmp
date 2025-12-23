@@ -8,6 +8,7 @@ import * as bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import { Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
+import { SyncronizeDto } from './dtos'
 
 @Injectable()
 export class SyncronizeService2 implements OnModuleInit {
@@ -71,16 +72,16 @@ export class SyncronizeService2 implements OnModuleInit {
 		return allData
 	}
 
-	async sync() {
+	async syncronize(query: SyncronizeDto) {
 		console.log('synchronization started')
 
 		await this.clearDatabase()
 		await this.signIn()
 
-		await this.syncStaffs()
-		await this.syncSuppliers()
-		await this.syncClients()
-		await this.syncProducts()
+		if (query.staff) await this.syncStaffs()
+		if (query.supplier) await this.syncSuppliers()
+		if (query.client) await this.syncClients()
+		if (query.product) await this.syncProducts()
 
 		console.log('synchronization finished')
 
