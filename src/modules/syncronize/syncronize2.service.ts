@@ -48,11 +48,12 @@ export class SyncronizeService2 implements OnModuleInit {
 	}
 
 	private async fetchAllPages<T>(endpoint: string): Promise<T[]> {
+		const timeout = endpoint === '/product' ? 30000 : 5000
 		const allData: T[] = []
 		const firstPageUrl = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=1`
 		const firstPage = await axios.get(firstPageUrl, {
 			headers: this.getHeaders(),
-			timeout: 5000,
+			timeout: timeout,
 			maxRedirects: 1,
 			proxy: false,
 		})
@@ -61,7 +62,7 @@ export class SyncronizeService2 implements OnModuleInit {
 			const url = `${this.baseUrl}${endpoint}?pageSize=100&pageNumber=${i}`
 			const res = await axios.get(url, {
 				headers: this.getHeaders(),
-				timeout: 5000,
+				timeout: timeout,
 				maxRedirects: 1,
 				proxy: false,
 			})
