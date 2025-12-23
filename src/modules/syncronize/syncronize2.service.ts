@@ -114,8 +114,6 @@ export class SyncronizeService2 implements OnModuleInit {
 			type: UserTypeEnum.staff,
 			createdAt: staff.createdAt,
 			balance: new Decimal(0),
-			debt: new Decimal(0),
-			payment: [],
 		}))
 
 		await this.prisma.userModel.createMany({
@@ -144,7 +142,6 @@ export class SyncronizeService2 implements OnModuleInit {
 			type: UserTypeEnum.supplier,
 			createdAt: supplier.createdAt,
 			balance: new Decimal(supplier.debt),
-			debt: new Decimal(0),
 		}))
 
 		await this.prisma.userModel.createMany({ data: suppliers })
@@ -179,7 +176,6 @@ export class SyncronizeService2 implements OnModuleInit {
 			type: UserTypeEnum.client,
 			createdAt: client.createdAt,
 			balance: new Decimal(client.debt),
-			debt: new Decimal(client.debt),
 		}))
 
 		await this.prisma.userModel.createMany({ data: clients })
