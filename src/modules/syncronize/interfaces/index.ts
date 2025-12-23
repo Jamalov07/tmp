@@ -307,3 +307,10 @@ export declare interface Returning {
 		createdAt: Date
 	}[]
 }
+
+export class SyncronizeRequest {
+	client: boolean
+	staff: boolean
+	supplier: boolean
+	product: boolean
+}

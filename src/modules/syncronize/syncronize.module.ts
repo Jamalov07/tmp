@@ -8,7 +8,7 @@ import { SyncronizeService2 } from './syncronize2.service'
 @Module({
 	imports: [PrismaModule],
 	controllers: [SyncronizeController],
-	providers: [SyncronizeService, SyncronizeRepository, SyncronizeService, SyncronizeService2],
-	exports: [SyncronizeService, SyncronizeRepository, SyncronizeService, SyncronizeService2],
+	providers: [SyncronizeService, SyncronizeRepository, SyncronizeService2],
+	exports: [SyncronizeService, SyncronizeRepository, SyncronizeService2],
 })
 export class SyncronizeModule {}

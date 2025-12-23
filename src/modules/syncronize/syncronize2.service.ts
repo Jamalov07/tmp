@@ -6,9 +6,8 @@ import { createResponse } from '../../common'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
-import { Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier } from './interfaces'
+import { Client, IClient, IProduct, IStaff, ISupplier, Product, Staff, Supplier, SyncronizeRequest } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
-import { SyncronizeDto } from './dtos'
 
 @Injectable()
 export class SyncronizeService2 implements OnModuleInit {
@@ -72,7 +71,7 @@ export class SyncronizeService2 implements OnModuleInit {
 		return allData
 	}
 
-	async syncronize(query: SyncronizeDto) {
+	async syncronize(query: SyncronizeRequest) {
 		console.log(query)
 		console.log('synchronization started')
 
