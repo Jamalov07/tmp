@@ -76,7 +76,7 @@ export class SyncronizeService2 implements OnModuleInit {
 		console.log(query)
 		console.log('synchronization started')
 
-		await this.clearDatabase()
+		await this.clearDatabase(query)
 		await this.signIn()
 
 		if (query.staff) await this.syncStaffs()
@@ -92,15 +92,15 @@ export class SyncronizeService2 implements OnModuleInit {
 		})
 	}
 
-	private async clearDatabase() {
+	private async clearDatabase(query: SyncronizeRequest) {
 		await this.prisma.arrivalModel.deleteMany({})
 		await this.prisma.botUserModel.deleteMany({})
 		await this.prisma.paymentModel.deleteMany({})
 		await this.prisma.productMVModel.deleteMany({})
-		await this.prisma.productModel.deleteMany({})
+		if (query.product) await this.prisma.productModel.deleteMany({})
 		await this.prisma.returningModel.deleteMany({})
 		await this.prisma.sellingModel.deleteMany({})
-		await this.prisma.userModel.deleteMany({})
+		if (query.client || query.staff || query.supplier) await this.prisma.userModel.deleteMany({})
 	}
 
 	private async syncStaffs() {
