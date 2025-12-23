@@ -144,7 +144,7 @@ export class SyncronizeService2 implements OnModuleInit {
 			balance: new Decimal(supplier.debt),
 		}))
 
-		await this.prisma.userModel.createMany({ data: suppliers })
+		await this.prisma.userModel.createMany({ data: suppliers, skipDuplicates: true })
 
 		const payments = suppliersRemote.map((supplier) => ({
 			id: uuidv4(),
@@ -178,7 +178,7 @@ export class SyncronizeService2 implements OnModuleInit {
 			balance: new Decimal(client.debt),
 		}))
 
-		await this.prisma.userModel.createMany({ data: clients })
+		await this.prisma.userModel.createMany({ data: clients, skipDuplicates: true })
 
 		const payments = clientsRemote.map((client) => ({
 			id: uuidv4(),
