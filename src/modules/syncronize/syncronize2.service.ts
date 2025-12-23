@@ -73,6 +73,7 @@ export class SyncronizeService2 implements OnModuleInit {
 	}
 
 	async syncronize(query: SyncronizeDto) {
+		console.log(query)
 		console.log('synchronization started')
 
 		await this.clearDatabase()
