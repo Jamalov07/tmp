@@ -1,30 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { SyncronizeRequest } from '../interfaces'
-import { Type } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import { IsBoolean, IsOptional } from 'class-validator'
 
 export class SyncronizeDto implements SyncronizeRequest {
-	@ApiProperty({ type: Boolean, default: true })
-	@IsOptional()
+	@ApiProperty({ type: Boolean })
+	@Transform(({ value }) => ([false, 'false'].includes(value) ? false : [true, 'true'].includes(value) ? true : undefined))
 	@IsBoolean()
-	@Type(() => Boolean)
+	@IsOptional()
 	client: boolean
 
-	@ApiProperty({ type: Boolean, default: true })
-	@IsOptional()
+	@ApiProperty({ type: Boolean })
+	@Transform(({ value }) => ([false, 'false'].includes(value) ? false : [true, 'true'].includes(value) ? true : undefined))
 	@IsBoolean()
-	@Type(() => Boolean)
+	@IsOptional()
 	staff: boolean
 
-	@ApiProperty({ type: Boolean, default: true })
-	@IsOptional()
+	@ApiProperty({ type: Boolean })
+	@Transform(({ value }) => ([false, 'false'].includes(value) ? false : [true, 'true'].includes(value) ? true : undefined))
 	@IsBoolean()
-	@Type(() => Boolean)
+	@IsOptional()
 	supplier: boolean
 
-	@ApiProperty({ type: Boolean, default: true })
-	@IsOptional()
+	@ApiProperty({ type: Boolean })
+	@Transform(({ value }) => ([false, 'false'].includes(value) ? false : [true, 'true'].includes(value) ? true : undefined))
 	@IsBoolean()
-	@Type(() => Boolean)
+	@IsOptional()
 	product: boolean
 }
