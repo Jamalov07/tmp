@@ -8,9 +8,9 @@ import { SyncronizeDto } from './dtos'
 export class SyncronizeController {
 	constructor(private readonly syncronizeService: SyncronizeService2) {}
 
-	@Get()
+	// @Get()
 	// @AuthOptions(true, true)
-	async syncronize(@Query() query: SyncronizeDto) {
-		return this.syncronizeService.syncronize(query)
-	}
+	// async syncronize(@Query() query: SyncronizeDto) {
+	// return this.syncronizeService.syncronize(query)
+	// }
 }

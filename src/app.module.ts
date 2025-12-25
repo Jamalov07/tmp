@@ -22,6 +22,7 @@ import {
 	PdfModule,
 	CommonModule,
 	SyncronizeModule,
+	UploadModule,
 } from '@module'
 import { appConfig, botConfig, databaseConfig, jwtConfig, oldServiceConfig } from '@config'
 import { AuthGuard, CheckPermissionGuard } from '@common'
@@ -53,6 +54,7 @@ import { AuthGuard, CheckPermissionGuard } from '@common'
 		BotModule,
 		CommonModule,
 		SyncronizeModule,
+		UploadModule,
 	],
 	controllers: [],
 	providers: [AuthGuard, CheckPermissionGuard],
