@@ -15,6 +15,7 @@ export class UploadService {
 
 	async uploadStaff(file: Express.Multer.File, query: UploadQueryDto) {
 		const rows = readExcel(file.buffer)
+		console.log(rows)
 
 		if (query.mode === UploadModeEnum.OVERWRITE) {
 			await this.prisma.userModel.deleteMany({
@@ -87,11 +88,11 @@ export class UploadService {
 				data[SUPPLIER_EXCEL_MAP[excelKey]] = row[excelKey]
 			}
 
-			if (!data.id || !data.phone || !data.name) continue
+			if (!data.id || !data.phone || !data.fullname) continue
 
 			const phone = String(data.phone).trim()
-			const fullname = String(data.name).trim()
-			const debt = new Decimal(data.debt ?? 0)
+			const fullname = String(data.fullname).trim()
+			const debt = new Decimal(this.parseAmount(data.debt) ?? 0)
 			const createdAt = data.createdAt ? new Date(data.createdAt) : new Date()
 
 			suppliersData.push({
@@ -162,11 +163,11 @@ export class UploadService {
 				data[CLIENT_EXCEL_MAP[excelKey]] = row[excelKey]
 			}
 
-			if (!data.id || !data.phone || !data.name) continue
+			if (!data.id || !data.phone || !data.fullname) continue
 
 			const phone = String(data.phone).trim()
-			const fullname = String(data.name).trim()
-			const debt = new Decimal(data.debt ?? 0)
+			const fullname = String(data.fullname).trim()
+			const debt = new Decimal(this.parseAmount(data.debt) ?? 0)
 			const createdAt = data.createdAt ? new Date(data.createdAt) : new Date()
 
 			clientsData.push({
@@ -212,6 +213,7 @@ export class UploadService {
 
 	async uploadProduct(file: Express.Multer.File, query: UploadQueryDto) {
 		const rows = readExcel(file.buffer)
+		console.log(rows.length)
 
 		if (query.mode === UploadModeEnum.OVERWRITE) {
 			await this.prisma.productModel.deleteMany({})
@@ -231,11 +233,10 @@ export class UploadService {
 				data[PRODUCT_EXCEL_MAP[excelKey]] = row[excelKey]
 			}
 
-			// minimal validation
 			if (!data.id || !data.name || !data.price) continue
 
-			const cost = new Decimal(data.cost ?? 0)
-			const price = new Decimal(data.price ?? 0)
+			const cost = new Decimal(this.parseAmount(data.cost) ?? 0)
+			const price = new Decimal(this.parseAmount(data.price) ?? 0)
 			const count = Number(data.count ?? 0)
 
 			productsData.push({
@@ -277,5 +278,17 @@ export class UploadService {
 			products: products.count,
 			productMVs: productMVs.count,
 		}
+	}
+
+	parseAmount(value: any): number {
+		if (value === null || value === undefined) return 0
+
+		const cleaned = String(value).replace(/,/g, '').trim()
+
+		const num = Number(cleaned)
+
+		if (isNaN(num)) return 0
+
+		return Number(num.toFixed(2))
 	}
 }
