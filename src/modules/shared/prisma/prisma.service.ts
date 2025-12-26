@@ -55,6 +55,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 					description: actionDescriptionConverter(`${fullRoute}-${method}-${RequestMethod[methodType].toLowerCase()}`),
 				}
 			})
+			.filter((action) => action.method !== 'get')
 		await this.actionModel.createMany({ data: actions, skipDuplicates: true })
 	}
 

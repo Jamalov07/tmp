@@ -448,6 +448,6 @@ export class ProductMVRepository {
 	}
 
 	async onModuleInit() {
-		await this.prisma.createActionMethods(ProductMVController)
+		// await this.prisma.createActionMethods(ProductMVController)
 	}
 }
