@@ -267,7 +267,7 @@ export class ProductMVService {
 
 		const sellingProduct = await this.productMVRepository.deleteOne(query)
 
-		if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
+		if (sellingProduct.selling?.status === SellingStatusEnum.accepted) {
 			// const sellingProducts = sellingProduct.selling.products.map((pro) => {
 			// 	let status: BotSellingProductTitleEnum = undefined
 			// 	if (pro.id === sellingProduct.id) {
