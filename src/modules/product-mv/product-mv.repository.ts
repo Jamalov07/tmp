@@ -433,7 +433,8 @@ export class ProductMVRepository {
 			}
 		} else if (product.type === ServiceTypeEnum.arrival) {
 			const totalCost = product.arrival.totalCost.minus(product.cost.mul(product.count))
-			await this.prisma.arrivalModel.update({ where: { id: product.arrival.id }, data: { totalPrice: totalCost } })
+			const totalPrice = product.arrival.totalPrice.minus(product.price.mul(product.count))
+			await this.prisma.arrivalModel.update({ where: { id: product.arrival.id }, data: { totalCost: totalCost, totalPrice: totalPrice } })
 			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 		} else if (product.type === ServiceTypeEnum.returning) {
 			const totalPrice = product.returning.totalPrice.minus(product.price.mul(product.count))
