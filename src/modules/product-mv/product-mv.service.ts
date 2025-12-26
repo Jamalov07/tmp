@@ -267,44 +267,44 @@ export class ProductMVService {
 
 		const sellingProduct = await this.productMVRepository.deleteOne(query)
 
-		if (sellingProduct.selling?.status === SellingStatusEnum.accepted) {
-			// const sellingProducts = sellingProduct.selling.products.map((pro) => {
-			// 	let status: BotSellingProductTitleEnum = undefined
-			// 	if (pro.id === sellingProduct.id) {
-			// 		status = BotSellingProductTitleEnum.deleted
-			// 	}
-			// 	return { ...pro, status: status }
-			// })
+		// if (sellingProduct.selling?.status === SellingStatusEnum.accepted) {
+		// const sellingProducts = sellingProduct.selling.products.map((pro) => {
+		// 	let status: BotSellingProductTitleEnum = undefined
+		// 	if (pro.id === sellingProduct.id) {
+		// 		status = BotSellingProductTitleEnum.deleted
+		// 	}
+		// 	return { ...pro, status: status }
+		// })
 
-			const totalPrice = sellingProduct.selling.totalPrice.minus(productmv.data.price.mul(productmv.data.count))
+		// const totalPrice = sellingProduct.selling.totalPrice.minus(productmv.data.price.mul(productmv.data.count))
 
-			await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: totalPrice })
+		// await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: totalPrice })
 
-			// const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
-			// const sellingInfo = {
-			// 	...sellingProduct.selling,
-			// 	client: client.data,
-			// 	title: BotSellingTitleEnum.deleted,
-			// 	totalPayment: sellingProduct.selling.payment.total,
-			// 	totalPrice: totalPrice,
-			// 	debt: totalPrice.minus(sellingProduct.selling.payment.total),
-			// 	products: sellingProducts,
-			// }
+		// const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })
+		// const sellingInfo = {
+		// 	...sellingProduct.selling,
+		// 	client: client.data,
+		// 	title: BotSellingTitleEnum.deleted,
+		// 	totalPayment: sellingProduct.selling.payment.total,
+		// 	totalPrice: totalPrice,
+		// 	debt: totalPrice.minus(sellingProduct.selling.payment.total),
+		// 	products: sellingProducts,
+		// }
 
-			// if (productmv.data.selling.status === SellingStatusEnum.accepted) {
-			// 	if (query.send) {
-			// 		if (client.data.telegram?.id) {
-			// 			await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
-			// 				console.log('user', e)
-			// 			})
-			// 		}
-			// 	}
+		// if (productmv.data.selling.status === SellingStatusEnum.accepted) {
+		// 	if (query.send) {
+		// 		if (client.data.telegram?.id) {
+		// 			await this.botService.sendSellingToClient({ ...sellingInfo, products: sellingInfo.products.filter((p) => p.id !== sellingProduct.id) }).catch((e) => {
+		// 				console.log('user', e)
+		// 			})
+		// 		}
+		// 	}
 
-			// 	await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
-			// 		console.log('channel', e)
-			// 	})
-			// }
-		}
+		// 	await this.botService.sendSellingToChannel(sellingInfo).catch((e) => {
+		// 		console.log('channel', e)
+		// 	})
+		// }
+		// }
 
 		return createResponse({ data: null, success: { messages: ['delete one success'] } })
 	}

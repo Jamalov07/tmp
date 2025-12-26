@@ -400,6 +400,7 @@ export class ProductMVRepository {
 				id: true,
 				type: true,
 				returning: true,
+				arrival: true,
 				selling: {
 					select: {
 						id: true,
@@ -424,12 +425,18 @@ export class ProductMVRepository {
 		})
 
 		if (product.type === ServiceTypeEnum.selling) {
+			const totalPrice = product.selling.totalPrice.minus(product.price.mul(product.count))
+			await this.prisma.sellingModel.update({ where: { id: product.selling.id }, data: { totalPrice: totalPrice } })
 			if (product.selling && product.selling.status === SellingStatusEnum.accepted) {
 				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { increment: product.count } } })
 			}
 		} else if (product.type === ServiceTypeEnum.arrival) {
+			const totalCost = product.arrival.totalCost.minus(product.cost.mul(product.count))
+			await this.prisma.arrivalModel.update({ where: { id: product.arrival.id }, data: { totalPrice: totalCost } })
 			await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 		} else if (product.type === ServiceTypeEnum.returning) {
+			const totalPrice = product.returning.totalPrice.minus(product.price.mul(product.count))
+			await this.prisma.returningModel.update({ where: { id: product.returning.id }, data: { totalPrice: totalPrice } })
 			if (product.returning && product.returning.status === SellingStatusEnum.accepted) {
 				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { increment: product.count } } })
 			}
