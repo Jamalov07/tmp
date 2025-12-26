@@ -45,7 +45,7 @@ export class ClientService {
 				actions: c.actions,
 				createdAt: c.createdAt,
 				phone: c.phone,
-				debt: c.balance.gt(0) ? sellingPayment.minus(c.balance) : sellingPayment.plus(c.balance),
+				debt: c.balance.minus(sellingPayment),
 				lastSellingDate: c.sellings?.length ? c.sellings[0].date : null,
 			}
 		})
@@ -146,7 +146,7 @@ export class ClientService {
 				updatedAt: client.updatedAt,
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
-				debt: sellingPayment.minus(payment),
+				debt: payment.minus(sellingPayment),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,
