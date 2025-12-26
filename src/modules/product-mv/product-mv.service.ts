@@ -137,8 +137,8 @@ export class ProductMVService {
 	async createOneArrival(request: CRequest, body: ArrivalProductMVCreateOneRequest) {
 		const productmv = await this.productMVRepository.createOneArrival({
 			...body,
-			totalCost: body.cost.mul(body.count),
-			totalPrice: body.price.mul(body.count),
+			totalCost: new Decimal(body.cost ?? 0).mul(body.count),
+			totalPrice: new Decimal(body.price ?? 0).mul(body.count),
 			staffId: request.user.id,
 		})
 
@@ -157,7 +157,7 @@ export class ProductMVService {
 		const productmv = await this.productMVRepository.createOneReturning({
 			...body,
 			staffId: request.user.id,
-			totalPrice: body.price.mul(body.count),
+			totalPrice: new Decimal(body.price ?? 0).mul(body.count),
 		})
 
 		await this.returningService.updateOne(
