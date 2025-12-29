@@ -179,6 +179,9 @@ export class ProductMVService {
 		})
 
 		const newSellingTotalPrice = productmv.data.selling.totalPrice.minus(productmv.data.totalPrice).plus(sellingProduct.totalPrice)
+		console.log(body.price, productmv.data.price, body.count, productmv.data.count)
+		console.log(productmv.data.selling.totalPrice, productmv.data.totalPrice, sellingProduct.totalPrice)
+		console.log(newSellingTotalPrice)
 
 		// await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: newSellingTotalPrice })
 		await this.productMVRepository.updateSellingTotalPrice(sellingProduct.selling.id, newSellingTotalPrice)
