@@ -180,7 +180,8 @@ export class ProductMVService {
 
 		const newSellingTotalPrice = sellingProduct.selling.totalPrice.minus(productmv.data.totalPrice).plus(sellingProduct.totalPrice)
 
-		await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: newSellingTotalPrice })
+		// await this.sellingService.updateOne({ id: sellingProduct.selling.id }, { totalPrice: newSellingTotalPrice })
+		await this.productMVRepository.updateSellingTotalPrice(sellingProduct.selling.id, newSellingTotalPrice)
 
 		// if (sellingProduct.selling.status === SellingStatusEnum.accepted) {
 		// const client = await this.clientService.findOne({ id: sellingProduct.selling.client.id })

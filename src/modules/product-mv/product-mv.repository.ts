@@ -15,6 +15,7 @@ import {
 } from './interfaces'
 import { ProductMVController } from './product-mv.controller'
 import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class ProductMVRepository {
@@ -338,6 +339,10 @@ export class ProductMVRepository {
 		}
 
 		return product
+	}
+
+	async updateSellingTotalPrice(id: string, totalPrice: Decimal) {
+		await this.prisma.sellingModel.update({ where: { id: id }, data: { totalPrice: totalPrice } })
 	}
 
 	async updateOneArrival(query: ProductMVGetOneRequest, body: ArrivalProductMVUpdateOneRequest) {
