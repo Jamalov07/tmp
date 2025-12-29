@@ -160,6 +160,7 @@ export class ProductMVRepository {
 	async getOne(query: ProductMVGetOneRequest) {
 		const product = await this.prisma.productMVModel.findFirst({
 			where: {
+				id: query.id,
 				sellingId: query.sellingId,
 				arrivalId: query.arrivalId,
 				productId: query.productId,
