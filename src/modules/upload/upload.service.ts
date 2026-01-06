@@ -4,7 +4,7 @@ import { Express } from 'express'
 import { CLIENT_EXCEL_MAP, PRODUCT_EXCEL_MAP, readExcel, STAFF_EXCEL_MAP, SUPPLIER_EXCEL_MAP } from './helpers'
 import { UploadModeEnum } from './enums'
 import { PrismaService } from '../shared'
-import { ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
+import { PageEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 import * as bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
@@ -40,6 +40,8 @@ export class UploadService {
 			const fullname = String(data.fullname).trim()
 			const createdAt = data.createdAt ? new Date(data.createdAt) : new Date()
 
+			const pages = data.role === 'super_admin' ? Object.values(PageEnum) : []
+
 			staffsData.push({
 				id: data.id,
 				phone,
@@ -48,6 +50,7 @@ export class UploadService {
 				type: data.role === 'super_admin' ? UserTypeEnum.admin : UserTypeEnum.staff,
 				createdAt,
 				balance: new Decimal(0),
+				pages: pages,
 			})
 		}
 
