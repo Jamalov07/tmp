@@ -35,7 +35,7 @@ export class ClientService {
 			}, new Decimal(0))
 
 			c.returnings.map((returning) => {
-				c.balance = c.balance.plus(returning.payment.fromBalance)
+				c.balance = c.balance.minus(returning.payment.fromBalance)
 			})
 
 			return {
@@ -131,7 +131,7 @@ export class ClientService {
 			if ((!deedStartDate || returning.payment.createdAt >= deedStartDate) && (!deedEndDate || returning.payment.createdAt <= deedEndDate)) {
 				deeds.push({ type: 'credit', action: 'returning', value: returning.payment.fromBalance, date: returning.payment.createdAt, description: returning.payment.description })
 				totalCredit = totalCredit.plus(returning.payment.fromBalance)
-				payment = payment.plus(returning.payment.fromBalance)
+				payment = payment.minus(returning.payment.fromBalance)
 			}
 		})
 
