@@ -139,6 +139,7 @@ export class ClientService {
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
+		console.log(sellingDebt, client.balance, returningTotalSum)
 		return createResponse({
 			data: {
 				id: client.id,
