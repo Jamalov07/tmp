@@ -142,10 +142,12 @@ export class ProductMVService {
 			staffId: request.user.id,
 		})
 
-		await this.productMVRepository.updateArrivalCostAndPrice(
-			productmv.arrival.id,
-			productmv.arrival.totalCost.plus(productmv.totalCost),
-			productmv.arrival.totalPrice.plus(productmv.totalPrice),
+		await this.arrivalService.updateOne(
+			{ id: productmv.arrival.id },
+			{
+				totalCost: productmv.arrival.totalCost.plus(productmv.totalCost),
+				totalPrice: productmv.arrival.totalPrice.plus(productmv.totalPrice),
+			},
 		)
 
 		return createResponse({ data: null, success: { messages: ['create one success'] } })
@@ -239,6 +241,12 @@ export class ProductMVService {
 				totalPrice: productmv.data.arrival.totalPrice.minus(productmv.data.totalPrice).plus(body.totalPrice),
 				totalCost: productmv.data.arrival.totalCost.minus(productmv.data.totalCost).plus(body.totalCost),
 			},
+		)
+
+		await this.productMVRepository.updateArrivalPriceAndCost(
+			productmv.data.arrival.id,
+			productmv.data.arrival.totalPrice.minus(productmv.data.totalPrice).plus(body.totalPrice),
+			productmv.data.arrival.totalCost.minus(productmv.data.totalCost).plus(body.totalCost),
 		)
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
