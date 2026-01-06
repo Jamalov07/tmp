@@ -483,6 +483,10 @@ export class ProductMVRepository {
 		return product
 	}
 
+	async updateArrivalCostAndPrice(id: string, price: Decimal, cost: Decimal) {
+		await this.prisma.arrivalModel.update({ where: { id: id }, data: { totalCost: cost, totalPrice: price } })
+	}
+
 	async onModuleInit() {
 		// await this.prisma.createActionMethods(ProductMVController)
 	}
