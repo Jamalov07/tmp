@@ -30,7 +30,7 @@ export class ClientService {
 		// const clientsCount = await this.clientRepository.countFindMany(query)
 
 		const mappedClients = clients.map((c) => {
-			const sellingPayment = c.sellings.reduce((acc, sel) => {
+			const sellingDebt = c.sellings.reduce((acc, sel) => {
 				return acc.plus(sel.totalPrice).minus(sel.payment.total)
 			}, new Decimal(0))
 
@@ -45,7 +45,7 @@ export class ClientService {
 				actions: c.actions,
 				createdAt: c.createdAt,
 				phone: c.phone,
-				debt: c.balance.minus(sellingPayment),
+				debt: c.balance.plus(sellingDebt),
 				lastSellingDate: c.sellings?.length ? c.sellings[0].date : null,
 			}
 		})
