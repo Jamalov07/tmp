@@ -127,11 +127,13 @@ export class ClientService {
 			return acc.plus(sel.totalPrice).minus(sel.payment.total)
 		}, new Decimal(0))
 
+		let returningTotalSum = new Decimal(0)
 		client.returnings.map((returning) => {
 			if ((!deedStartDate || returning.payment.createdAt >= deedStartDate) && (!deedEndDate || returning.payment.createdAt <= deedEndDate)) {
 				deeds.push({ type: 'credit', action: 'returning', value: returning.payment.fromBalance, date: returning.payment.createdAt, description: returning.payment.description })
 				totalCredit = totalCredit.plus(returning.payment.fromBalance)
 				payment = payment.minus(returning.payment.fromBalance)
+				returningTotalSum = returningTotalSum.plus(returning.payment.fromBalance)
 			}
 		})
 
@@ -146,7 +148,7 @@ export class ClientService {
 				updatedAt: client.updatedAt,
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
-				debt: sellingDebt.plus(client.balance),
+				debt: sellingDebt.plus(client.balance.plus(returningTotalSum)),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,
