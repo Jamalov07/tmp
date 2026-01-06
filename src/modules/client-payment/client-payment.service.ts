@@ -119,7 +119,7 @@ export class ClientPaymentService {
 		const clientPayment = await this.clientPaymentRepository.createOne(body)
 
 		if (!total.isZero()) {
-			await this.clientService.updateOne({ id: body.userId }, { balance: clientPayment.user.balance.plus(total) })
+			await this.clientService.updateOne({ id: body.userId }, { balance: clientPayment.user.balance.minus(total) })
 		}
 
 		const client = await this.clientService.findOne({ id: clientPayment.user.id })
@@ -147,7 +147,7 @@ export class ClientPaymentService {
 		const clientPayment = await this.clientPaymentRepository.updateOne(query, body)
 
 		if (!totalDiff.isZero()) {
-			await this.clientService.updateOne({ id: payment.data.id }, { balance: payment.data.user.balance.plus(totalDiff) })
+			await this.clientService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(totalDiff) })
 		}
 
 		const client = await this.clientService.findOne({ id: clientPayment.user.id })
@@ -164,7 +164,7 @@ export class ClientPaymentService {
 		} else {
 			// if (query.method === DeleteMethodEnum.hard) {
 			if (!payment.data.total.isZero()) {
-				await this.clientService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.minus(payment.data.total) })
+				await this.clientService.updateOne({ id: payment.data.user.id }, { balance: payment.data.user.balance.plus(payment.data.total) })
 			}
 			await this.clientPaymentRepository.deleteOne(query)
 			// } else {
