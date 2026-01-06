@@ -28,7 +28,7 @@ export class StaffRepository implements OnModuleInit {
 		const users = await this.prisma.userModel.findMany({
 			where: {
 				fullname: query.fullname,
-				type: UserTypeEnum.staff,
+				type: { in: [UserTypeEnum.staff, UserTypeEnum.admin] },
 				OR: [{ fullname: { contains: query.search, mode: 'insensitive' } }, { phone: { contains: query.search, mode: 'insensitive' } }],
 			},
 			select: {
@@ -69,7 +69,7 @@ export class StaffRepository implements OnModuleInit {
 		const usersCount = await this.prisma.userModel.count({
 			where: {
 				fullname: query.fullname,
-				type: UserTypeEnum.staff,
+				type: { in: [UserTypeEnum.staff, UserTypeEnum.admin] },
 				OR: [{ fullname: { contains: query.search, mode: 'insensitive' } }, { phone: { contains: query.search, mode: 'insensitive' } }],
 			},
 		})
@@ -86,7 +86,7 @@ export class StaffRepository implements OnModuleInit {
 		const users = await this.prisma.userModel.findMany({
 			where: {
 				id: { in: query.ids },
-				type: UserTypeEnum.staff,
+				type: { in: [UserTypeEnum.staff, UserTypeEnum.admin] },
 				fullname: query.fullname,
 			},
 			...paginationOptions,
@@ -108,7 +108,7 @@ export class StaffRepository implements OnModuleInit {
 		const usersCount = await this.prisma.userModel.count({
 			where: {
 				id: { in: query.ids },
-				type: UserTypeEnum.staff,
+				type: { in: [UserTypeEnum.staff, UserTypeEnum.admin] },
 				fullname: query.fullname,
 			},
 		})
