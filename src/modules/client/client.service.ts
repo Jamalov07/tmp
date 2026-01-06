@@ -113,7 +113,7 @@ export class ClientService {
 			return acc.plus(curr.total)
 		}, new Decimal(0))
 
-		const sellingPayment = client.sellings.reduce((acc, sel) => {
+		const sellingDebt = client.sellings.reduce((acc, sel) => {
 			if ((!deedStartDate || sel.date >= deedStartDate) && (!deedEndDate || sel.date <= deedEndDate)) {
 				deeds.push({ type: 'debit', action: 'selling', value: sel.totalPrice, date: sel.date, description: '' })
 				totalDebit = totalDebit.plus(sel.totalPrice)
@@ -146,7 +146,7 @@ export class ClientService {
 				updatedAt: client.updatedAt,
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
-				debt: payment.minus(sellingPayment),
+				debt: payment.plus(sellingDebt),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,
