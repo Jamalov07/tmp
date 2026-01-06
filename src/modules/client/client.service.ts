@@ -133,7 +133,7 @@ export class ClientService {
 				deeds.push({ type: 'credit', action: 'returning', value: returning.payment.fromBalance, date: returning.payment.createdAt, description: returning.payment.description })
 				totalCredit = totalCredit.plus(returning.payment.fromBalance)
 				payment = payment.minus(returning.payment.fromBalance)
-				returningTotalSum = returningTotalSum.plus(returning.payment.fromBalance)
+				returningTotalSum = returningTotalSum.minus(returning.payment.fromBalance)
 			}
 		})
 
@@ -148,7 +148,7 @@ export class ClientService {
 				updatedAt: client.updatedAt,
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
-				debt: sellingDebt.plus(client.balance.plus(returningTotalSum)),
+				debt: sellingDebt.plus(client.balance.minus(returningTotalSum)),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,
