@@ -147,6 +147,14 @@ export class ProductMVService {
 			{
 				totalCost: productmv.arrival.totalCost.plus(productmv.totalCost),
 				totalPrice: productmv.arrival.totalPrice.plus(productmv.totalPrice),
+				payment: {
+					card: productmv.arrival.payment.card,
+					cash: productmv.arrival.payment.cash,
+					other: productmv.arrival.payment.other,
+					transfer: productmv.arrival.payment.transfer,
+					description: productmv.arrival.payment.description,
+					total: productmv.arrival.payment.total,
+				},
 			},
 		)
 
