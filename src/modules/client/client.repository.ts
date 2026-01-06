@@ -74,6 +74,7 @@ export class ClientRepository implements OnModuleInit {
 			select: {
 				id: true,
 				fullname: true,
+				balance: true,
 				phone: true,
 				actions: true,
 				updatedAt: true,

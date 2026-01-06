@@ -146,7 +146,7 @@ export class ClientService {
 				updatedAt: client.updatedAt,
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
-				debt: sellingDebt.plus(payment),
+				debt: sellingDebt.plus(client.balance),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,
