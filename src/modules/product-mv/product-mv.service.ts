@@ -235,14 +235,6 @@ export class ProductMVService {
 
 		await this.productMVRepository.updateOneArrival(query, body)
 
-		await this.arrivalService.updateOne(
-			{ id: productmv.data.arrival.id },
-			{
-				totalPrice: productmv.data.arrival.totalPrice.minus(productmv.data.totalPrice).plus(body.totalPrice),
-				totalCost: productmv.data.arrival.totalCost.minus(productmv.data.totalCost).plus(body.totalCost),
-			},
-		)
-
 		await this.productMVRepository.updateArrivalPriceAndCost(
 			productmv.data.arrival.id,
 			productmv.data.arrival.totalPrice.minus(productmv.data.totalPrice).plus(body.totalPrice),
