@@ -279,7 +279,7 @@ export class SellingService {
 		const updatedSelling = await this.sellingRepository.updateOne(query, body)
 
 		// Clientni yangilaymiz
-		const client = await this.clientService.findOne({ id: body.clientId })
+		const client = await this.clientService.findOne({ id: selling.data.client.id })
 
 		const sellingInfo = {
 			...updatedSelling,
