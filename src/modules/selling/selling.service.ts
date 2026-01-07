@@ -323,7 +323,7 @@ export class SellingService {
 
 			// if (!total.isZero() || !sellingInfo.payment.total.isZero()) {
 			if (shouldSendPayment) {
-				await this.botService.sendPaymentToChannel(sellingInfo.payment, !wasAccepted, client.data)
+				await this.botService.sendPaymentToChannel(sellingInfo.payment, isModified, client.data)
 			}
 			// }
 			// }
