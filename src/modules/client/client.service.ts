@@ -139,7 +139,14 @@ export class ClientService {
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-		console.log(sellingDebt, client.balance, returningTotalSum)
+		const sellingDebt2 = client.sellings.reduce((acc, sel) => {
+			return acc.plus(sel.totalPrice).minus(sel.payment.total)
+		}, new Decimal(0))
+
+		client.returnings.map((returning) => {
+			client.balance = client.balance.minus(returning.payment.fromBalance)
+		})
+
 		return createResponse({
 			data: {
 				id: client.id,
@@ -149,7 +156,7 @@ export class ClientService {
 				updatedAt: client.updatedAt,
 				deletedAt: client.deletedAt,
 				actionIds: client.actions.map((a) => a.id),
-				debt: sellingDebt.plus(client.balance).plus(returningTotalSum),
+				debt: sellingDebt2.plus(client.balance),
 				deedInfo: {
 					totalDebit: totalDebit,
 					totalCredit: totalCredit,
