@@ -81,7 +81,7 @@ export class ClientRepository implements OnModuleInit {
 				createdAt: true,
 				deletedAt: true,
 				payments: {
-					where: { type: ServiceTypeEnum.client, deletedAt: null },
+					where: { type: ServiceTypeEnum.client, deletedAt: null, id: query.id },
 					select: { card: true, total: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
