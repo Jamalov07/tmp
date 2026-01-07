@@ -189,7 +189,7 @@ export class SellingRepository implements OnModuleInit {
 			data: {
 				status: body.status,
 				clientId: body.clientId,
-				date: new Date(body.date),
+				date: dayClose ? body.date : undefined,
 				staffId: body.staffId,
 				totalPrice: body.totalPrice,
 				createdAt: dayClose ? body.date : undefined,
@@ -252,7 +252,7 @@ export class SellingRepository implements OnModuleInit {
 		const selling = await this.prisma.sellingModel.update({
 			where: { id: query.id },
 			data: {
-				date: body.date ? new Date(body.date) : undefined,
+				date: existSelling.status !== SellingStatusEnum.accepted ? (body.date ? new Date(body.date) : undefined) : undefined,
 				status: body.status,
 				clientId: body.clientId,
 				deletedAt: body.deletedAt,
@@ -291,6 +291,10 @@ export class SellingRepository implements OnModuleInit {
 		})
 
 		if (body.status === SellingStatusEnum.accepted && existSelling.status !== SellingStatusEnum.accepted) {
+			await this.prisma.productMVModel.updateMany({
+				where: { id: { in: selling.products.map((prr) => prr.id) } },
+				data: { createdAt: body.date ? new Date(body.date) : undefined },
+			})
 			for (const product of selling.products) {
 				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 			}

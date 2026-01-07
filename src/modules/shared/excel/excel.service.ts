@@ -124,7 +124,7 @@ export class ExcelService {
 			where: { id: query.id },
 			include: {
 				client: true,
-				products: { include: { product: true } },
+				products: { include: { product: true }, orderBy: [{ createdAt: 'desc' }] },
 				payment: true,
 			},
 		})

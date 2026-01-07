@@ -301,12 +301,12 @@ export class SellingService {
 					await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
 				}
 			}
-
+			console.log(shouldSend, 'should send')
 			// chdfannelga yuborish
 			if (shouldSend) {
 				await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
 
-				if (!total.isZero()) {
+				if (!total.isZero() || !sellingInfo.payment.total.isZero()) {
 					await this.botService.sendPaymentToChannel(sellingInfo.payment, !isFirstSend, client.data)
 				}
 			}
