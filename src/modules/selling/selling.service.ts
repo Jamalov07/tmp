@@ -232,7 +232,7 @@ export class SellingService {
 		}
 
 		let total = new Decimal(0)
-		let shouldSend = false
+		let shouldSend = true
 		let isFirstSend = false
 
 		// Faqat status accepted bo‘lmagan bo‘lsa va paymentda haqiqiy qiymatlar bo‘lsa
