@@ -294,14 +294,14 @@ export class SellingService {
 			})),
 		}
 
+		console.log(shouldSend, selling.data.status, body.status, updatedSelling.status, total, sellingInfo.payment.total)
 		// clientga yuborish
-		if (selling.data.status === SellingStatusEnum.accepted || body.status === SellingStatusEnum.accepted) {
+		if (selling.data.status === SellingStatusEnum.accepted || body.status === SellingStatusEnum.accepted || updatedSelling.status === SellingStatusEnum.accepted) {
 			if (body.send) {
 				if (updatedSelling.client?.telegram?.id) {
 					await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
 				}
 			}
-			console.log(shouldSend, 'should send')
 			// chdfannelga yuborish
 			if (shouldSend) {
 				await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
