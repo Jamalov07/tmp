@@ -309,17 +309,21 @@ export class SellingService {
 			const isAcceptedNow = updatedSelling.status === SellingStatusEnum.accepted
 			const newPaymentTotal = updatedSelling.payment?.total ?? new Decimal(0)
 			const paymentChanged = !prevPaymentTotal.equals(newPaymentTotal)
+			const hadPaymentBefore = !prevPaymentTotal.isZero()
 			const shouldSendPayment =
 				// 1) birinchi marta accepted bo‘ldi va payment bor
 				(!wasAccepted && isAcceptedNow && !newPaymentTotal.isZero()) ||
 				// 2) oldin accepted edi va payment o‘zgardi
 				(wasAccepted && paymentChanged)
+			const isModified =
+				// faqat oldin payment bo‘lgan bo‘lsa
+				hadPaymentBefore && paymentChanged
 
 			await this.botService.sendSellingToChannel(sellingInfo).catch(console.log)
 
 			// if (!total.isZero() || !sellingInfo.payment.total.isZero()) {
 			if (shouldSendPayment) {
-				await this.botService.sendPaymentToChannel(sellingInfo.payment, !isFirstSend, client.data)
+				await this.botService.sendPaymentToChannel(sellingInfo.payment, !wasAccepted, client.data)
 			}
 			// }
 			// }
