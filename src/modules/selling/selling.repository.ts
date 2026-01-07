@@ -37,6 +37,7 @@ export class SellingRepository implements OnModuleInit {
 				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				date: { gte: query.startDate, lte: query.endDate },
 			},
+			orderBy: [{ date: 'desc' }],
 			select: {
 				id: true,
 				status: true,
