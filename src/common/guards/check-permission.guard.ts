@@ -12,10 +12,6 @@ export class CheckPermissionGuard implements CanActivate {
 	async canActivate(context: ExecutionContext): Promise<boolean> {
 		const request = context.switchToHttp().getRequest<CRequest>()
 
-		if (!request.user) {
-			throw new UnauthorizedException(ERROR_MSG.GUARD_USER_NOT_FOUND.UZ)
-		}
-
 		const controller = context.getClass()
 		const baseRoute = Reflect.getMetadata('path', controller) || ''
 
@@ -34,6 +30,10 @@ export class CheckPermissionGuard implements CanActivate {
 
 		if (methodType === 'post' && fullRoute === 'auth/sign-in') {
 			return true
+		}
+
+		if (!request.user) {
+			throw new UnauthorizedException(ERROR_MSG.GUARD_USER_NOT_FOUND.UZ)
 		}
 
 		if (methodType !== 'get') {
