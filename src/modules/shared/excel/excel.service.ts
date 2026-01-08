@@ -122,13 +122,21 @@ export class ExcelService {
 	async sellingDownloadOne(res: Response, query: SellingFindOneRequest) {
 		const selling = await this.prisma.sellingModel.findUnique({
 			where: { id: query.id },
-			include: {
-				client: true,
+			select: {
+				id: true,
+				status: true,
+				totalPrice: true,
+				updatedAt: true,
+				createdAt: true,
+				deletedAt: true,
+				date: true,
+				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
+				payment: { select: { fromBalance: true, id: true, total: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
 				products: {
 					orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
 					select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } },
 				},
-				payment: true,
 			},
 		})
 
