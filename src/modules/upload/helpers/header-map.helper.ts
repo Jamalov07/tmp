@@ -28,6 +28,6 @@ export const PRODUCT_EXCEL_MAP = {
 	Miqdori: 'count',
 	'Minimal miqdor': 'minAmount',
 	'Sotish narxi': 'price',
-	'Ulgurji narx': 'cost',
+	Narxi: 'cost',
 	'Yaratilgan sana': 'createdAt',
 } as const

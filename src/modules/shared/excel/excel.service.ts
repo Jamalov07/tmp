@@ -189,8 +189,8 @@ export class ExcelService {
 			}
 
 			const row = worksheet.addRow([index + 1, productName, '', count, price, sum])
-			row.eachCell((cell) => {
-				cell.alignment = { vertical: 'middle', horizontal: 'center' }
+			row.eachCell((cell, colNumber) => {
+				cell.alignment = { vertical: 'middle', horizontal: colNumber === 2 ? 'left' : 'center' }
 				cell.border = {
 					top: { style: 'thin', color: { argb: 'FF000000' } },
 					left: { style: 'thin', color: { argb: 'FF000000' } },

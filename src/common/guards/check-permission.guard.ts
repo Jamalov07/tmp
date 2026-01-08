@@ -9,44 +9,44 @@ import { ERROR_MSG } from '../constants'
 export class CheckPermissionGuard implements CanActivate {
 	constructor(private readonly prisma: PrismaService) {}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
 	async canActivate(context: ExecutionContext): Promise<boolean> {
-		// const request = context.switchToHttp().getRequest<CRequest>()
+		const request = context.switchToHttp().getRequest<CRequest>()
 
-		// if (!request.user) {
-		// 	throw new UnauthorizedException(ERROR_MSG.GUARD_USER_NOT_FOUND.UZ)
-		// }
+		if (!request.user) {
+			throw new UnauthorizedException(ERROR_MSG.GUARD_USER_NOT_FOUND.UZ)
+		}
 
-		// const controller = context.getClass()
-		// const baseRoute = Reflect.getMetadata('path', controller) || ''
+		const controller = context.getClass()
+		const baseRoute = Reflect.getMetadata('path', controller) || ''
 
-		// const handler = context.getHandler()
-		// const route = Reflect.getMetadata('path', handler) || ''
-		// const method = Reflect.getMetadata('method', handler)
+		const handler = context.getHandler()
+		const route = Reflect.getMetadata('path', handler) || ''
+		const method = Reflect.getMetadata('method', handler)
 
-		// if (method === undefined) {
-		// 	throw new BadRequestException(ERROR_MSG.HTTP_METHOD_METADATA_NOT_FOUND.UZ)
-		// }
+		if (method === undefined) {
+			throw new BadRequestException(ERROR_MSG.HTTP_METHOD_METADATA_NOT_FOUND.UZ)
+		}
 
-		// const fullRoute = `${baseRoute}/${route}`.replace(/\/+/g, '/')
-		// const methodType = RequestMethod[method].toLowerCase() as ActionMethodEnum
+		const fullRoute = `${baseRoute}/${route}`.replace(/\/+/g, '/')
+		const methodType = RequestMethod[method].toLowerCase() as ActionMethodEnum
 
-		// if (methodType !== 'get') {
-		// 	const payload = { url: fullRoute, name: handler.name, method: methodType }
+		if (methodType !== 'get') {
+			const payload = { url: fullRoute, name: handler.name, method: methodType }
 
-		// 	const action = await this.prisma.actionModel.findFirst({ where: { ...payload } })
+			const action = await this.prisma.actionModel.findFirst({ where: { ...payload } })
 
-		// 	if (!action) {
-		// 		throw new NotFoundException(ERROR_MSG.NOT_FOUND(`${methodType.toUpperCase()} /${fullRoute}`).UZ)
-		// 	}
-		// 	const staff = await this.prisma.userModel.findFirst({
-		// 		select: { actions: { select: { name: true, method: true, url: true } } },
-		// 	})
+			if (!action) {
+				throw new NotFoundException(ERROR_MSG.NOT_FOUND(`${methodType.toUpperCase()} /${fullRoute}`).UZ)
+			}
+			const staff = await this.prisma.userModel.findFirst({
+				where: { id: request?.user?.id },
+				select: { actions: { select: { name: true, method: true, url: true } } },
+			})
 
-		// 	if (!staff) {
-		// 		throw new BadRequestException(ERROR_MSG.AUTH.PERMISSION_NOT_GRANTED.UZ)
-		// 	}
-		// }
+			if (!staff) {
+				throw new BadRequestException(ERROR_MSG.AUTH.PERMISSION_NOT_GRANTED.UZ)
+			}
+		}
 
 		return true
 	}
