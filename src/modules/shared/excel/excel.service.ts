@@ -125,7 +125,7 @@ export class ExcelService {
 			include: {
 				client: true,
 				products: {
-					orderBy: [{ createdAt: 'desc' }],
+					orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
 					select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } },
 				},
 				payment: true,
