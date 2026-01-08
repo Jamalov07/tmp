@@ -175,6 +175,7 @@ export class ExcelService {
 		})
 
 		// Mahsulotlar
+		let maxProductNameLength = 30
 		let totalSum = 0
 		selling.products.forEach((item, index) => {
 			const count = item.count
@@ -182,7 +183,12 @@ export class ExcelService {
 			const sum = count * price
 			totalSum += sum
 
-			const row = worksheet.addRow([index + 1, item.product.name, '', count, price, sum])
+			const productName = item.product.name
+			if (productName.length > maxProductNameLength) {
+				maxProductNameLength = productName.length
+			}
+
+			const row = worksheet.addRow([index + 1, productName, '', count, price, sum])
 			row.eachCell((cell) => {
 				cell.alignment = { vertical: 'middle', horizontal: 'center' }
 				cell.border = {
@@ -232,6 +238,8 @@ export class ExcelService {
 			{ key: 'price', width: 25 },
 			{ key: 'total', width: 25 },
 		]
+
+		worksheet.getColumn(2).width = Math.min(Math.max(maxProductNameLength + 5, 20), 60)
 
 		// Javob
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
