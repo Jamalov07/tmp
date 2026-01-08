@@ -30,6 +30,10 @@ export class CheckPermissionGuard implements CanActivate {
 		const fullRoute = `${baseRoute}/${route}`.replace(/\/+/g, '/')
 		const methodType = RequestMethod[method].toLowerCase() as ActionMethodEnum
 
+		if (methodType === 'post' && fullRoute === 'auth/sign-in') {
+			return true
+		}
+
 		if (methodType !== 'get') {
 			const payload = { url: fullRoute, name: handler.name, method: methodType }
 
