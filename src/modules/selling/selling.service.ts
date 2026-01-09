@@ -471,7 +471,7 @@ export class SellingService {
 		for (const s of suppliers) {
 			const arrivalDebt = s.arrivals.reduce((acc, a) => acc.plus(a.totalCost).minus(a.payment?.total ?? 0), new Decimal(0))
 
-			const totalDebt = arrivalDebt.plus(s.balance ?? 0)
+			const totalDebt = s.balance.plus(arrivalDebt ?? 0)
 
 			if (totalDebt.gt(0)) {
 				ourDebt = ourDebt.plus(totalDebt)
