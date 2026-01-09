@@ -223,7 +223,7 @@ export class SellingService {
 		return createResponse({ data: selling, success: { messages: ['create one success'] } })
 	}
 
-	async updateOne(query: SellingGetOneRequest, body: SellingUpdateOneRequest) {
+	async updateOne(request: CRequest, query: SellingGetOneRequest, body: SellingUpdateOneRequest) {
 		const selling = await this.getOne(query)
 
 		// accepted bo‘lsa, date o‘zgartirilmaydi
@@ -267,7 +267,7 @@ export class SellingService {
 		body = {
 			...body,
 			status: body.status,
-			staffId: selling.data.staff.id,
+			staffId: request.user.id || selling.data.staff.id,
 			payment: hasValidPayment
 				? {
 						...body.payment,

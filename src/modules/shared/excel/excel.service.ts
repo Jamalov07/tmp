@@ -1738,19 +1738,24 @@ export class ExcelService {
 			}
 		})
 
-		const filteredClients = mappedClients.filter((s) => {
-			if (query.debtType && query.debtValue !== undefined) {
-				const value = new Decimal(query.debtValue)
-				switch (query.debtType) {
-					case DebtTypeEnum.gt:
-						return s.debt.gt(value)
-					case DebtTypeEnum.lt:
-						return s.debt.lt(value)
-					case DebtTypeEnum.eq:
-						return s.debt.eq(value)
-				}
-			}
-			return true
+		// const filteredClients = mappedClients.filter((s) => {
+		// 	if (query.debtType && query.debtValue !== undefined) {
+		// 		const value = new Decimal(query.debtValue)
+		// 		switch (query.debtType) {
+		// 			case DebtTypeEnum.gt:
+		// 				return s.debt.gt(value)
+		// 			case DebtTypeEnum.lt:
+		// 				return s.debt.lt(value)
+		// 			case DebtTypeEnum.eq:
+		// 				return s.debt.eq(value)
+		// 		}
+		// 	}
+		// 	return true
+		// })
+
+		const sortedClients = mappedClients.sort((a, b) => {
+			// b - a → descending
+			return b.debt.comparedTo(a.debt)
 		})
 
 		const workbook = new ExcelJS.Workbook()
@@ -1775,7 +1780,7 @@ export class ExcelService {
 			cell.border = this.allBorder()
 		})
 
-		filteredClients.forEach((client, index) => {
+		sortedClients.forEach((client, index) => {
 			const row = worksheet.addRow({
 				no: index + 1,
 				fullname: client.fullname,

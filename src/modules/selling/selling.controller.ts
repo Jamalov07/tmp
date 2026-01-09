@@ -79,8 +79,8 @@ export class SellingController {
 	@AuthOptions(true, true)
 	@ApiOperation({ summary: 'update one selling' })
 	@ApiOkResponse({ type: SellingModifyResponseDto })
-	async updateOne(@Query() query: SellingFindOneRequestDto, @Body() body: SellingUpdateOneRequestDto): Promise<SellingModifyResponseDto> {
-		return this.sellingService.updateOne(query, body)
+	async updateOne(@Req() request: CRequest, @Query() query: SellingFindOneRequestDto, @Body() body: SellingUpdateOneRequestDto): Promise<SellingModifyResponseDto> {
+		return this.sellingService.updateOne(request, query, body)
 	}
 
 	@Delete('one')
