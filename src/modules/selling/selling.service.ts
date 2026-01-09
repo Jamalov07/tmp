@@ -425,6 +425,10 @@ export class SellingService {
 					where: { status: SellingStatusEnum.accepted },
 					select: { totalPrice: true, payment: { select: { total: true } } },
 				},
+				returnings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: { payment: { select: { fromBalance: true } } },
+				},
 			},
 		})
 
@@ -433,6 +437,9 @@ export class SellingService {
 
 		for (const c of clients) {
 			const sellingDebt = c.sellings.reduce((acc, s) => acc.plus(s.totalPrice).minus(s.payment.total), new Decimal(0))
+			c.returnings.map((returning) => {
+				c.balance = c.balance.minus(returning.payment.fromBalance)
+			})
 
 			const totalDebt = sellingDebt.plus(c.balance ?? 0)
 
