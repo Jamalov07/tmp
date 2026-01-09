@@ -125,7 +125,7 @@ export class ProductMVService {
 			totalPrice: new Decimal(body.price ?? 0).mul(body.count),
 		})
 
-		await this.sellingService.updateOne({ id: productmv.selling.id }, { totalPrice: productmv.selling.totalPrice.plus(productmv.totalPrice) })
+		await this.sellingService.updateOne(request, { id: productmv.selling.id }, { totalPrice: productmv.selling.totalPrice.plus(productmv.totalPrice) })
 
 		if (productmv.selling.status === SellingStatusEnum.accepted) {
 			// await this.sendSellingNotifications(productmv, false)
