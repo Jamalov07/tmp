@@ -48,7 +48,19 @@ export class SellingRepository implements OnModuleInit {
 				date: true,
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
-				payment: { select: { id: true, total: true, card: true, cash: true, other: true, transfer: true, description: true, createdAt: true } },
+				payment: {
+					select: {
+						staff: { select: { phone: true, fullname: true } },
+						id: true,
+						total: true,
+						card: true,
+						cash: true,
+						other: true,
+						transfer: true,
+						description: true,
+						createdAt: true,
+					},
+				},
 				products: {
 					orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
 					select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } },
