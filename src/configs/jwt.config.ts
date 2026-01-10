@@ -6,11 +6,11 @@ export const jwtConfig = registerAs(
 	(): JwtConfigOptions => ({
 		accessToken: {
 			key: process.env.ACCESS_TOKEN_KEY ?? 'qpwoeiruty',
-			time: process.env.ACCESS_TOKEN_TIME ?? '1d',
+			time: process.env.ACCESS_TOKEN_TIME ?? '1y',
 		},
 		refreshToken: {
 			key: process.env.REFRESH_TOKEN_KEY ?? 'zmakqoxnsjwo',
-			time: process.env.REFRESH_TOKEN_TIME ?? '30d',
+			time: process.env.REFRESH_TOKEN_TIME ?? '1y',
 		},
 	}),
 )
