@@ -13,6 +13,7 @@ yarn-error.log*
 lerna-debug.log*
 
 uploads/*
+ok.json
 
 # OS
 .DS_Store
