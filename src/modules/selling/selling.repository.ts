@@ -295,7 +295,9 @@ export class SellingRepository implements OnModuleInit {
 				client: { select: { fullname: true, phone: true, id: true, createdAt: true, telegram: true } },
 				staff: { select: { fullname: true, phone: true, id: true, createdAt: true } },
 				payment: { select: { total: true, id: true, card: true, cash: true, other: true, type: true, transfer: true, description: true, createdAt: true } },
-				products: { select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } } },
+				products: {
+					select: { createdAt: true, id: true, price: true, count: true, product: { select: { name: true, id: true, createdAt: true } } },
+				},
 			},
 		})
 
@@ -305,10 +307,24 @@ export class SellingRepository implements OnModuleInit {
 		})
 
 		if (body.status === SellingStatusEnum.accepted && existSelling.status !== SellingStatusEnum.accepted) {
-			await this.prisma.productMVModel.updateMany({
-				where: { id: { in: selling.products.map((prr) => prr.id) } },
-				data: { createdAt: body.date ? new Date(body.date) : undefined },
-			})
+			const sellingDate = body.date ? new Date(body.date) : new Date()
+
+			const sortedProducts = [...selling.products].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+
+			for (let i = 0; i < sortedProducts.length; i++) {
+				const product = sortedProducts[sortedProducts.length - 1 - i]
+
+				const newDate = new Date(sellingDate.getTime() - i * 1000)
+
+				await this.prisma.productMVModel.update({
+					where: { id: product.id },
+					data: { createdAt: newDate },
+				})
+			}
+			// await this.prisma.productMVModel.updateMany({
+			// 	where: { id: { in: selling.products.map((prr) => prr.id) } },
+			// 	data: { createdAt: body.date ? new Date(body.date) : undefined },
+			// })
 			for (const product of selling.products) {
 				await this.prisma.productModel.update({ where: { id: product.product.id }, data: { count: { decrement: product.count } } })
 			}
