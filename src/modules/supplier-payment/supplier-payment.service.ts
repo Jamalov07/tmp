@@ -153,7 +153,14 @@ export class SupplierPaymentService {
 	async deleteOne(query: SupplierPaymentDeleteOneRequest) {
 		const payment = await this.getOne(query)
 		if (payment.data.type === ServiceTypeEnum.arrival) {
-			await this.supplierPaymentRepository.updateOne(query, { card: new Decimal(0), cash: new Decimal(0), other: new Decimal(0), transfer: new Decimal(0), description: '' })
+			await this.supplierPaymentRepository.updateOne(query, {
+				total: new Decimal(0),
+				card: new Decimal(0),
+				cash: new Decimal(0),
+				other: new Decimal(0),
+				transfer: new Decimal(0),
+				description: '',
+			})
 		} else {
 			// if (query.method === DeleteMethodEnum.hard) {
 			if (!payment.data.total.isZero()) {
