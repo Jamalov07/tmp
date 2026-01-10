@@ -1705,16 +1705,22 @@ export class ExcelService {
 			select: {
 				fullname: true,
 				phone: true,
+				balance: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, deletedAt: null },
-					select: { card: true, cash: true, other: true, transfer: true },
+					select: { fromBalance: true },
+				},
+				returnings: {
+					select: {
+						payment: { select: { fromBalance: true } },
+					},
 				},
 				sellings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true } },
-						products: { select: { count: true, price: true } },
+						totalPrice: true,
+						payment: { select: { total: true } },
 					},
 					orderBy: { date: 'desc' },
 				},
@@ -1722,18 +1728,22 @@ export class ExcelService {
 		})
 
 		const mappedClients = clients.map((c) => {
-			const payment = c.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
-
-			const sellingPayment = c.sellings.reduce((acc, sel) => {
-				const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
-				const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-				return acc.plus(productsSum).minus(totalPayment)
+			// Sotuvlardan qarz
+			const sellingDebt = c.sellings.reduce((acc, sel) => {
+				return acc.plus(sel.totalPrice).minus(sel.payment.total)
 			}, new Decimal(0))
+
+			// Qaytarishlardan balance kamayishi
+			const returningBalance = c.returnings.reduce((acc, r) => {
+				return acc.plus(r.payment.fromBalance)
+			}, new Decimal(0))
+
+			const finalBalance = new Decimal(c.balance).minus(returningBalance)
 
 			return {
 				fullname: c.fullname,
 				phone: c.phone,
-				debt: sellingPayment.minus(payment),
+				debt: sellingDebt.plus(finalBalance),
 				lastSellingDate: c.sellings?.[0]?.date ?? null,
 			}
 		})
