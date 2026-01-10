@@ -38,6 +38,7 @@ export class ClientPaymentRepository implements OnModuleInit {
 				id: true,
 				staff: { select: { id: true, fullname: true, phone: true } },
 				user: { select: { id: true, fullname: true, phone: true } },
+				total: true,
 				type: true,
 				card: true,
 				cash: true,
