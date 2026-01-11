@@ -426,7 +426,7 @@ export class ExcelService {
 
 		// Mahsulotlar
 		arrival.products.forEach((product, index) => {
-			const row = worksheet.addRow([index + 1, product.product.name, product.count, product.price.toNumber(), product.cost.toNumber() * product.count])
+			const row = worksheet.addRow([index + 1, product.product.name, product.count, product.cost.toNumber(), product.cost.toNumber() * product.count])
 			row.eachCell((cell) => {
 				cell.alignment = { vertical: 'middle', horizontal: 'center' }
 				cell.border = borderAll()

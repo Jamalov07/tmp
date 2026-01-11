@@ -302,7 +302,7 @@ export class SellingService {
 					await this.botService.sendSellingToClient(sellingInfo).catch(console.log)
 				}
 			}
-			// chdfannelga yuborish
+			// channelga yuborish
 			// if (shouldSend) {
 			const wasAccepted = selling.data.status === SellingStatusEnum.accepted
 			const prevPaymentTotal = selling.data.payment?.total ?? new Decimal(0)
