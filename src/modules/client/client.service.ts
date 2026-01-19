@@ -147,6 +147,8 @@ export class ClientService {
 			client.balance = client.balance.minus(returning.payment.fromBalance)
 		})
 
+		console.log(totalDebit, totalCredit, totalDebit.minus(totalCredit), sellingDebt2, client.balance)
+
 		return createResponse({
 			data: {
 				id: client.id,
