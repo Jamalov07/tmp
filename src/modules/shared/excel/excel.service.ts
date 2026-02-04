@@ -1524,14 +1524,11 @@ export class ExcelService {
 			})
 			totalCredit = totalCredit.plus(total)
 		})
-		console.log('arrivals', supplier.arrivals)
 
 		supplier.arrivals.forEach((arr) => {
 			const sum = arr.products.reduce((acc, p) => {
 				const price = p.price.mul(p.count)
 				const cost = p.cost.mul(p.count)
-
-				console.log('product', p)
 
 				deeds.push({
 					type: 'debit',
@@ -1566,7 +1563,8 @@ export class ExcelService {
 			}
 		})
 
-		const filteredDeeds = deeds.filter((d) => !d.value.isZero()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+		const filteredDeeds = deeds /* .filter((d) => !d.value.isZero()) */
+			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
 		///=====================
 		const supplierDeedInfos = await this.prisma.userModel.findFirst({
