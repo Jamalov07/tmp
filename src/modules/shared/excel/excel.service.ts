@@ -267,6 +267,8 @@ export class ExcelService {
 		const arrivalList = await this.prisma.arrivalModel.findMany({
 			where: {
 				deletedAt: null,
+				supplierId: query.supplierId,
+				OR: [{ supplier: { fullname: { contains: query.search, mode: 'insensitive' } } }, { supplier: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				createdAt: {
 					...(startDate && { gte: startDate }),
 					...(endDate && { lte: endDate }),
@@ -1522,11 +1524,14 @@ export class ExcelService {
 			})
 			totalCredit = totalCredit.plus(total)
 		})
+		console.log('arrivals', supplier.arrivals)
 
 		supplier.arrivals.forEach((arr) => {
 			const sum = arr.products.reduce((acc, p) => {
 				const price = p.price.mul(p.count)
 				const cost = p.cost.mul(p.count)
+
+				console.log('product', p)
 
 				deeds.push({
 					type: 'debit',
