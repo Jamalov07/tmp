@@ -29,6 +29,7 @@ export class StaffPaymentRepository implements OnModuleInit {
 		const staffPayments = await this.prisma.paymentModel.findMany({
 			where: {
 				staffId: query.staffId,
+				userId: query.userId,
 				type: ServiceTypeEnum.staff,
 				createdAt: { gte: query.startDate, lte: query.endDate },
 			},
@@ -70,6 +71,7 @@ export class StaffPaymentRepository implements OnModuleInit {
 		const staffPaymentsCount = await this.prisma.paymentModel.count({
 			where: {
 				staffId: query.staffId,
+				userId: query.userId,
 				type: ServiceTypeEnum.staff,
 				createdAt: { gte: query.startDate, lte: query.endDate },
 			},

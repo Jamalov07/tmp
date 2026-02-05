@@ -2,7 +2,7 @@ import { PaginationRequest, RequestOtherFields } from '@common'
 import { StaffPaymentOptional, StaffPaymentRequired } from './fields.interfaces'
 
 export declare interface StaffPaymentFindManyRequest
-	extends Pick<StaffPaymentOptional, 'staffId'>,
+	extends Pick<StaffPaymentOptional, 'staffId' | 'userId'>,
 		PaginationRequest,
 		Pick<RequestOtherFields, 'isDeleted' | 'startDate' | 'endDate'> {}
 
