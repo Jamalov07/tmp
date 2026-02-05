@@ -401,19 +401,18 @@ export class SellingRepository implements OnModuleInit {
 		const endDay = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, extractedNow.day, 23, 59, 59, 999))
 
 		const salesByDay = []
-		for (let day = startDay.getDate(); day <= endDay.getDate(); day++) {
-			const dayStart = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, day, 0, 0, 0, 0))
 
-			const dayEnd = convertUTCtoLocal(new Date(extractedNow.year, extractedNow.month, day, 23, 59, 59, 999))
+		for (let current = new Date(startDay); current <= endDay; current.setDate(current.getDate() + 1)) {
+			const dayStart = convertUTCtoLocal(new Date(current.getFullYear(), current.getMonth(), current.getDate(), 0, 0, 0, 0))
+
+			const dayEnd = convertUTCtoLocal(new Date(current.getFullYear(), current.getMonth(), current.getDate(), 23, 59, 59, 999))
 
 			const sales = await this.prisma.sellingModel.findMany({
 				where: { createdAt: { gte: dayStart, lte: dayEnd } },
 				select: { totalPrice: true },
 			})
 
-			const totalSum = sales.reduce((sum, selling) => {
-				return sum.plus(selling.totalPrice)
-			}, new Decimal(0))
+			const totalSum = sales.reduce((sum, selling) => sum.plus(selling.totalPrice), new Decimal(0))
 
 			salesByDay.push({
 				date: `${dayStart.getFullYear()}-${String(dayStart.getMonth() + 1).padStart(2, '0')}-${String(dayStart.getDate()).padStart(2, '0')}`,
