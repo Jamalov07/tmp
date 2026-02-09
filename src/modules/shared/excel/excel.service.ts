@@ -29,6 +29,7 @@ export class ExcelService {
 		const sellingList = await this.prisma.sellingModel.findMany({
 			where: {
 				deletedAt: null,
+				clientId: query.clientId,
 				status: SellingStatusEnum.accepted,
 				date: { ...(startDate && { gte: startDate }), ...(endDate && { lte: endDate }) },
 			},
