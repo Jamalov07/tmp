@@ -30,6 +30,8 @@ export class ExcelService {
 			where: {
 				deletedAt: null,
 				clientId: query.clientId,
+				staffId: query.staffId,
+				OR: [{ client: { fullname: { contains: query.search, mode: 'insensitive' } } }, { client: { phone: { contains: query.search, mode: 'insensitive' } } }],
 				status: SellingStatusEnum.accepted,
 				date: { ...(startDate && { gte: startDate }), ...(endDate && { lte: endDate }) },
 			},
