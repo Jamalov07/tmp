@@ -1151,7 +1151,7 @@ export class ExcelService {
 					value: price,
 					date: p.createdAt,
 					description: '',
-					cost: p.cost.mul(p.count),
+					cost: p.price,
 					price,
 					quantity: p.count,
 					name: p.product.name,
@@ -1171,7 +1171,7 @@ export class ExcelService {
 		})
 
 		const filtered = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => a.date.getTime() - b.date.getTime())
-		const rows = filtered.map((deed, i) => [i + 1, deed.name || '', deed.quantity, deed.price.toFixed(2), deed.cost.toFixed(2), deed.action, this.formatDate(deed.date)])
+		const rows = filtered.map((deed, i) => [i + 1, deed.name || '', deed.quantity, deed.cost.toFixed(2), deed.price.toFixed(2), deed.action, this.formatDate(deed.date)])
 
 		///=====================
 		const clientAllInfos = await this.prisma.userModel.findFirst({
@@ -1245,7 +1245,7 @@ export class ExcelService {
 
 		ws.addRow([])
 
-		const header = ws.addRow(['№', 'Товар', 'Количество', 'Цена', 'Стоимость', 'Операция', 'Время'])
+		const header = ws.addRow(['№', 'Товар', 'Количество', 'Стоимость', 'Цена', 'Операция', 'Время'])
 		header.eachCell((cell) => {
 			cell.font = { bold: true }
 			cell.alignment = { vertical: 'middle', horizontal: 'center' }
