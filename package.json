@@ -30,7 +30,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^5.0.1",
     "@nestjs/swagger": "^11.1.0",
-    "@prisma/client": "^6.5.0",
+    "@prisma/client": "^6.19.1",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "big.js": "^7.0.1",
