@@ -1312,16 +1312,18 @@ export class ExcelService {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.supplier, createdAt: { gte: deedStartDate, lte: deedEndDate } },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				arrivals: {
 					where: { date: { gte: deedStartDate, lte: deedEndDate } },
 					select: {
 						date: true,
-						products: { select: { cost: true, count: true, price: true } },
+						totalCost: true,
+						totalPrice: true,
+						products: { select: { totalCost: true, totalPrice: true, cost: true, count: true, price: true } },
 						payment: {
 							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -1336,19 +1338,17 @@ export class ExcelService {
 		let totalCredit = new Decimal(0)
 
 		supplier.payments.forEach((curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-			totalCredit = totalCredit.plus(totalPayment)
+			deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
+			totalCredit = totalCredit.plus(curr.total)
 		})
 
 		supplier.arrivals.forEach((arr) => {
-			const productsSum = arr.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			const productsSum = arr.products.reduce((a, p) => a.plus(p.totalCost), new Decimal(0))
 			deeds.push({ type: 'debit', action: 'arrival', value: productsSum, date: arr.date, description: '' })
 			totalDebit = totalDebit.plus(productsSum)
 
-			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: arr.payment.createdAt, description: arr.payment.description })
-			totalCredit = totalCredit.plus(totalPayment)
+			deeds.push({ type: 'credit', action: 'payment', value: arr.payment.total, date: arr.payment.createdAt, description: arr.payment.description })
+			totalCredit = totalCredit.plus(arr.payment.total)
 		})
 
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -1562,8 +1562,8 @@ export class ExcelService {
 					date: p.createdAt,
 					description: '',
 					name: p.product.name,
-					price: arr.totalPrice,
-					cost: arr.totalCost,
+					price: p.cost,
+					cost: p.totalCost,
 					quantity: p.count,
 				})
 
