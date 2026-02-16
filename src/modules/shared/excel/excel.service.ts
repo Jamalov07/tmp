@@ -1482,12 +1482,22 @@ export class ExcelService {
 						type: ServiceTypeEnum.supplier,
 						createdAt: { gte: deedStartDate, lte: deedEndDate },
 					},
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: {
+						total: true,
+						card: true,
+						cash: true,
+						other: true,
+						transfer: true,
+						createdAt: true,
+						description: true,
+					},
 				},
 				arrivals: {
 					where: { date: { gte: deedStartDate, lte: deedEndDate } },
 					select: {
 						date: true,
+						totalCost: true,
+						totalPrice: true,
 						products: {
 							select: {
 								product: { select: { name: true } },
@@ -1495,11 +1505,13 @@ export class ExcelService {
 								count: true,
 								price: true,
 								createdAt: true,
+								totalCost: true,
+								totalPrice: true,
 							},
 						},
 						payment: {
 							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -1514,55 +1526,64 @@ export class ExcelService {
 		let totalCredit = new Decimal(0)
 
 		supplier.payments.forEach((curr) => {
-			const total = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			deeds.push({
-				type: 'credit',
-				action: 'payment',
-				value: total,
-				date: curr.createdAt,
-				description: curr.description,
-				cost: total,
-				price: total,
-				quantity: 1,
-			})
-			totalCredit = totalCredit.plus(total)
+			if (curr.description === `import qilingan boshlang'ich qiymat ${Number(curr.total).toFixed(2)}`) {
+				deeds.push({
+					type: 'debit',
+					action: 'arrival',
+					value: curr.total,
+					date: curr.createdAt,
+					description: curr.description,
+					cost: curr.total,
+					price: curr.total,
+					quantity: 1,
+				})
+				totalDebit = totalDebit.plus(curr.total)
+			} else {
+				deeds.push({
+					type: 'credit',
+					action: 'payment',
+					value: curr.total,
+					date: curr.createdAt,
+					description: curr.description,
+					cost: curr.total,
+					price: curr.total,
+					quantity: 1,
+				})
+				totalCredit = totalCredit.plus(curr.total)
+			}
 		})
 
 		supplier.arrivals.forEach((arr) => {
 			const sum = arr.products.reduce((acc, p) => {
-				const price = p.price.mul(p.count)
-				const cost = p.cost.mul(p.count)
-
 				deeds.push({
 					type: 'debit',
 					action: 'arrival',
-					value: price,
+					value: arr.totalCost,
 					date: p.createdAt,
 					description: '',
 					name: p.product.name,
-					price,
-					cost,
+					price: arr.totalPrice,
+					cost: arr.totalCost,
 					quantity: p.count,
 				})
 
-				return acc.plus(price)
+				return acc.plus(arr.totalCost)
 			}, new Decimal(0))
 
 			totalDebit = totalDebit.plus(sum)
 
-			const payment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-			if (!payment.isZero()) {
+			if (!arr.payment.total.isZero()) {
 				deeds.push({
 					type: 'credit',
 					action: 'payment',
-					value: payment,
+					value: arr.payment.total,
 					date: arr.payment.createdAt,
 					description: arr.payment.description,
-					price: payment,
-					cost: payment,
+					price: arr.payment.total,
+					cost: arr.payment.total,
 					quantity: 1,
 				})
-				totalCredit = totalCredit.plus(payment)
+				totalCredit = totalCredit.plus(arr.payment.total)
 			}
 		})
 
@@ -1582,14 +1603,16 @@ export class ExcelService {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.supplier },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				arrivals: {
 					select: {
 						date: true,
-						products: { select: { cost: true, count: true, price: true } },
+						totalCost: true,
+						totalPrice: true,
+						products: { select: { totalPrice: true, totalCost: true, cost: true, count: true, price: true } },
 						payment: {
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -1600,16 +1623,14 @@ export class ExcelService {
 		let totalDebit2: Decimal = new Decimal(0)
 		let totalCredit2: Decimal = new Decimal(0)
 		supplierDeedInfos.payments.forEach((curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(curr.total)
 		})
 
 		supplierDeedInfos.arrivals.forEach((arr) => {
-			const productsSum = arr.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			const productsSum = arr.products.reduce((a, p) => a.plus(p.totalCost), new Decimal(0))
 			totalDebit2 = totalDebit2.plus(productsSum)
 
-			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(arr.payment.total)
 		})
 		///=====================
 
