@@ -90,6 +90,7 @@ export class SupplierService {
 		let totalCredit: Decimal = new Decimal(0)
 
 		const payment = supplier.payments.reduce((acc, curr) => {
+			console.log('payment', curr.total)
 			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
 				if (curr.description === `import qilingan boshlang'ich qiymat ${Number(curr.total).toFixed(2)}`) {
 					deeds.push({ type: 'debit', action: 'arrival', value: curr.total, date: curr.createdAt, description: curr.description })
@@ -102,8 +103,10 @@ export class SupplierService {
 
 			return acc.plus(curr.total)
 		}, new Decimal(0))
+		console.log('totalPayment', payment)
 
 		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
+			console.log('arrival', arr.payment.total, arr.totalCost)
 			if ((!deedStartDate || arr.date >= deedStartDate) && (!deedEndDate || arr.date <= deedEndDate)) {
 				deeds.push({ type: 'debit', action: 'arrival', value: arr.totalCost, date: arr.date, description: '' })
 				totalDebit = totalDebit.plus(arr.totalCost)
@@ -116,7 +119,9 @@ export class SupplierService {
 
 			return acc.plus(arr.totalCost).minus(arr.payment?.total || 0)
 		}, new Decimal(0))
-
+		console.log('arrivalPayment', arrivalPayment)
+		console.log(supplier.balance, arrivalPayment)
+		console.log(totalDebit, totalCredit)
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
 		return createResponse({
