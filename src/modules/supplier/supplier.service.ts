@@ -91,8 +91,13 @@ export class SupplierService {
 
 		const payment = supplier.payments.reduce((acc, curr) => {
 			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
-				deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
-				totalDebit = totalDebit.plus(curr.total)
+				if (curr.description === `import qilingan boshlang'ich qiymat ${curr.total.toNumber()}`) {
+					deeds.push({ type: 'debit', action: 'arrival', value: curr.total, date: curr.createdAt, description: curr.description })
+					totalDebit = totalDebit.plus(curr.total)
+				} else {
+					deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
+					totalCredit = totalCredit.plus(curr.total)
+				}
 			}
 
 			return acc.plus(curr.total)
@@ -101,12 +106,12 @@ export class SupplierService {
 		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
 			if ((!deedStartDate || arr.date >= deedStartDate) && (!deedEndDate || arr.date <= deedEndDate)) {
 				deeds.push({ type: 'debit', action: 'arrival', value: arr.totalCost, date: arr.date, description: '' })
-				totalCredit = totalCredit.plus(arr.totalCost)
+				totalDebit = totalDebit.plus(arr.totalCost)
 			}
 
 			if ((!deedStartDate || arr.payment.createdAt >= deedStartDate) && (!deedEndDate || arr.payment.createdAt <= deedEndDate)) {
 				deeds.push({ type: 'credit', action: 'payment', value: arr.payment.total, date: arr.payment.createdAt, description: arr.payment.description })
-				totalDebit = totalDebit.plus(arr.payment.total)
+				totalCredit = totalCredit.plus(arr.payment.total)
 			}
 
 			return acc.plus(arr.totalCost).minus(arr.payment?.total || 0)
