@@ -91,7 +91,10 @@ export class SupplierService {
 
 		const payment = supplier.payments.reduce((acc, curr) => {
 			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
-				if (curr.description === `import qilingan boshlang'ich qiymat ${curr.total.toNumber()}`) {
+				if (
+					curr.description === `import qilingan boshlang'ich qiymat ${curr.total.toNumber()}` ||
+					curr.description === `import qilingan boshlang'ich qiymat ${curr.total.toNumber()}0`
+				) {
 					deeds.push({ type: 'debit', action: 'arrival', value: curr.total, date: curr.createdAt, description: curr.description })
 					totalDebit = totalDebit.plus(curr.total)
 				} else {
