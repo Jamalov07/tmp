@@ -106,8 +106,13 @@ export class ClientService {
 
 		let payment = client.payments.reduce((acc, curr) => {
 			if ((!deedStartDate || curr.createdAt >= deedStartDate) && (!deedEndDate || curr.createdAt <= deedEndDate)) {
-				deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
-				totalCredit = totalCredit.plus(curr.total)
+				if (curr.description === `import qilingan boshlang'ich qiymat ${Number(curr.total).toFixed(2)}`) {
+					deeds.push({ type: 'debit', action: 'selling', value: curr.total, date: curr.createdAt, description: curr.description })
+					totalDebit = totalDebit.plus(curr.total)
+				} else {
+					deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
+					totalCredit = totalCredit.plus(curr.total)
+				}
 			}
 
 			return acc.plus(curr.total)
