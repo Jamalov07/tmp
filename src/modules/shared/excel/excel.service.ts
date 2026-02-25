@@ -1338,8 +1338,13 @@ export class ExcelService {
 		let totalCredit = new Decimal(0)
 
 		supplier.payments.forEach((curr) => {
-			deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
-			totalCredit = totalCredit.plus(curr.total)
+			if (curr.description === `import qilingan boshlang'ich qiymat ${Number(curr.total).toFixed(2)}`) {
+				deeds.push({ type: 'debit', action: 'arrival', value: curr.total, date: curr.createdAt, description: curr.description })
+				totalDebit = totalDebit.plus(curr.total)
+			} else {
+				deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
+				totalCredit = totalCredit.plus(curr.total)
+			}
 		})
 
 		supplier.arrivals.forEach((arr) => {
@@ -1521,7 +1526,7 @@ export class ExcelService {
 
 		if (!supplier) throw new BadRequestException(ERROR_MSG.SUPPLIER.NOT_FOUND.UZ)
 
-		const deeds: (ClientDeed & { quantity: number; price: Decimal; cost: Decimal; name?: string })[] = []
+		const deeds: (Omit<ClientDeed, 'value'> & { quantity: number; price: Decimal; cost: Decimal; name?: string })[] = []
 		let totalDebit = new Decimal(0)
 		let totalCredit = new Decimal(0)
 
@@ -1530,7 +1535,7 @@ export class ExcelService {
 				deeds.push({
 					type: 'debit',
 					action: 'arrival',
-					value: curr.total,
+					// value: curr.total,
 					date: curr.createdAt,
 					description: curr.description,
 					cost: curr.total,
@@ -1542,7 +1547,7 @@ export class ExcelService {
 				deeds.push({
 					type: 'credit',
 					action: 'payment',
-					value: curr.total,
+					// value: curr.total,
 					date: curr.createdAt,
 					description: curr.description,
 					cost: curr.total,
@@ -1558,7 +1563,7 @@ export class ExcelService {
 				deeds.push({
 					type: 'debit',
 					action: 'arrival',
-					value: arr.totalCost,
+					// value: arr.totalCost,
 					date: p.createdAt,
 					description: '',
 					name: p.product.name,
@@ -1567,7 +1572,7 @@ export class ExcelService {
 					quantity: p.count,
 				})
 
-				return acc.plus(arr.totalCost)
+				return acc.plus(p.totalCost)
 			}, new Decimal(0))
 
 			totalDebit = totalDebit.plus(sum)
@@ -1576,7 +1581,7 @@ export class ExcelService {
 				deeds.push({
 					type: 'credit',
 					action: 'payment',
-					value: arr.payment.total,
+					// value: arr.payment.total,
 					date: arr.payment.createdAt,
 					description: arr.payment.description,
 					price: arr.payment.total,
@@ -1597,6 +1602,7 @@ export class ExcelService {
 				id: true,
 				fullname: true,
 				phone: true,
+				balance: true,
 				actions: true,
 				updatedAt: true,
 				createdAt: true,
@@ -1620,18 +1626,22 @@ export class ExcelService {
 			},
 		})
 
-		let totalDebit2: Decimal = new Decimal(0)
-		let totalCredit2: Decimal = new Decimal(0)
-		supplierDeedInfos.payments.forEach((curr) => {
-			totalCredit2 = totalCredit2.plus(curr.total)
-		})
+		const arrivalPayment = supplier.arrivals.reduce((acc, arr) => {
+			return acc.plus(arr.totalCost).minus(arr.payment?.total || 0)
+		}, new Decimal(0))
 
-		supplierDeedInfos.arrivals.forEach((arr) => {
-			const productsSum = arr.products.reduce((a, p) => a.plus(p.totalCost), new Decimal(0))
-			totalDebit2 = totalDebit2.plus(productsSum)
+		// let totalDebit2: Decimal = new Decimal(0)
+		// let totalCredit2: Decimal = new Decimal(0)
+		// supplierDeedInfos.payments.forEach((curr) => {
+		// 	totalCredit2 = totalCredit2.plus(curr.total)
+		// })
 
-			totalCredit2 = totalCredit2.plus(arr.payment.total)
-		})
+		// supplierDeedInfos.arrivals.forEach((arr) => {
+		// 	const productsSum = arr.products.reduce((a, p) => a.plus(p.totalCost), new Decimal(0))
+		// 	totalDebit2 = totalDebit2.plus(productsSum)
+
+		// 	totalCredit2 = totalCredit2.plus(arr.payment.total)
+		// })
 		///=====================
 
 		const workbook = new ExcelJS.Workbook()
@@ -1648,7 +1658,7 @@ export class ExcelService {
 		]
 
 		// === 1-2 qator ===
-		const row1 = worksheet.addRow([`Клиент: ${supplier.fullname}`, '', '', `Остаток: ${totalDebit2.minus(totalCredit2).toFixed(2)}`, '', '', ''])
+		const row1 = worksheet.addRow([`Клиент: ${supplier.fullname}`, '', '', `Остаток: ${supplierDeedInfos.balance.plus(arrivalPayment).toNumber()}`, '', '', ''])
 		worksheet.mergeCells('A1:C1')
 		worksheet.mergeCells('D1:G1')
 
