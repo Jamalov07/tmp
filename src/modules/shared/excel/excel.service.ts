@@ -898,16 +898,16 @@ export class ExcelService {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, createdAt: { gte: deedStartDate, lte: deedEndDate } },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
 					where: { status: SellingStatusEnum.accepted, date: { gte: deedStartDate, lte: deedEndDate } },
 					select: {
 						date: true,
-						products: { select: { cost: true, count: true, price: true } },
+						products: { select: { totalPrice: true, cost: true, count: true, price: true } },
 						payment: {
 							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -931,19 +931,22 @@ export class ExcelService {
 		let totalCredit: Decimal = new Decimal(0)
 
 		client.payments.forEach((curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: curr.createdAt, description: curr.description })
-			totalCredit = totalCredit.plus(totalPayment)
+			if (curr.description === `import qilingan boshlang'ich qiymat ${Number(curr.total).toFixed(2)}`) {
+				deeds.push({ type: 'debit', action: 'selling', value: curr.total, date: curr.createdAt, description: curr.description })
+				totalDebit = totalDebit.plus(curr.total)
+			} else {
+				deeds.push({ type: 'credit', action: 'payment', value: curr.total, date: curr.createdAt, description: curr.description })
+				totalCredit = totalCredit.plus(curr.total)
+			}
 		})
 
 		client.sellings.forEach((sel) => {
-			const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			const productsSum = sel.products.reduce((a, p) => a.plus(p.totalPrice), new Decimal(0))
 			deeds.push({ type: 'debit', action: 'selling', value: productsSum, date: sel.date, description: '' })
 			totalDebit = totalDebit.plus(productsSum)
 
-			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: totalPayment, date: sel.payment.createdAt, description: sel.payment.description })
-			totalCredit = totalCredit.plus(totalPayment)
+			deeds.push({ type: 'credit', action: 'payment', value: sel.payment.total, date: sel.payment.createdAt, description: sel.payment.description })
+			totalCredit = totalCredit.plus(sel.payment.total)
 		})
 
 		client.returnings.forEach((returning) => {
@@ -972,15 +975,15 @@ export class ExcelService {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
 						date: true,
-						products: { select: { cost: true, count: true, price: true } },
+						products: { select: { totalPrice: true, cost: true, count: true, price: true } },
 						payment: {
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -1000,16 +1003,14 @@ export class ExcelService {
 		let totalCredit2: Decimal = new Decimal(0)
 
 		clientAllInfos.payments.forEach((curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(curr.total)
 		})
 
 		clientAllInfos.sellings.forEach((sel) => {
-			const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			const productsSum = sel.products.reduce((a, p) => a.plus(p.totalPrice), new Decimal(0))
 			totalDebit2 = totalDebit2.plus(productsSum)
 
-			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(sel.payment.total)
 		})
 
 		clientAllInfos.returnings.forEach((returning) => {
@@ -1105,7 +1106,7 @@ export class ExcelService {
 				fullname: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client, createdAt: { gte: deedStartDate, lte: deedEndDate } },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
 					where: { status: SellingStatusEnum.accepted, date: { gte: deedStartDate, lte: deedEndDate } },
@@ -1114,7 +1115,7 @@ export class ExcelService {
 						products: { select: { product: { select: { name: true } }, cost: true, count: true, price: true, createdAt: true } },
 						payment: {
 							where: { createdAt: { gte: deedStartDate, lte: deedEndDate } },
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 				},
@@ -1137,9 +1138,31 @@ export class ExcelService {
 		let totalCredit = new Decimal(0)
 
 		client.payments.forEach((curr) => {
-			const total = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: total, date: curr.createdAt, description: curr.description, cost: total, price: total, quantity: 1 })
-			totalCredit = totalCredit.plus(total)
+			if (curr.description === `import qilingan boshlang'ich qiymat ${Number(curr.total).toFixed(2)}`) {
+				deeds.push({
+					type: 'debit',
+					action: 'selling',
+					value: curr.total,
+					date: curr.createdAt,
+					description: curr.description,
+					cost: curr.total,
+					price: curr.total,
+					quantity: 1,
+				})
+				totalDebit = totalDebit.plus(curr.total)
+			} else {
+				deeds.push({
+					type: 'credit',
+					action: 'payment',
+					value: curr.total,
+					date: curr.createdAt,
+					description: curr.description,
+					cost: curr.total,
+					price: curr.total,
+					quantity: 1,
+				})
+				totalCredit = totalCredit.plus(curr.total)
+			}
 		})
 
 		client.sellings.forEach((sel) => {
@@ -1159,14 +1182,31 @@ export class ExcelService {
 				totalDebit = totalDebit.plus(price)
 			})
 
-			const pay = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-			deeds.push({ type: 'credit', action: 'payment', value: pay, date: sel.payment.createdAt, description: sel.payment.description, cost: pay, price: pay, quantity: 1 })
-			totalCredit = totalCredit.plus(pay)
+			deeds.push({
+				type: 'credit',
+				action: 'payment',
+				value: sel.payment.total,
+				date: sel.payment.createdAt,
+				description: sel.payment.description,
+				cost: sel.payment.total,
+				price: sel.payment.total,
+				quantity: 1,
+			})
+			totalCredit = totalCredit.plus(sel.payment.total)
 		})
 
 		client.returnings.forEach((r) => {
 			const bal = r.payment.fromBalance
-			deeds.push({ type: 'credit', action: 'returning', value: bal, date: r.payment.createdAt, description: r.payment.description, cost: bal, price: bal, quantity: 1 })
+			deeds.push({
+				type: 'credit',
+				action: 'returning',
+				value: bal,
+				date: r.payment.createdAt,
+				description: r.payment.description,
+				cost: bal,
+				price: bal,
+				quantity: 1,
+			})
 			totalCredit = totalCredit.plus(bal)
 		})
 
@@ -1186,15 +1226,15 @@ export class ExcelService {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.client },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				sellings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
 						date: true,
-						products: { select: { cost: true, count: true, price: true } },
+						products: { select: { totalPrice: true, cost: true, count: true, price: true } },
 						payment: {
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -1214,16 +1254,14 @@ export class ExcelService {
 		let totalCredit2: Decimal = new Decimal(0)
 
 		clientAllInfos.payments.forEach((curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(curr.total)
 		})
 
 		clientAllInfos.sellings.forEach((sel) => {
-			const productsSum = sel.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			const productsSum = sel.products.reduce((a, p) => a.plus(p.totalPrice), new Decimal(0))
 			totalDebit2 = totalDebit2.plus(productsSum)
 
-			const totalPayment = sel.payment.card.plus(sel.payment.cash).plus(sel.payment.other).plus(sel.payment.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(sel.payment.total)
 		})
 
 		clientAllInfos.returnings.forEach((returning) => {
