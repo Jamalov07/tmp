@@ -2003,17 +2003,19 @@ export class ExcelService {
 				id: true,
 				fullname: true,
 				phone: true,
+				balance: true,
 				arrivals: {
 					select: {
 						date: true,
-						payment: { select: { card: true, cash: true, other: true, transfer: true } },
-						products: { select: { cost: true, count: true, price: true } },
+						totalCost: true,
+						payment: { select: { total: true, card: true, cash: true, other: true, transfer: true } },
+						products: { select: { totalPrice: true, totalCost: true, cost: true, count: true, price: true } },
 					},
 					orderBy: { date: 'desc' },
 				},
 				payments: {
 					where: { type: ServiceTypeEnum.supplier },
-					select: { card: true, cash: true, other: true, transfer: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true },
 				},
 				actions: true,
 				updatedAt: true,
@@ -2023,20 +2025,12 @@ export class ExcelService {
 		})
 
 		const mappedSuppliers = suppliers.map((s) => {
-			const payment = s.payments.reduce((acc, curr) => acc.plus(curr.card).plus(curr.cash).plus(curr.other).plus(curr.transfer), new Decimal(0))
-
 			const arrivalPayment = s.arrivals.reduce((acc, arr) => {
-				const productsSum = arr.products.reduce((a, p) => {
-					return a.plus(p.cost.mul(p.count))
-				}, new Decimal(0))
-
-				const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-
-				return acc.plus(productsSum).minus(totalPayment)
+				return acc.plus(arr.totalCost).minus(arr.payment?.total || 0)
 			}, new Decimal(0))
 			return {
 				...s,
-				debt: payment.plus(arrivalPayment),
+				debt: s.balance.plus(arrivalPayment),
 				lastArrivalDate: s.arrivals?.length ? s.arrivals[0].date : null,
 			}
 		})
