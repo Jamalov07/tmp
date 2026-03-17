@@ -133,7 +133,7 @@ export class SupplierPaymentService {
 				.plus(body.other ?? 0)
 				.plus(body.transfer ?? 0)
 
-			totalDiff = payment.data.total.minus(newTotal)
+			totalDiff = newTotal.minus(payment.data.total)
 
 			body = {
 				...body,
