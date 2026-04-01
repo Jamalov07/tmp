@@ -1409,14 +1409,14 @@ export class ExcelService {
 				deletedAt: true,
 				payments: {
 					where: { type: ServiceTypeEnum.supplier },
-					select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 				},
 				arrivals: {
 					select: {
 						date: true,
-						products: { select: { cost: true, count: true, price: true } },
+						products: { select: { totalCost: true, totalPrice: true, cost: true, count: true, price: true } },
 						payment: {
-							select: { card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
+							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
 						},
 					},
 					orderBy: { date: 'desc' },
@@ -1427,16 +1427,14 @@ export class ExcelService {
 		let totalDebit2: Decimal = new Decimal(0)
 		let totalCredit2: Decimal = new Decimal(0)
 		supplierDeedInfos.payments.forEach((curr) => {
-			const totalPayment = curr.card.plus(curr.cash).plus(curr.other).plus(curr.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(curr.total)
 		})
 
 		supplierDeedInfos.arrivals.forEach((arr) => {
-			const productsSum = arr.products.reduce((a, p) => a.plus(p.price.mul(p.count)), new Decimal(0))
+			const productsSum = arr.products.reduce((a, p) => a.plus(p.totalCost), new Decimal(0))
 			totalDebit2 = totalDebit2.plus(productsSum)
 
-			const totalPayment = arr.payment.card.plus(arr.payment.cash).plus(arr.payment.other).plus(arr.payment.transfer)
-			totalCredit2 = totalCredit2.plus(totalPayment)
+			totalCredit2 = totalCredit2.plus(arr.payment.total)
 		})
 		///=====================
 
