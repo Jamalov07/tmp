@@ -60,6 +60,7 @@ enum PageEnum {
   returning        @map("returning")
   client           @map("client")
   clientpayment    @map("clientpayment")
+  clientreport     @map("clientreport")
   supplier         @map("supplier")
   supplierpayment  @map("supplierpayment")
   stuff            @map("stuff")
