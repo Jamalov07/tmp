@@ -893,6 +893,7 @@ export class ExcelService {
 				fullname: true,
 				phone: true,
 				actions: true,
+				balance: true,
 				updatedAt: true,
 				createdAt: true,
 				deletedAt: true,
@@ -960,6 +961,8 @@ export class ExcelService {
 			totalCredit = totalCredit.plus(returning.payment.fromBalance)
 		})
 
+		console.log('total credit and debit', totalCredit, totalDebit)
+
 		const filteredDeeds = deeds.filter((d) => !d.value.equals(0)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
 		///=====================
@@ -969,6 +972,7 @@ export class ExcelService {
 				id: true,
 				fullname: true,
 				phone: true,
+				balance: true,
 				actions: true,
 				updatedAt: true,
 				createdAt: true,
@@ -1003,7 +1007,11 @@ export class ExcelService {
 		let totalCredit2: Decimal = new Decimal(0)
 
 		clientAllInfos.payments.forEach((curr) => {
-			totalCredit2 = totalCredit2.plus(curr.total)
+			if (curr.description === `import qilingan boshlang'ich qiymat ${Number(curr.total).toFixed(2)}`) {
+				totalDebit2 = totalDebit2.plus(curr.total)
+			} else {
+				totalCredit2 = totalCredit2.plus(curr.total)
+			}
 		})
 
 		clientAllInfos.sellings.forEach((sel) => {
@@ -1016,6 +1024,9 @@ export class ExcelService {
 		clientAllInfos.returnings.forEach((returning) => {
 			totalCredit2 = totalCredit2.plus(returning.payment.fromBalance)
 		})
+
+		console.log('total credit2 and debit2', totalCredit2, totalDebit2, clientAllInfos.balance)
+
 		///=====================
 
 		const workbook = new ExcelJS.Workbook()
