@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { PrismaService } from '../shared/prisma'
 import {
+	ClientCalc,
 	ClientCreateOneRequest,
 	ClientDeleteOneRequest,
 	ClientFindManyRequest,
@@ -66,6 +67,125 @@ export class ClientRepository implements OnModuleInit {
 		})
 
 		return clients
+	}
+
+	async findManyClientForReport(query: ClientFindManyRequest) {
+		let paginationOptions = {}
+		if (query.pagination) {
+			paginationOptions = { take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }
+		}
+
+		const clients = await this.prisma.userModel.findMany({
+			where: {
+				fullname: query.fullname,
+				type: UserTypeEnum.client,
+				OR: [{ fullname: { contains: query.search, mode: 'insensitive' } }, { phone: { contains: query.search, mode: 'insensitive' } }],
+			},
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				actions: true,
+				createdAt: true,
+			},
+			...paginationOptions,
+		})
+
+		return clients
+	}
+
+	async findManyStatsForReport2(query: ClientFindManyRequest) {
+		const clientMap = new Map<string, ClientCalc>()
+
+		const createEmptyCalc = (): ClientCalc => ({
+			selling: {
+				count: 0,
+				totalPrice: 0,
+				payment: {
+					count: 0,
+					total: 0,
+					totalCard: 0,
+					totalCash: 0,
+					totalTransfer: 0,
+					totalOther: 0,
+				},
+			},
+			returning: {
+				count: 0,
+				totalPrice: 0,
+				payment: {
+					totalFromBalance: 0,
+					totalCash: 0,
+				},
+			},
+		})
+
+		const getClient = (clientId: string) => {
+			if (!clientMap.has(clientId)) clientMap.set(clientId, createEmptyCalc())
+			return clientMap.get(clientId)
+		}
+
+		// --- SELLING STATS ---
+		const sellingStats = await this.prisma.sellingModel.groupBy({
+			by: ['clientId'],
+			where: {
+				status: 'accepted',
+				...(query.startDate && { date: { gte: query.startDate } }),
+				...(query.endDate && { date: { lte: query.endDate } }),
+			},
+			_count: { clientId: true },
+			_sum: { totalPrice: true },
+		})
+
+		for (const s of sellingStats) {
+			const c = getClient(s.clientId)
+			c.selling.count = Number(s._count.clientId)
+			c.selling.totalPrice = Number(s._sum.totalPrice ?? 0)
+		}
+
+		// --- PAYMENT STATS ---
+		const paymentStats = await this.prisma.paymentModel.groupBy({
+			by: ['userId'],
+			where: {
+				type: { in: ['client', 'selling'] },
+				deletedAt: null,
+				total: { gt: 0 },
+				...(query.startDate && { createdAt: { gte: query.startDate } }),
+				...(query.endDate && { createdAt: { lte: query.endDate } }),
+			},
+			_count: { userId: true },
+			_sum: { total: true, cash: true, card: true, transfer: true, other: true },
+		})
+
+		for (const p of paymentStats) {
+			const c = getClient(p.userId)
+			c.selling.payment.count = Number(p._count.userId)
+			c.selling.payment.total = Number(p._sum.total ?? 0)
+			c.selling.payment.totalCash = Number(p._sum.cash ?? 0)
+			c.selling.payment.totalCard = Number(p._sum.card ?? 0)
+			c.selling.payment.totalTransfer = Number(p._sum.transfer ?? 0)
+			c.selling.payment.totalOther = Number(p._sum.other ?? 0)
+		}
+
+		// --- RETURNING STATS ---
+		const returningStats = await this.prisma.returningModel.findMany({
+			where: {
+				status: 'accepted',
+				...(query.startDate && { date: { gte: query.startDate } }),
+				...(query.endDate && { date: { lte: query.endDate } }),
+			},
+			include: { payment: { select: { fromBalance: true, cash: true } } },
+		})
+
+		for (const r of returningStats) {
+			const c = getClient(r.clientId)
+			c.returning.count += 1
+			c.returning.totalPrice += Number(r.totalPrice ?? 0)
+			c.returning.payment.totalFromBalance += Number(r.payment?.fromBalance ?? 0)
+			c.returning.payment.totalCash += Number(r.payment?.cash ?? 0)
+		}
+
+		return Object.fromEntries(clientMap)
 	}
 
 	async findOne(query: ClientFindOneRequest) {

@@ -32,6 +32,13 @@ export class ClientController {
 		return this.clientService.findMany(query)
 	}
 
+	@Get('many/report')
+	@ApiOkResponse({ type: ClientFindManyResponseDto })
+	@ApiOperation({ summary: 'get all client reports' })
+	async findManyReport(@Query() query: ClientFindManyRequestDto): Promise<ClientFindManyResponseDto> {
+		return this.clientService.findManyForReport(query)
+	}
+
 	@Get('excel-download/many')
 	@ApiOperation({ summary: 'download many clients' })
 	async excelDownloadMany(@Res() res: Response, @Query() query: ClientFindManyRequestDto) {

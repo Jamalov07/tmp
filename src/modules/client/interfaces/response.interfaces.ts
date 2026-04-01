@@ -41,3 +41,26 @@ export declare interface ClientCreateOneResponse extends GlobalResponse {
 export declare interface ClientModifyResponse extends GlobalResponse {
 	data: null
 }
+
+export interface ClientCalc {
+	selling: {
+		count: number
+		totalPrice: number
+		payment: {
+			count: number
+			total: number
+			totalCard: number
+			totalCash: number
+			totalTransfer: number
+			totalOther: number
+		}
+	}
+	returning: {
+		count: number
+		totalPrice: number
+		payment: {
+			totalFromBalance: number
+			totalCash: number
+		}
+	}
+}

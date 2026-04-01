@@ -10,6 +10,7 @@ import {
 	ClientFindOneRequest,
 	ClientDeleteOneRequest,
 	ClientDeed,
+	ClientCalc,
 } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ExcelService } from '../shared'
@@ -81,6 +82,35 @@ export class ClientService {
 					pagesCount: Math.ceil(sortedClients.length / query.pageSize),
 					pageSize: paginatedClients.length,
 					data: paginatedClients,
+				}
+			: { data: mappedClients }
+
+		return createResponse({ data: result, success: { messages: ['find many success'] } })
+	}
+
+	async findManyForReport(query: ClientFindManyRequest) {
+		const clients = await this.clientRepository.findManyClientForReport(query)
+		const clientStats = await this.clientRepository.findManyStatsForReport2(query)
+		const clientsCount = await this.clientRepository.countFindMany(query)
+
+		const mappedClients = clients.map((c) => {
+			const calc: ClientCalc = clientStats[c.id]
+
+			return {
+				id: c.id,
+				fullname: c.fullname,
+				createdAt: c.createdAt,
+				phone: c.phone,
+				calc: calc,
+			}
+		})
+
+		const result = query.pagination
+			? {
+					totalCount: clientsCount,
+					pagesCount: Math.ceil(clientsCount / query.pageSize),
+					pageSize: mappedClients.length,
+					data: mappedClients,
 				}
 			: { data: mappedClients }
 

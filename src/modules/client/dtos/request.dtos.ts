@@ -5,7 +5,11 @@ import { ClientOptionalDto, ClientRequiredDto } from './fields.dtos'
 import { IsDateString, IsOptional } from 'class-validator'
 
 export class ClientFindManyRequestDto
-	extends IntersectionType(PickType(ClientOptionalDto, ['fullname', 'phone']), PaginationRequestDto, PickType(RequestOtherFieldsDto, ['search', 'debtValue', 'debtType']))
+	extends IntersectionType(
+		PickType(ClientOptionalDto, ['fullname', 'phone']),
+		PaginationRequestDto,
+		PickType(RequestOtherFieldsDto, ['search', 'debtValue', 'debtType', 'startDate', 'endDate']),
+	)
 	implements ClientFindManyRequest {}
 
 export class ClientFindOneRequestDto extends IntersectionType(PickType(ClientRequiredDto, ['id'])) implements ClientFindOneRequest {
