@@ -93,17 +93,19 @@ export class ClientService {
 		const clientStats = await this.clientRepository.findManyStatsForReport2(query)
 		const clientsCount = await this.clientRepository.countFindMany(query)
 
-		const mappedClients = clients.map((c) => {
-			const calc: ClientCalc = clientStats[c.id]
+		const mappedClients = clients
+			.map((c) => {
+				const calc: ClientCalc = clientStats[c.id]
 
-			return {
-				id: c.id,
-				fullname: c.fullname,
-				createdAt: c.createdAt,
-				phone: c.phone,
-				calc: calc,
-			}
-		})
+				return {
+					id: c.id,
+					fullname: c.fullname,
+					createdAt: c.createdAt,
+					phone: c.phone,
+					calc: calc,
+				}
+			})
+			.sort((a, b) => (b.calc?.selling?.totalPrice ?? 0) - (a.calc?.selling?.totalPrice ?? 0))
 
 		const result = query.pagination
 			? {
