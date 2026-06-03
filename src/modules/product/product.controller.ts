@@ -21,6 +21,14 @@ export class ProductController {
 
 	@Get('many')
 	@ApiOkResponse({ type: ProductFindManyResponseDto })
+	@ApiOperation({ summary: 'get all products (optimized)' })
+	@AuthOptions(false, false)
+	async findManyNew(@Query() query: ProductFindManyRequestDto): Promise<ProductFindManyResponseDto> {
+		return this.productService.findManyNew({ ...query, isDeleted: false })
+	}
+
+	@Get('many/old')
+	@ApiOkResponse({ type: ProductFindManyResponseDto })
 	@ApiOperation({ summary: 'get all products' })
 	@AuthOptions(false, false)
 	async findMany(@Query() query: ProductFindManyRequestDto): Promise<ProductFindManyResponseDto> {

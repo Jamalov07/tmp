@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ProductRepository } from './product.repository'
+import { ProductManyNewRepository } from './product-many-new.repository'
 import { createResponse, ERROR_MSG } from '@common'
 import { ProductGetOneRequest, ProductCreateOneRequest, ProductUpdateOneRequest, ProductGetManyRequest, ProductFindManyRequest, ProductFindOneRequest } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -10,6 +11,7 @@ import { Response } from 'express'
 export class ProductService {
 	constructor(
 		private readonly productRepository: ProductRepository,
+		private readonly productManyNewRepository: ProductManyNewRepository,
 		private readonly excelService: ExcelService,
 	) {}
 
@@ -74,6 +76,64 @@ export class ProductService {
 			: { data: sortedProducts, calc: { calcPage, calcTotal } }
 
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
+	}
+
+	async findManyNew(query: ProductFindManyRequest) {
+		const [products, productsCount, totals] = await Promise.all([
+			this.productManyNewRepository.findMany(query),
+			this.productManyNewRepository.countFindMany(query),
+			this.productManyNewRepository.aggregateFindManyTotals(query),
+		])
+
+		const lastSellingDates = await this.productManyNewRepository.getLastSellingDatesByProductIds(products.map((p) => p.id))
+
+		const calcPage = {
+			totalPrice: new Decimal(0),
+			totalCost: new Decimal(0),
+			totalCount: new Decimal(0),
+		}
+
+		const calcTotal = {
+			totalPrice: new Decimal(totals.total_price ?? 0),
+			totalCost: new Decimal(totals.total_cost ?? 0),
+			totalCount: new Decimal(Number(totals.total_count ?? 0)),
+		}
+
+		const mappedProducts = products.map((p) => {
+			const lastSellingDate = lastSellingDates.get(p.id) ?? null
+
+			const product = {
+				...p,
+				totalCost: p.cost.mul(p.count),
+				totalPrice: p.price.mul(p.count),
+				lastSellingDate,
+			}
+
+			calcPage.totalCost = calcPage.totalCost.plus(product.totalCost)
+			calcPage.totalPrice = calcPage.totalPrice.plus(product.totalPrice)
+			calcPage.totalCount = calcPage.totalCount.plus(product.count)
+
+			return product
+		})
+
+		const sortedProducts = mappedProducts.sort((a, b) => {
+			if (!a.lastSellingDate && !b.lastSellingDate) return 0
+			if (!a.lastSellingDate) return 1
+			if (!b.lastSellingDate) return -1
+			return new Date(b.lastSellingDate).getTime() - new Date(a.lastSellingDate).getTime()
+		})
+
+		const result = query.pagination
+			? {
+					totalCount: productsCount,
+					pagesCount: Math.ceil(productsCount / query.pageSize),
+					pageSize: sortedProducts.length,
+					data: sortedProducts,
+					calc: { calcPage, calcTotal },
+				}
+			: { data: sortedProducts, calc: { calcPage, calcTotal } }
+
+		return createResponse({ data: result, success: { messages: ['find many new success'] } })
 	}
 
 	async excelDownloadMany(res: Response, query: ProductFindManyRequest) {
