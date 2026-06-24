@@ -69,6 +69,49 @@ export class ClientRepository implements OnModuleInit {
 		return clients
 	}
 
+	async findManyNew(query: ClientFindManyRequest) {
+		// debtType filter JS-da hisoblashni talab qilgani uchun pagination faqat u yo'q bo'lsa DB darajasida qo'llanadi
+		const useDbPagination = query.pagination && !query.debtType
+
+		const baseArgs = {
+			where: {
+				fullname: query.fullname,
+				type: UserTypeEnum.client,
+				OR: [{ fullname: { contains: query.search, mode: 'insensitive' as const } }, { phone: { contains: query.search, mode: 'insensitive' as const } }],
+			},
+			select: {
+				id: true,
+				fullname: true,
+				phone: true,
+				balance: true,
+				actions: true,
+				createdAt: true,
+				telegram: true,
+				sellings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						date: true,
+						totalPrice: true,
+						payment: { select: { total: true } },
+					},
+					orderBy: { date: 'desc' as const },
+				},
+				returnings: {
+					where: { status: SellingStatusEnum.accepted },
+					select: {
+						payment: { select: { fromBalance: true } },
+					},
+				},
+			},
+		}
+
+		const clients = useDbPagination
+			? await this.prisma.userModel.findMany({ ...baseArgs, take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize })
+			: await this.prisma.userModel.findMany(baseArgs)
+
+		return { clients, useDbPagination }
+	}
+
 	async findManyClientForReport(query: ClientFindManyRequest) {
 		let paginationOptions = {}
 		if (query.pagination) {

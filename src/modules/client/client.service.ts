@@ -88,6 +88,79 @@ export class ClientService {
 		return createResponse({ data: result, success: { messages: ['find many success'] } })
 	}
 
+	async findManyNew(query: ClientFindManyRequest) {
+		const { clients, useDbPagination } = await this.clientRepository.findManyNew(query)
+
+		const debtFilterValue = query.debtType && query.debtValue !== undefined ? new Decimal(query.debtValue) : null
+
+		const mappedClients: Array<{
+			id: string
+			fullname: string
+			telegram: any
+			actions: any
+			createdAt: Date
+			phone: string
+			debt: Decimal
+			lastSellingDate: Date | null
+		}> = []
+
+		for (const c of clients) {
+			const sellingDebt = c.sellings.reduce((acc, sel) => acc.plus(sel.totalPrice).minus(sel.payment.total), new Decimal(0))
+
+			const returningDeduction = c.returnings.reduce((acc, r) => acc.plus(r.payment.fromBalance), new Decimal(0))
+
+			const debt = sellingDebt.plus(c.balance).minus(returningDeduction)
+
+			if (debtFilterValue !== null) {
+				switch (query.debtType) {
+					case DebtTypeEnum.gt:
+						if (!debt.gt(debtFilterValue)) continue
+						break
+					case DebtTypeEnum.lt:
+						if (!debt.lt(debtFilterValue)) continue
+						break
+					case DebtTypeEnum.eq:
+						if (!debt.eq(debtFilterValue)) continue
+						break
+				}
+			}
+
+			mappedClients.push({
+				id: c.id,
+				fullname: c.fullname,
+				telegram: c.telegram,
+				actions: c.actions,
+				createdAt: c.createdAt,
+				phone: c.phone,
+				debt,
+				lastSellingDate: c.sellings.length ? c.sellings[0].date : null,
+			})
+		}
+
+		// DB pagination bo'lsa sort DB da orderBy bilan bo'ladi (keyingi optimallashtirish),
+		// JS pagination bo'lsa (debtType bilan) — bu yerda sort kerak
+		if (!useDbPagination) {
+			mappedClients.sort((a, b) => {
+				const da = a.lastSellingDate ? a.lastSellingDate.getTime() : 0
+				const db = b.lastSellingDate ? b.lastSellingDate.getTime() : 0
+				return db - da
+			})
+		}
+
+		const paginatedClients = query.pagination && !useDbPagination ? mappedClients.slice((query.pageNumber - 1) * query.pageSize, query.pageNumber * query.pageSize) : mappedClients
+
+		const result = query.pagination
+			? {
+					totalCount: mappedClients.length,
+					pagesCount: Math.ceil(mappedClients.length / query.pageSize),
+					pageSize: paginatedClients.length,
+					data: paginatedClients,
+				}
+			: { data: mappedClients }
+
+		return createResponse({ data: result, success: { messages: ['find many success'] } })
+	}
+
 	async findManyForReport(query: ClientFindManyRequest) {
 		const clients = await this.clientRepository.findManyClientForReport(query)
 		const clientStats = await this.clientRepository.findManyStatsForReport2(query)
