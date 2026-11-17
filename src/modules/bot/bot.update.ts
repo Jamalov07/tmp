@@ -44,7 +44,7 @@ export class BotUpdate {
 	async onText(@Ctx() ctx: Context) {
 		const text = ctx.message && 'text' in ctx.message ? ctx.message.text : ''
 		if (!text || text.startsWith('/') || LANGUAGE_BUTTONS.has(text) || !ctx.from || !ctx.message) return
-		return this.chatService.ingestTelegram({
+		await this.chatService.ingestTelegram({
 			telegramUserId: String(ctx.from.id),
 			telegramMessageId: ctx.message.message_id,
 			text,
@@ -56,7 +56,7 @@ export class BotUpdate {
 		const message = ctx.message
 		if (!message || !('photo' in message) || !ctx.from) return
 		const caption = 'caption' in message ? message.caption?.trim() : ''
-		return this.chatService.ingestTelegram({
+		await this.chatService.ingestTelegram({
 			telegramUserId: String(ctx.from.id),
 			telegramMessageId: message.message_id,
 			text: caption ? `Rasm: ${caption}` : 'Rasm yuborildi',
@@ -69,7 +69,7 @@ export class BotUpdate {
 		if (!message || !('document' in message) || !ctx.from) return
 		const name = message.document.file_name || 'hujjat'
 		const caption = 'caption' in message ? message.caption?.trim() : ''
-		return this.chatService.ingestTelegram({
+		await this.chatService.ingestTelegram({
 			telegramUserId: String(ctx.from.id),
 			telegramMessageId: message.message_id,
 			text: caption ? `Hujjat (${name}): ${caption}` : `Hujjat yuborildi: ${name}`,

@@ -27,6 +27,7 @@ export class StaffRepository implements OnModuleInit {
 
 		const users = await this.prisma.userModel.findMany({
 			where: {
+				...this.deletedAtFilter(query.isDeleted),
 				fullname: query.fullname,
 				type: { in: [UserTypeEnum.staff, UserTypeEnum.admin] },
 				OR: [{ fullname: { contains: query.search, mode: 'insensitive' } }, { phone: { contains: query.search, mode: 'insensitive' } }],
@@ -68,6 +69,7 @@ export class StaffRepository implements OnModuleInit {
 	async countFindMany(query: StaffFindManyRequest) {
 		const usersCount = await this.prisma.userModel.count({
 			where: {
+				...this.deletedAtFilter(query.isDeleted),
 				fullname: query.fullname,
 				type: { in: [UserTypeEnum.staff, UserTypeEnum.admin] },
 				OR: [{ fullname: { contains: query.search, mode: 'insensitive' } }, { phone: { contains: query.search, mode: 'insensitive' } }],
@@ -97,7 +99,7 @@ export class StaffRepository implements OnModuleInit {
 
 	async getOne(query: StaffGetOneRequest) {
 		const user = await this.prisma.userModel.findFirst({
-			where: { id: query.id, fullname: query.fullname, phone: query.phone },
+			where: { id: query.id, fullname: query.fullname, phone: query.phone, ...this.deletedAtFilter(query.isDeleted) },
 			select: { id: true, fullname: true, phone: true, createdAt: true, deletedAt: true, password: true, token: true, pages: true },
 		})
 
@@ -186,5 +188,9 @@ export class StaffRepository implements OnModuleInit {
 
 	async onModuleInit() {
 		await this.prisma.createActionMethods(StaffController)
+	}
+
+	private deletedAtFilter(isDeleted?: boolean) {
+		return isDeleted ? { deletedAt: { not: null } } : { deletedAt: null }
 	}
 }

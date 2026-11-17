@@ -31,6 +31,13 @@ export class StaffController {
 		return this.staffService.findMany({ ...query, isDeleted: false })
 	}
 
+	@Get('many/deleted')
+	@ApiOkResponse({ type: StaffFindManyResponseDto })
+	@ApiOperation({ summary: 'get all deleted staffs' })
+	async findManyDeleted(@Query() query: StaffFindManyRequestDto): Promise<StaffFindManyResponseDto> {
+		return this.staffService.findMany({ ...query, isDeleted: true })
+	}
+
 	@Get('one')
 	@ApiOperation({ summary: 'find one staff' })
 	@ApiOkResponse({ type: StaffFindOneResponseDto })
@@ -50,6 +57,13 @@ export class StaffController {
 	@ApiOkResponse({ type: StaffModifyResponseDto })
 	async updateOne(@Query() query: StaffFindOneRequestDto, @Body() body: StaffUpdateOneRequestDto): Promise<StaffModifyResponseDto> {
 		return this.staffService.updateOne(query, body)
+	}
+
+	@Patch('one/restore')
+	@ApiOperation({ summary: 'restore one staff' })
+	@ApiOkResponse({ type: StaffModifyResponseDto })
+	async restoreOne(@Query() query: StaffFindOneRequestDto): Promise<StaffModifyResponseDto> {
+		return this.staffService.restoreOne(query)
 	}
 
 	@Delete('one')

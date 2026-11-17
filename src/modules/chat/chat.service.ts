@@ -77,14 +77,14 @@ export class ChatService {
 
 	async ingestTelegram(input: { telegramUserId: string; telegramMessageId: number; text?: string | null }) {
 		const text = input.text?.trim()
-		if (!text) return null
+		if (!text) return
 		const botUser = await this.prisma.botUserModel.findFirst({
 			where: { id: input.telegramUserId },
 			select: { userId: true, isActive: true, user: { select: { id: true, type: true, deletedAt: true } } },
 		})
-		if (!botUser?.userId || botUser.isActive === false) return null
-		if (!botUser.user || botUser.user.deletedAt || botUser.user.type !== UserTypeEnum.client) return null
-		return this.repository.create({
+		if (!botUser?.userId || botUser.isActive === false) return
+		if (!botUser.user || botUser.user.deletedAt || botUser.user.type !== UserTypeEnum.client) return
+		await this.repository.create({
 			clientId: botUser.user.id,
 			direction: 'in',
 			text,
