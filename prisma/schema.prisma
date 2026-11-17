@@ -65,6 +65,16 @@ enum PageEnum {
   supplierpayment  @map("supplierpayment")
   stuff            @map("stuff")
   stuffpayment     @map("stuffpayment")
+  chat             @map("chat")
+  reminder         @map("reminder")
+}
+
+enum ChatMessageDirectionEnum {
+  in     @map("in")
+  out    @map("out")
+  system @map("system")
+
+  @@map("chat_message_direction")
 }
 
 model ActionModel {
@@ -109,8 +119,9 @@ model UserModel {
   balance   Decimal  @map("balance")   @db.Decimal(10, 3)  @default(0)
   type      UserTypeEnum
 
-  pages     PageEnum[] @default([])
- 
+  pages      PageEnum[] @default([])
+  chatReadAt DateTime?  @map("chat_read_at") @db.Timestamptz
+
   createdAt  DateTime   @map("created_at")  @db.Timestamptz  @default(dbgenerated("NOW()"))
   updatedAt  DateTime   @map("updated_at")  @db.Timestamptz  @updatedAt
   deletedAt  DateTime?  @map("deleted_at")  @db.Timestamptz
@@ -129,6 +140,10 @@ model UserModel {
   addedSellings    SellingModel[]    @relation(name: "addedfromme")
   addedArrivals    ArrivalModel[]    @relation(name: "addedfromme")
   addedReturnings  ReturningModel[]  @relation(name: "addedfromme")
+
+  clientChatMessages ChatMessageModel[] @relation("ChatClient")
+  staffChatMessages  ChatMessageModel[] @relation("ChatStaff")
+  reminders          ReminderModel[]
 
   @@id([ id ])
   @@index([ id ])
@@ -336,4 +351,44 @@ model DayCloseLog {
 
   @@id([ id ])
   @@map("day_close_log")
+}
+
+model ChatMessageModel {
+  id                String                   @map("id")                  @db.Uuid @default(dbgenerated("GEN_RANDOM_UUID()"))
+  clientId          String                   @map("client_id")           @db.Uuid
+  direction         ChatMessageDirectionEnum @map("direction")
+  text              String?                  @map("text")                @db.VarChar()
+  telegramMessageId Int?                     @map("telegram_message_id")
+  staffId           String?                  @map("staff_id")            @db.Uuid
+
+  client UserModel  @relation("ChatClient", fields: [clientId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  staff  UserModel? @relation("ChatStaff", fields: [staffId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  createdAt DateTime  @map("created_at") @db.Timestamptz @default(dbgenerated("NOW()"))
+  updatedAt DateTime  @map("updated_at") @db.Timestamptz @updatedAt
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  @@id([id])
+  @@index([clientId, createdAt])
+  @@map("chat_message")
+}
+
+model ReminderModel {
+  id          String    @map("id")           @db.Uuid @default(dbgenerated("GEN_RANDOM_UUID()"))
+  clientId    String    @map("client_id")    @db.Uuid
+  startDate   DateTime  @map("start_date")   @db.Date
+  sendHour    Int       @map("send_hour")    @default(8)
+  description String    @map("description")  @db.VarChar()
+  lastSentOn  DateTime? @map("last_sent_on") @db.Date
+
+  client UserModel @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  createdAt DateTime  @map("created_at") @db.Timestamptz @default(dbgenerated("NOW()"))
+  updatedAt DateTime  @map("updated_at") @db.Timestamptz @updatedAt
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  @@id([id])
+  @@index([clientId])
+  @@index([startDate])
+  @@map("reminder")
 }

@@ -209,6 +209,25 @@ export const ERROR_MSG = {
 			UZ: "yetkazib beruvchi to'lovi topilmadi",
 		},
 	},
+	CHAT: {
+		NOT_FOUND: {
+			EN: 'chat message not found',
+			RU: 'chat message not found',
+			UZ: 'xabar topilmadi',
+		},
+		TEXT_REQUIRED: {
+			EN: 'message text is required',
+			RU: 'message text is required',
+			UZ: 'xabar matni kerak',
+		},
+	},
+	REMINDER: {
+		NOT_FOUND: {
+			EN: 'reminder not found',
+			RU: 'reminder not found',
+			UZ: 'eslatma topilmadi',
+		},
+	},
 	INTERNAL_SERVER_ERROR: {
 		EN: 'internal server error',
 		RU: 'internal server error',

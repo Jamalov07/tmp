@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { MyBotName } from './constants'
 import { TelegrafModule } from 'nestjs-telegraf'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { BotService } from './bot.service'
 import { BotUpdate } from './bot.update'
 import { PdfModule, PrismaModule } from '../shared'
+import { ChatModule } from '../chat/chat.module'
 
 @Module({
 	imports: [
@@ -18,11 +19,13 @@ import { PdfModule, PrismaModule } from '../shared'
 					token,
 					middlewares: [],
 					include: [],
+					launchOptions: process.env.BOT_LAUNCH === 'false' ? false : undefined,
 				}
 			},
 		}),
 		PrismaModule,
 		PdfModule,
+		forwardRef(() => ChatModule),
 	],
 	providers: [BotUpdate, BotService],
 	exports: [BotService],

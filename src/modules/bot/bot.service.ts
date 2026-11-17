@@ -322,6 +322,40 @@ export class BotService {
 		return user
 	}
 
+	async sendTextToClient(telegramId: string, text: string): Promise<number | null> {
+		try {
+			const sent = await this.bot.telegram.sendMessage(telegramId, text)
+			return sent.message_id
+		} catch (error) {
+			console.log('bot send text error:', error)
+			return null
+		}
+	}
+
+	async deleteTelegramMessage(telegramId: string, messageId: number): Promise<boolean> {
+		try {
+			await this.bot.telegram.deleteMessage(telegramId, messageId)
+			return true
+		} catch (error) {
+			console.log('bot delete message error:', error)
+			return false
+		}
+	}
+
+	async sendReminderChannelMessage(text: string): Promise<boolean> {
+		const channelId = this.configService.get<string>('bot.reminderChannelId')
+		if (!channelId) return false
+		try {
+			const chatInfo = await this.bot.telegram.getChat(channelId).catch(() => undefined)
+			if (!chatInfo) return false
+			await this.bot.telegram.sendMessage(channelId, text)
+			return true
+		} catch (error) {
+			console.log('bot reminder channel error:', error)
+			return false
+		}
+	}
+
 	private formatDate(date: Date): string {
 		const dd = String(date.getDate()).padStart(2, '0')
 		const mm = String(date.getMonth() + 1).padStart(2, '0')

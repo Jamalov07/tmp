@@ -23,6 +23,8 @@ import {
 	CommonModule,
 	SyncronizeModule,
 	UploadModule,
+	ChatModule,
+	ReminderModule,
 } from '@module'
 import { appConfig, botConfig, databaseConfig, jwtConfig, oldServiceConfig } from '@config'
 import { AuthGuard, CheckPermissionGuard } from '@common'
@@ -55,6 +57,8 @@ import { AuthGuard, CheckPermissionGuard } from '@common'
 		CommonModule,
 		SyncronizeModule,
 		UploadModule,
+		ChatModule,
+		ReminderModule,
 	],
 	controllers: [],
 	providers: [AuthGuard, CheckPermissionGuard],

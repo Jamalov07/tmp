@@ -6,5 +6,6 @@ export const botConfig = registerAs('bot', (): BotConfigOptions => {
 		token: process.env.BOT_TOKEN ?? undefined,
 		paymentChannelId: process.env.PAYMENT_CHANNEL_ID ?? undefined,
 		sellingChannelId: process.env.SELLING_CHANNEL_ID ?? undefined,
+		reminderChannelId: process.env.REMINDER_CHANNEL_ID ?? undefined,
 	}
 })
