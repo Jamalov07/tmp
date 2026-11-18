@@ -548,10 +548,11 @@ export class SellingRepository implements OnModuleInit {
 					COUNT(DISTINCT s.id)::int AS sale_count,
 					COALESCE(SUM(pm.count), 0)::int AS quantity,
 					COALESCE(SUM(pm.total_price), 0)::float8 AS revenue,
-					COALESCE(SUM(pm.total_cost), 0)::float8 AS cost,
-					COALESCE(SUM(pm.total_price - pm.total_cost), 0)::float8 AS profit
+					COALESCE(SUM(pr.cost * pm.count), 0)::float8 AS cost,
+					COALESCE(SUM(pm.total_price - (pr.cost * pm.count)), 0)::float8 AS profit
 				FROM product_mv pm
 				INNER JOIN selling s ON s.id = pm.selling_id
+				INNER JOIN product pr ON pr.id = pm.product_id
 				WHERE pm.deleted_at IS NULL
 					AND s.deleted_at IS NULL
 					AND pm.type = ${ServiceTypeEnum.selling}::service_type
@@ -563,9 +564,10 @@ export class SellingRepository implements OnModuleInit {
 			returns AS (
 				SELECT
 					pm.product_id,
-					COALESCE(SUM(pm.total_price - pm.total_cost), 0)::float8 AS profit
+					COALESCE(SUM(pm.total_price - (pr.cost * pm.count)), 0)::float8 AS profit
 				FROM product_mv pm
 				INNER JOIN "returning" r ON r.id = pm.returning_id
+				INNER JOIN product pr ON pr.id = pm.product_id
 				WHERE pm.deleted_at IS NULL
 					AND r.deleted_at IS NULL
 					AND pm.type = ${ServiceTypeEnum.returning}::service_type
