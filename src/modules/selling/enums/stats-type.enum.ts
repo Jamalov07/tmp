@@ -5,6 +5,11 @@ export enum StatsTypeEnum {
 	year = 'year',
 }
 
+export enum ProductRankMetricEnum {
+	count = 'count',
+	profit = 'profit',
+}
+
 export enum BotSellingTitleEnum {
 	new,
 	updated,

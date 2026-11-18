@@ -12,6 +12,7 @@ import {
 	SellingDeleteOneRequest,
 	SellingGetTotalStatsRequest,
 	SellingGetPeriodStatsRequest,
+	SellingGetProductRankRequest,
 } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ArrivalService } from '../arrival'
@@ -487,5 +488,11 @@ export class SellingService {
 		const result = await this.sellingRepository.getPeriodStats(query)
 
 		return createResponse({ data: result, success: { messages: ['get period stats success'] } })
+	}
+
+	async getProductRank(query: SellingGetProductRankRequest) {
+		const result = await this.sellingRepository.getProductRank(query)
+
+		return createResponse({ data: result, success: { messages: ['get product rank success'] } })
 	}
 }

@@ -5,6 +5,7 @@ import {
 	SellingFindManyRequest,
 	SellingFindOneRequest,
 	SellingGetPeriodStatsRequest,
+	SellingGetProductRankRequest,
 	SellingGetTotalStatsRequest,
 	SellingPayment,
 	SellingProduct,
@@ -16,7 +17,7 @@ import { ClientPaymentOptionalDto, ClientPaymentRequiredDto } from '../../client
 import { ProductMVRequiredDto } from '../../product-mv'
 import { ArrayNotEmpty, IsArray, IsEnum, IsOptional, IsUUID, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
-import { StatsTypeEnum } from '../enums'
+import { ProductRankMetricEnum, StatsTypeEnum } from '../enums'
 
 export class SellingFindManyRequestDto
 	extends IntersectionType(
@@ -75,4 +76,14 @@ export class SellingGetPeriodStatsRequestDto implements SellingGetPeriodStatsReq
 	@IsOptional()
 	@IsEnum(StatsTypeEnum)
 	type?: StatsTypeEnum = StatsTypeEnum.day
+}
+
+export class SellingGetProductRankRequestDto
+	extends IntersectionType(PaginationRequestDto, PickType(RequestOtherFieldsDto, ['startDate', 'endDate']))
+	implements SellingGetProductRankRequest
+{
+	@ApiPropertyOptional({ enum: ProductRankMetricEnum })
+	@IsOptional()
+	@IsEnum(ProductRankMetricEnum)
+	metric?: ProductRankMetricEnum = ProductRankMetricEnum.count
 }

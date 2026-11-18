@@ -8,11 +8,12 @@ import {
 	SellingGetManyRequest,
 	SellingGetOneRequest,
 	SellingGetPeriodStatsRequest,
+	SellingGetProductRankRequest,
 	SellingUpdateOneRequest,
 } from './interfaces'
 import { SellingController } from './selling.controller'
-import { SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
-import { StatsTypeEnum } from './enums'
+import { Prisma, SellingStatusEnum, ServiceTypeEnum } from '@prisma/client'
+import { ProductRankMetricEnum, StatsTypeEnum } from './enums'
 import { convertUTCtoLocal, extractDateParts } from '../../common'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -482,4 +483,136 @@ export class SellingRepository implements OnModuleInit {
 		}
 		return salesByMonth
 	}
+
+	async getProductRank(query: SellingGetProductRankRequest) {
+		const metric = query.metric ?? ProductRankMetricEnum.count
+		const pageNumber = query.pageNumber || 1
+		const pageSize = query.pageSize || 20
+		const now = new Date()
+		const startDate = query.startDate ? new Date(query.startDate) : new Date(now.getFullYear(), now.getMonth(), 1)
+		const endDate = query.endDate ? new Date(query.endDate) : new Date(new Date().setHours(23, 59, 59, 999))
+		const [summary] = await this.prisma.$queryRaw<ProductRankSummaryRow[]>`
+			${this.productRankCte(startDate, endDate)}
+			SELECT
+				COUNT(*) FILTER (WHERE ${metric} = 'profit' OR sale_count > 0)::int AS total_count,
+				COUNT(*) FILTER (WHERE sale_count > 0)::int AS product_count,
+				COALESCE(SUM(quantity) FILTER (WHERE sale_count > 0), 0)::int AS quantity,
+				COALESCE(SUM(revenue) FILTER (WHERE sale_count > 0), 0)::float8 AS revenue,
+				COALESCE(SUM(profit), 0)::float8 AS profit
+			FROM ranked
+		`
+
+		const rows = await this.prisma.$queryRaw<ProductRankRow[]>`
+			${this.productRankCte(startDate, endDate)}
+			SELECT id, name, sale_count, quantity, revenue, cost, profit
+			FROM ranked
+			WHERE ${metric} = 'profit' OR sale_count > 0
+			ORDER BY
+				CASE WHEN ${metric} = 'profit' THEN profit END DESC NULLS LAST,
+				CASE WHEN ${metric} = 'count' THEN sale_count END DESC NULLS LAST,
+				quantity DESC,
+				name ASC
+			OFFSET ${(pageNumber - 1) * pageSize}
+			LIMIT ${pageSize}
+		`
+
+		const totalCount = this.toNumber(summary?.total_count)
+
+		return {
+			totalCount,
+			pagesCount: pageSize ? Math.ceil(totalCount / pageSize) : 0,
+			pageSize,
+			summary: {
+				productCount: this.toNumber(summary?.product_count),
+				quantity: this.toNumber(summary?.quantity),
+				revenue: this.toNumber(summary?.revenue),
+				profit: this.toNumber(summary?.profit),
+			},
+			data: rows.map((row) => ({
+				id: row.id,
+				name: row.name,
+				saleCount: this.toNumber(row.sale_count),
+				quantity: this.toNumber(row.quantity),
+				revenue: this.toNumber(row.revenue),
+				cost: this.toNumber(row.cost),
+				profit: this.toNumber(row.profit),
+			})),
+		}
+	}
+
+	private productRankCte(startDate: Date, endDate: Date) {
+		return Prisma.sql`
+			WITH sales AS (
+				SELECT
+					pm.product_id,
+					COUNT(DISTINCT s.id)::int AS sale_count,
+					COALESCE(SUM(pm.count), 0)::int AS quantity,
+					COALESCE(SUM(pm.total_price), 0)::float8 AS revenue,
+					COALESCE(SUM(pm.total_cost), 0)::float8 AS cost,
+					COALESCE(SUM(pm.total_price - pm.total_cost), 0)::float8 AS profit
+				FROM product_mv pm
+				INNER JOIN selling s ON s.id = pm.selling_id
+				WHERE pm.deleted_at IS NULL
+					AND s.deleted_at IS NULL
+					AND pm.type = ${ServiceTypeEnum.selling}::service_type
+					AND s.status = ${SellingStatusEnum.accepted}::selling_status
+					AND s.date >= ${startDate}
+					AND s.date <= ${endDate}
+				GROUP BY pm.product_id
+			),
+			returns AS (
+				SELECT
+					pm.product_id,
+					COALESCE(SUM(pm.total_price - pm.total_cost), 0)::float8 AS profit
+				FROM product_mv pm
+				INNER JOIN "returning" r ON r.id = pm.returning_id
+				WHERE pm.deleted_at IS NULL
+					AND r.deleted_at IS NULL
+					AND pm.type = ${ServiceTypeEnum.returning}::service_type
+					AND r.status = ${SellingStatusEnum.accepted}::selling_status
+					AND r.date >= ${startDate}
+					AND r.date <= ${endDate}
+				GROUP BY pm.product_id
+			),
+			ranked AS (
+				SELECT
+					p.id::text AS id,
+					p.name AS name,
+					COALESCE(s.sale_count, 0)::int AS sale_count,
+					COALESCE(s.quantity, 0)::int AS quantity,
+					COALESCE(s.revenue, 0)::float8 AS revenue,
+					COALESCE(s.cost, 0)::float8 AS cost,
+					(COALESCE(s.profit, 0) - COALESCE(rt.profit, 0))::float8 AS profit
+				FROM product p
+				LEFT JOIN sales s ON s.product_id = p.id
+				LEFT JOIN returns rt ON rt.product_id = p.id
+				WHERE p.deleted_at IS NULL
+					AND (s.product_id IS NOT NULL OR rt.product_id IS NOT NULL)
+			)
+		`
+	}
+
+	private toNumber(value: unknown) {
+		const numberValue = Number(value ?? 0)
+
+		return Number.isFinite(numberValue) ? numberValue : 0
+	}
+}
+
+type ProductRankRow = {
+	id: string
+	name: string
+	sale_count: number
+	quantity: number
+	revenue: number
+	cost: number
+	profit: number
+}
+
+type ProductRankSummaryRow = {
+	total_count: number
+	product_count: number
+	quantity: number
+	revenue: number
+	profit: number
 }

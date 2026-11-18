@@ -2,7 +2,7 @@ import { PaginationRequest, RequestOtherFields } from '@common'
 import { SellingOptional, SellingRequired } from './fields.interfaces'
 import { ClientPaymentOptional, ClientPaymentRequired } from '../../client-payment'
 import { ProductMVOptional, ProductMVRequired } from '../../product-mv'
-import { StatsTypeEnum } from '../enums'
+import { ProductRankMetricEnum, StatsTypeEnum } from '../enums'
 
 export declare interface SellingFindManyRequest
 	extends Pick<SellingOptional, 'clientId' | 'staffId' | 'status'>,
@@ -36,4 +36,8 @@ export declare interface SellingGetTotalStatsRequest {}
 
 export declare interface SellingGetPeriodStatsRequest {
 	type?: StatsTypeEnum
+}
+
+export declare interface SellingGetProductRankRequest extends PaginationRequest, Pick<RequestOtherFields, 'startDate' | 'endDate'> {
+	metric?: ProductRankMetricEnum
 }

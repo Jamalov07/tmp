@@ -14,6 +14,7 @@ import {
 	SellingGetTotalStatsRequestDto,
 	SellingGetPeriodStatsResponseDto,
 	SellingGetPeriodStatsRequestDto,
+	SellingGetProductRankRequestDto,
 } from './dtos'
 import { SellingService } from './selling.service'
 import { AuthOptions, CheckPermissionGuard, CRequest } from '../../common'
@@ -52,6 +53,13 @@ export class SellingController {
 	@AuthOptions(false, false)
 	async getPeriodStats(@Query() query: SellingGetPeriodStatsRequestDto): Promise<SellingGetPeriodStatsResponseDto> {
 		return this.sellingService.getPeriodStats(query)
+	}
+
+	@Get('product-rank')
+	@ApiOperation({ summary: 'rank products by sale count or profit' })
+	@AuthOptions(false, false)
+	async getProductRank(@Query() query: SellingGetProductRankRequestDto) {
+		return this.sellingService.getProductRank(query)
 	}
 
 	@Get('one')
