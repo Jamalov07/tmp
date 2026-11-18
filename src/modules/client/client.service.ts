@@ -89,7 +89,7 @@ export class ClientService {
 	}
 
 	async findManyNew(query: ClientFindManyRequest) {
-		const { clients, useDbPagination } = await this.clientRepository.findManyNew(query)
+		const { clients, useDbPagination, totalCount } = await this.clientRepository.findManyNew(query)
 
 		const debtFilterValue = query.debtType && query.debtValue !== undefined ? new Decimal(query.debtValue) : null
 
@@ -149,10 +149,13 @@ export class ClientService {
 
 		const paginatedClients = query.pagination && !useDbPagination ? mappedClients.slice((query.pageNumber - 1) * query.pageSize, query.pageNumber * query.pageSize) : mappedClients
 
+		// DB pagination da mappedClients faqat joriy sahifa. totalCount shu sahifa uzunligi bo'lsa pagesCount doim 1 chiqadi.
+		const resultTotalCount = useDbPagination ? totalCount : mappedClients.length
+
 		const result = query.pagination
 			? {
-					totalCount: mappedClients.length,
-					pagesCount: Math.ceil(mappedClients.length / query.pageSize),
+					totalCount: resultTotalCount,
+					pagesCount: Math.ceil(resultTotalCount / query.pageSize),
 					pageSize: paginatedClients.length,
 					data: paginatedClients,
 				}

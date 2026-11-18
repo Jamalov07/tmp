@@ -73,12 +73,14 @@ export class ClientRepository implements OnModuleInit {
 		// debtType filter JS-da hisoblashni talab qilgani uchun pagination faqat u yo'q bo'lsa DB darajasida qo'llanadi
 		const useDbPagination = query.pagination && !query.debtType
 
+		const where = {
+			fullname: query.fullname,
+			type: UserTypeEnum.client,
+			OR: [{ fullname: { contains: query.search, mode: 'insensitive' as const } }, { phone: { contains: query.search, mode: 'insensitive' as const } }],
+		}
+
 		const baseArgs = {
-			where: {
-				fullname: query.fullname,
-				type: UserTypeEnum.client,
-				OR: [{ fullname: { contains: query.search, mode: 'insensitive' as const } }, { phone: { contains: query.search, mode: 'insensitive' as const } }],
-			},
+			where,
 			select: {
 				id: true,
 				fullname: true,
@@ -105,11 +107,17 @@ export class ClientRepository implements OnModuleInit {
 			},
 		}
 
-		const clients = useDbPagination
-			? await this.prisma.userModel.findMany({ ...baseArgs, take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize })
-			: await this.prisma.userModel.findMany(baseArgs)
+		if (!useDbPagination) {
+			const clients = await this.prisma.userModel.findMany(baseArgs)
+			return { clients, useDbPagination, totalCount: clients.length }
+		}
 
-		return { clients, useDbPagination }
+		const [clients, totalCount] = await Promise.all([
+			this.prisma.userModel.findMany({ ...baseArgs, take: query.pageSize, skip: (query.pageNumber - 1) * query.pageSize }),
+			this.prisma.userModel.count({ where }),
+		])
+
+		return { clients, useDbPagination, totalCount }
 	}
 
 	async findManyClientForReport(query: ClientFindManyRequest) {
