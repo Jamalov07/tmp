@@ -1,8 +1,17 @@
 import { PickType, IntersectionType, ApiPropertyOptional } from '@nestjs/swagger'
-import { ClientCreateOneRequest, ClientDeleteOneRequest, ClientFindManyRequest, ClientFindOneRequest, ClientUpdateOneRequest } from '../interfaces'
+import {
+	ClientCreateOneRequest,
+	ClientDeleteOneRequest,
+	ClientFindManyRequest,
+	ClientFindOneRequest,
+	ClientGetActivityRequest,
+	ClientGetProfitRankRequest,
+	ClientUpdateOneRequest,
+} from '../interfaces'
+import { ClientActivityBucketEnum } from '../enums'
 import { PaginationRequestDto, RequestOtherFieldsDto } from '@common'
 import { ClientOptionalDto, ClientRequiredDto } from './fields.dtos'
-import { IsDateString, IsOptional } from 'class-validator'
+import { IsDateString, IsEnum, IsOptional } from 'class-validator'
 
 export class ClientFindManyRequestDto
 	extends IntersectionType(
@@ -31,3 +40,14 @@ export class ClientUpdateOneRequestDto extends IntersectionType(PickType(ClientO
 export class ClientDeleteOneRequestDto
 	extends IntersectionType(PickType(ClientRequiredDto, ['id']), PickType(RequestOtherFieldsDto, ['method']))
 	implements ClientDeleteOneRequest {}
+
+export class ClientGetActivityRequestDto extends PaginationRequestDto implements ClientGetActivityRequest {
+	@ApiPropertyOptional({ enum: ClientActivityBucketEnum })
+	@IsOptional()
+	@IsEnum(ClientActivityBucketEnum)
+	bucket?: ClientActivityBucketEnum = ClientActivityBucketEnum.month1
+}
+
+export class ClientGetProfitRankRequestDto
+	extends IntersectionType(PaginationRequestDto, PickType(RequestOtherFieldsDto, ['startDate', 'endDate']))
+	implements ClientGetProfitRankRequest {}

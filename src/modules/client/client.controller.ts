@@ -10,6 +10,8 @@ import {
 	ClientDeleteOneRequestDto,
 	ClientCreateOneRequestDto,
 	ClientCreateOneResponseDto,
+	ClientGetActivityRequestDto,
+	ClientGetProfitRankRequestDto,
 } from './dtos'
 import { ClientService } from './client.service'
 import { Response } from 'express'
@@ -44,6 +46,18 @@ export class ClientController {
 	@ApiOperation({ summary: 'get all client reports' })
 	async findManyReport(@Query() query: ClientFindManyRequestDto): Promise<ClientFindManyResponseDto> {
 		return this.clientService.findManyForReport(query)
+	}
+
+	@Get('activity')
+	@ApiOperation({ summary: 'clients grouped by their last accepted purchase' })
+	async getActivity(@Query() query: ClientGetActivityRequestDto) {
+		return this.clientService.getActivity(query)
+	}
+
+	@Get('profit-rank')
+	@ApiOperation({ summary: 'rank clients by profit in a date range' })
+	async getProfitRank(@Query() query: ClientGetProfitRankRequestDto) {
+		return this.clientService.getProfitRank(query)
 	}
 
 	@Get('excel-download/many')

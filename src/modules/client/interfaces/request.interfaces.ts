@@ -1,4 +1,5 @@
 import { PaginationRequest, RequestOtherFields } from '@common'
+import { ClientActivityBucketEnum } from '../enums'
 import { ClientOptional, ClientRequired } from './fields.interfaces'
 
 export declare interface ClientFindManyRequest
@@ -20,3 +21,9 @@ export declare interface ClientCreateOneRequest extends Pick<ClientRequired, 'fu
 export declare interface ClientUpdateOneRequest extends Pick<ClientOptional, 'fullname' | 'phone' | 'deletedAt' | 'balance'> {}
 
 export declare interface ClientDeleteOneRequest extends Pick<ClientOptional, 'id'>, Pick<RequestOtherFields, 'method'> {}
+
+export declare interface ClientGetActivityRequest extends PaginationRequest {
+	bucket?: ClientActivityBucketEnum
+}
+
+export declare interface ClientGetProfitRankRequest extends PaginationRequest, Pick<RequestOtherFields, 'startDate' | 'endDate'> {}

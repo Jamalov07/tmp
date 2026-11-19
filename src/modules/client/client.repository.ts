@@ -6,11 +6,14 @@ import {
 	ClientDeleteOneRequest,
 	ClientFindManyRequest,
 	ClientFindOneRequest,
+	ClientGetActivityRequest,
 	ClientGetManyRequest,
 	ClientGetOneRequest,
+	ClientGetProfitRankRequest,
 	ClientUpdateOneRequest,
 } from './interfaces'
-import { SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
+import { ClientActivityBucketEnum } from './enums'
+import { Prisma, SellingStatusEnum, ServiceTypeEnum, UserTypeEnum } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import { ClientController } from './client.controller'
 
@@ -375,7 +378,220 @@ export class ClientRepository implements OnModuleInit {
 		return client
 	}
 
+	async getActivity(query: ClientGetActivityRequest) {
+		const bucket = query.bucket ?? ClientActivityBucketEnum.month1
+		const pageNumber = query.pageNumber || 1
+		const pageSize = query.pageSize || 20
+		const countFilters = this.activityFilters(bucket)
+		const pageFilters = this.activityFilters(bucket)
+
+		const [summary] = await this.prisma.$queryRaw<ClientActivityCountRow[]>`
+			${this.activityCte()}
+			SELECT COUNT(*)::int AS total_count
+			FROM last_sale ls
+			INNER JOIN "user" u ON u.id = ls.client_id
+			WHERE u.deleted_at IS NULL
+				AND u.type = ${UserTypeEnum.client}::user_type
+				${countFilters.fromFilter}
+				${countFilters.toFilter}
+		`
+
+		const rows = await this.prisma.$queryRaw<ClientActivityRow[]>`
+			${this.activityCte()}
+			SELECT u.id::text AS id, u.fullname, u.phone, ls.last_date
+			FROM last_sale ls
+			INNER JOIN "user" u ON u.id = ls.client_id
+			WHERE u.deleted_at IS NULL
+				AND u.type = ${UserTypeEnum.client}::user_type
+				${pageFilters.fromFilter}
+				${pageFilters.toFilter}
+			${pageFilters.orderBy}
+			OFFSET ${(pageNumber - 1) * pageSize}
+			LIMIT ${pageSize}
+		`
+
+		const totalCount = this.toNumber(summary?.total_count)
+
+		return {
+			totalCount,
+			pagesCount: pageSize ? Math.ceil(totalCount / pageSize) : 0,
+			pageSize,
+			data: rows.map((row) => ({
+				id: row.id,
+				fullname: row.fullname,
+				phone: row.phone,
+				lastPurchaseDate: new Date(row.last_date).toISOString(),
+			})),
+		}
+	}
+
+	async getProfitRank(query: ClientGetProfitRankRequest) {
+		const pageNumber = query.pageNumber || 1
+		const pageSize = query.pageSize || 20
+		const now = new Date()
+		const startDate = query.startDate ? new Date(query.startDate) : new Date(now.getFullYear(), now.getMonth(), 1)
+		const endDate = query.endDate ? new Date(query.endDate) : new Date(new Date().setHours(23, 59, 59, 999))
+
+		const [summary] = await this.prisma.$queryRaw<ClientProfitSummaryRow[]>`
+			${this.profitRankCte(startDate, endDate)}
+			SELECT
+				COUNT(*)::int AS total_count,
+				COUNT(*) FILTER (WHERE sale_count > 0)::int AS client_count,
+				COALESCE(SUM(sale_count) FILTER (WHERE sale_count > 0), 0)::int AS sale_count,
+				COALESCE(SUM(revenue) FILTER (WHERE sale_count > 0), 0)::float8 AS revenue,
+				COALESCE(SUM(profit), 0)::float8 AS profit
+			FROM ranked
+		`
+
+		const rows = await this.prisma.$queryRaw<ClientProfitRow[]>`
+			${this.profitRankCte(startDate, endDate)}
+			SELECT id, fullname, phone, sale_count, revenue, profit
+			FROM ranked
+			ORDER BY profit DESC NULLS LAST, sale_count DESC, fullname ASC
+			OFFSET ${(pageNumber - 1) * pageSize}
+			LIMIT ${pageSize}
+		`
+
+		const totalCount = this.toNumber(summary?.total_count)
+
+		return {
+			totalCount,
+			pagesCount: pageSize ? Math.ceil(totalCount / pageSize) : 0,
+			pageSize,
+			summary: {
+				clientCount: this.toNumber(summary?.client_count),
+				saleCount: this.toNumber(summary?.sale_count),
+				revenue: this.toNumber(summary?.revenue),
+				profit: this.toNumber(summary?.profit),
+			},
+			data: rows.map((row) => ({
+				id: row.id,
+				fullname: row.fullname,
+				phone: row.phone,
+				saleCount: this.toNumber(row.sale_count),
+				revenue: this.toNumber(row.revenue),
+				profit: this.toNumber(row.profit),
+			})),
+		}
+	}
+
+	private activityCte() {
+		return Prisma.sql`
+			WITH last_sale AS (
+				SELECT s.client_id, MAX(s.date) AS last_date
+				FROM selling s
+				WHERE s.deleted_at IS NULL
+					AND s.status = ${SellingStatusEnum.accepted}::selling_status
+				GROUP BY s.client_id
+			)
+		`
+	}
+
+	private activityFilters(bucket: ClientActivityBucketEnum) {
+		const now = Date.now()
+		const day = 24 * 60 * 60 * 1000
+		const ago = (days: number) => new Date(now - days * day)
+		const range = {
+			[ClientActivityBucketEnum.month1]: { from: ago(30), to: null, newestFirst: true },
+			[ClientActivityBucketEnum.month2]: { from: ago(60), to: ago(30), newestFirst: true },
+			[ClientActivityBucketEnum.month3]: { from: ago(90), to: ago(60), newestFirst: true },
+			[ClientActivityBucketEnum.inactive]: { from: null, to: ago(90), newestFirst: false },
+		}[bucket]
+
+		return {
+			fromFilter: range.from ? Prisma.sql`AND ls.last_date >= ${range.from}` : Prisma.empty,
+			toFilter: range.to ? Prisma.sql`AND ls.last_date < ${range.to}` : Prisma.empty,
+			orderBy: range.newestFirst ? Prisma.sql`ORDER BY ls.last_date DESC, u.fullname ASC` : Prisma.sql`ORDER BY ls.last_date ASC, u.fullname ASC`,
+		}
+	}
+
+	private profitRankCte(startDate: Date, endDate: Date) {
+		return Prisma.sql`
+			WITH sales AS (
+				SELECT
+					s.client_id,
+					COUNT(DISTINCT s.id)::int AS sale_count,
+					COALESCE(SUM(pm.total_price), 0)::float8 AS revenue,
+					COALESCE(SUM(pm.total_price - (pr.cost * pm.count)), 0)::float8 AS profit
+				FROM product_mv pm
+				INNER JOIN selling s ON s.id = pm.selling_id
+				INNER JOIN product pr ON pr.id = pm.product_id
+				WHERE pm.deleted_at IS NULL
+					AND s.deleted_at IS NULL
+					AND pm.type = ${ServiceTypeEnum.selling}::service_type
+					AND s.status = ${SellingStatusEnum.accepted}::selling_status
+					AND s.date >= ${startDate}
+					AND s.date <= ${endDate}
+				GROUP BY s.client_id
+			),
+			returns AS (
+				SELECT
+					r.client_id,
+					COALESCE(SUM(pm.total_price - (pr.cost * pm.count)), 0)::float8 AS profit
+				FROM product_mv pm
+				INNER JOIN "returning" r ON r.id = pm.returning_id
+				INNER JOIN product pr ON pr.id = pm.product_id
+				WHERE pm.deleted_at IS NULL
+					AND r.deleted_at IS NULL
+					AND pm.type = ${ServiceTypeEnum.returning}::service_type
+					AND r.status = ${SellingStatusEnum.accepted}::selling_status
+					AND r.date >= ${startDate}
+					AND r.date <= ${endDate}
+				GROUP BY r.client_id
+			),
+			ranked AS (
+				SELECT
+					u.id::text AS id,
+					u.fullname AS fullname,
+					u.phone AS phone,
+					COALESCE(s.sale_count, 0)::int AS sale_count,
+					COALESCE(s.revenue, 0)::float8 AS revenue,
+					(COALESCE(s.profit, 0) - COALESCE(rt.profit, 0))::float8 AS profit
+				FROM "user" u
+				LEFT JOIN sales s ON s.client_id = u.id
+				LEFT JOIN returns rt ON rt.client_id = u.id
+				WHERE u.deleted_at IS NULL
+					AND u.type = ${UserTypeEnum.client}::user_type
+					AND (s.client_id IS NOT NULL OR rt.client_id IS NOT NULL)
+			)
+		`
+	}
+
+	private toNumber(value: unknown) {
+		const numberValue = Number(value ?? 0)
+
+		return Number.isFinite(numberValue) ? numberValue : 0
+	}
+
 	async onModuleInit() {
 		await this.prisma.createActionMethods(ClientController)
 	}
+}
+
+type ClientActivityRow = {
+	id: string
+	fullname: string
+	phone: string
+	last_date: Date
+}
+
+type ClientActivityCountRow = {
+	total_count: number
+}
+
+type ClientProfitRow = {
+	id: string
+	fullname: string
+	phone: string
+	sale_count: number
+	revenue: number
+	profit: number
+}
+
+type ClientProfitSummaryRow = {
+	total_count: number
+	client_count: number
+	sale_count: number
+	revenue: number
+	profit: number
 }

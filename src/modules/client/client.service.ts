@@ -11,6 +11,8 @@ import {
 	ClientDeleteOneRequest,
 	ClientDeed,
 	ClientCalc,
+	ClientGetActivityRequest,
+	ClientGetProfitRankRequest,
 } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
 import { ExcelService } from '../shared'
@@ -342,6 +344,18 @@ export class ClientService {
 		await this.clientRepository.updateOne(query, { ...body })
 
 		return createResponse({ data: null, success: { messages: ['update one success'] } })
+	}
+
+	async getActivity(query: ClientGetActivityRequest) {
+		const result = await this.clientRepository.getActivity(query)
+
+		return createResponse({ data: result, success: { messages: ['get client activity success'] } })
+	}
+
+	async getProfitRank(query: ClientGetProfitRankRequest) {
+		const result = await this.clientRepository.getProfitRank(query)
+
+		return createResponse({ data: result, success: { messages: ['get client profit rank success'] } })
 	}
 
 	async deleteOne(query: ClientDeleteOneRequest) {
