@@ -1,5 +1,5 @@
 import { NestFactory, repl } from '@nestjs/core'
-import { json, Request, Response } from 'express'
+import { json, NextFunction, Request, Response } from 'express'
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { appConfig } from '@config'
@@ -11,6 +11,27 @@ async function bootstrap() {
 	const app = await NestFactory.create<INestApplication>(AppModule, { forceCloseConnections: true })
 
 	// await repl(AppModule)
+
+	app.use((req: Request, _res: Response, next: NextFunction) => {
+		let path = req.path
+		try {
+			path = decodeURIComponent(path)
+		} catch {
+			req.socket.destroy()
+			return
+		}
+
+		const blocked =
+			path.includes('..') ||
+			path.split('/').some((part) => part.startsWith('.')) ||
+			/^\/(admin|secrets|phpmyadmin|wp-admin|wp-login\.php|cgi-bin|server-status|actuator)(\/|$)/i.test(path)
+
+		if (blocked) {
+			req.socket.destroy()
+			return
+		}
+		next()
+	})
 
 	app.use(compression())
 
