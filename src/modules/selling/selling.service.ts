@@ -12,6 +12,7 @@ import {
 	SellingDeleteOneRequest,
 	SellingGetTotalStatsRequest,
 	SellingGetPeriodStatsRequest,
+	SellingGetProductIdleRequest,
 	SellingGetProductRankRequest,
 } from './interfaces'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -494,5 +495,11 @@ export class SellingService {
 		const result = await this.sellingRepository.getProductRank(query)
 
 		return createResponse({ data: result, success: { messages: ['get product rank success'] } })
+	}
+
+	async getProductIdle(query: SellingGetProductIdleRequest) {
+		const result = await this.sellingRepository.getProductIdle(query)
+
+		return createResponse({ data: result, success: { messages: ['get product idle success'] } })
 	}
 }

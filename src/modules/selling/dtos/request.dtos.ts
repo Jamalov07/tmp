@@ -5,6 +5,7 @@ import {
 	SellingFindManyRequest,
 	SellingFindOneRequest,
 	SellingGetPeriodStatsRequest,
+	SellingGetProductIdleRequest,
 	SellingGetProductRankRequest,
 	SellingGetTotalStatsRequest,
 	SellingPayment,
@@ -87,3 +88,7 @@ export class SellingGetProductRankRequestDto
 	@IsEnum(ProductRankMetricEnum)
 	metric?: ProductRankMetricEnum = ProductRankMetricEnum.count
 }
+
+export class SellingGetProductIdleRequestDto
+	extends IntersectionType(PaginationRequestDto, PickType(RequestOtherFieldsDto, ['startDate', 'endDate']))
+	implements SellingGetProductIdleRequest {}

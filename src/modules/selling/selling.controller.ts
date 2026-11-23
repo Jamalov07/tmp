@@ -15,6 +15,7 @@ import {
 	SellingGetPeriodStatsResponseDto,
 	SellingGetPeriodStatsRequestDto,
 	SellingGetProductRankRequestDto,
+	SellingGetProductIdleRequestDto,
 } from './dtos'
 import { SellingService } from './selling.service'
 import { AuthOptions, CheckPermissionGuard, CRequest } from '../../common'
@@ -60,6 +61,13 @@ export class SellingController {
 	@AuthOptions(false, false)
 	async getProductRank(@Query() query: SellingGetProductRankRequestDto) {
 		return this.sellingService.getProductRank(query)
+	}
+
+	@Get('product-idle')
+	@ApiOperation({ summary: 'products ordered by oldest last sale' })
+	@AuthOptions(false, false)
+	async getProductIdle(@Query() query: SellingGetProductIdleRequestDto) {
+		return this.sellingService.getProductIdle(query)
 	}
 
 	@Get('one')

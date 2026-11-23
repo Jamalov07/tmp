@@ -8,6 +8,7 @@ import {
 	SellingGetManyRequest,
 	SellingGetOneRequest,
 	SellingGetPeriodStatsRequest,
+	SellingGetProductIdleRequest,
 	SellingGetProductRankRequest,
 	SellingUpdateOneRequest,
 } from './interfaces'
@@ -540,6 +541,95 @@ export class SellingRepository implements OnModuleInit {
 		}
 	}
 
+	async getProductIdle(query: SellingGetProductIdleRequest) {
+		const pageNumber = query.pageNumber || 1
+		const pageSize = query.pageSize || 20
+		const startDate = query.startDate ? new Date(query.startDate) : undefined
+		const endDate = query.endDate ? new Date(query.endDate) : undefined
+		const countFilters = this.productIdleFilters(startDate, endDate)
+		const pageFilters = this.productIdleFilters(startDate, endDate)
+
+		const [summary] = await this.prisma.$queryRaw<ProductIdleSummaryRow[]>`
+			${this.productIdleCte()}
+			SELECT
+				COUNT(*)::int AS total_count,
+				COUNT(*) FILTER (WHERE ls.last_date IS NULL)::int AS never_sold_count,
+				COALESCE(SUM(p.count), 0)::int AS stock,
+				COALESCE(SUM(p.cost * p.count), 0)::float8 AS stock_value
+			FROM product p
+			LEFT JOIN last_sale ls ON ls.product_id = p.id
+			WHERE p.deleted_at IS NULL
+				${countFilters.fromFilter}
+				${countFilters.toFilter}
+		`
+
+		const rows = await this.prisma.$queryRaw<ProductIdleRow[]>`
+			${this.productIdleCte()}
+			SELECT
+				p.id::text AS id,
+				p.name AS name,
+				p.count::int AS stock,
+				(p.cost * p.count)::float8 AS stock_value,
+				ls.last_date,
+				CASE
+					WHEN ls.last_date IS NULL THEN NULL
+					ELSE ((NOW() AT TIME ZONE 'Asia/Tashkent')::date - (ls.last_date AT TIME ZONE 'Asia/Tashkent')::date)::int
+				END AS idle_days
+			FROM product p
+			LEFT JOIN last_sale ls ON ls.product_id = p.id
+			WHERE p.deleted_at IS NULL
+				${pageFilters.fromFilter}
+				${pageFilters.toFilter}
+			ORDER BY ls.last_date ASC NULLS FIRST, p.name ASC
+			OFFSET ${(pageNumber - 1) * pageSize}
+			LIMIT ${pageSize}
+		`
+
+		const totalCount = this.toNumber(summary?.total_count)
+
+		return {
+			totalCount,
+			pagesCount: pageSize ? Math.ceil(totalCount / pageSize) : 0,
+			pageSize,
+			summary: {
+				productCount: totalCount,
+				neverSoldCount: this.toNumber(summary?.never_sold_count),
+				stock: this.toNumber(summary?.stock),
+				stockValue: this.toNumber(summary?.stock_value),
+			},
+			data: rows.map((row) => ({
+				id: row.id,
+				name: row.name,
+				lastSaleDate: row.last_date ? new Date(row.last_date).toISOString() : null,
+				idleDays: row.idle_days === null || row.idle_days === undefined ? null : this.toNumber(row.idle_days),
+				stock: this.toNumber(row.stock),
+				stockValue: this.toNumber(row.stock_value),
+			})),
+		}
+	}
+
+	private productIdleCte() {
+		return Prisma.sql`
+			WITH last_sale AS (
+				SELECT pm.product_id, MAX(s.date) AS last_date
+				FROM product_mv pm
+				INNER JOIN selling s ON s.id = pm.selling_id
+				WHERE pm.deleted_at IS NULL
+					AND s.deleted_at IS NULL
+					AND pm.type = ${ServiceTypeEnum.selling}::service_type
+					AND s.status = ${SellingStatusEnum.accepted}::selling_status
+				GROUP BY pm.product_id
+			)
+		`
+	}
+
+	private productIdleFilters(startDate?: Date, endDate?: Date) {
+		return {
+			fromFilter: startDate ? Prisma.sql`AND ls.last_date >= ${startDate}` : Prisma.empty,
+			toFilter: endDate ? Prisma.sql`AND ls.last_date <= ${endDate}` : Prisma.empty,
+		}
+	}
+
 	private productRankCte(startDate: Date, endDate: Date) {
 		return Prisma.sql`
 			WITH sales AS (
@@ -617,4 +707,20 @@ type ProductRankSummaryRow = {
 	quantity: number
 	revenue: number
 	profit: number
+}
+
+type ProductIdleRow = {
+	id: string
+	name: string
+	stock: number
+	stock_value: number
+	last_date: Date | null
+	idle_days: number | null
+}
+
+type ProductIdleSummaryRow = {
+	total_count: number
+	never_sold_count: number
+	stock: number
+	stock_value: number
 }

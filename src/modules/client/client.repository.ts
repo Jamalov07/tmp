@@ -384,31 +384,55 @@ export class ClientRepository implements OnModuleInit {
 		const pageSize = query.pageSize || 20
 		const countFilters = this.activityFilters(bucket)
 		const pageFilters = this.activityFilters(bucket)
+		const fromClients = bucket === ClientActivityBucketEnum.inactive
 
-		const [summary] = await this.prisma.$queryRaw<ClientActivityCountRow[]>`
-			${this.activityCte()}
-			SELECT COUNT(*)::int AS total_count
-			FROM last_sale ls
-			INNER JOIN "user" u ON u.id = ls.client_id
-			WHERE u.deleted_at IS NULL
-				AND u.type = ${UserTypeEnum.client}::user_type
-				${countFilters.fromFilter}
-				${countFilters.toFilter}
-		`
+		const [summary] = fromClients
+			? await this.prisma.$queryRaw<ClientActivityCountRow[]>`
+				${this.activityCte()}
+				SELECT COUNT(*)::int AS total_count
+				FROM "user" u
+				LEFT JOIN last_sale ls ON ls.client_id = u.id
+				WHERE u.deleted_at IS NULL
+					AND u.type = ${UserTypeEnum.client}::user_type
+					AND (ls.last_date IS NULL OR ls.last_date < ${countFilters.inactiveBefore})
+			`
+			: await this.prisma.$queryRaw<ClientActivityCountRow[]>`
+				${this.activityCte()}
+				SELECT COUNT(*)::int AS total_count
+				FROM last_sale ls
+				INNER JOIN "user" u ON u.id = ls.client_id
+				WHERE u.deleted_at IS NULL
+					AND u.type = ${UserTypeEnum.client}::user_type
+					${countFilters.fromFilter}
+					${countFilters.toFilter}
+			`
 
-		const rows = await this.prisma.$queryRaw<ClientActivityRow[]>`
-			${this.activityCte()}
-			SELECT u.id::text AS id, u.fullname, u.phone, ls.last_date
-			FROM last_sale ls
-			INNER JOIN "user" u ON u.id = ls.client_id
-			WHERE u.deleted_at IS NULL
-				AND u.type = ${UserTypeEnum.client}::user_type
-				${pageFilters.fromFilter}
-				${pageFilters.toFilter}
-			${pageFilters.orderBy}
-			OFFSET ${(pageNumber - 1) * pageSize}
-			LIMIT ${pageSize}
-		`
+		const rows = fromClients
+			? await this.prisma.$queryRaw<ClientActivityRow[]>`
+				${this.activityCte()}
+				SELECT u.id::text AS id, u.fullname, u.phone, ls.last_date
+				FROM "user" u
+				LEFT JOIN last_sale ls ON ls.client_id = u.id
+				WHERE u.deleted_at IS NULL
+					AND u.type = ${UserTypeEnum.client}::user_type
+					AND (ls.last_date IS NULL OR ls.last_date < ${pageFilters.inactiveBefore})
+				ORDER BY ls.last_date ASC NULLS FIRST, u.fullname ASC
+				OFFSET ${(pageNumber - 1) * pageSize}
+				LIMIT ${pageSize}
+			`
+			: await this.prisma.$queryRaw<ClientActivityRow[]>`
+				${this.activityCte()}
+				SELECT u.id::text AS id, u.fullname, u.phone, ls.last_date
+				FROM last_sale ls
+				INNER JOIN "user" u ON u.id = ls.client_id
+				WHERE u.deleted_at IS NULL
+					AND u.type = ${UserTypeEnum.client}::user_type
+					${pageFilters.fromFilter}
+					${pageFilters.toFilter}
+				${pageFilters.orderBy}
+				OFFSET ${(pageNumber - 1) * pageSize}
+				LIMIT ${pageSize}
+			`
 
 		const totalCount = this.toNumber(summary?.total_count)
 
@@ -420,7 +444,7 @@ export class ClientRepository implements OnModuleInit {
 				id: row.id,
 				fullname: row.fullname,
 				phone: row.phone,
-				lastPurchaseDate: new Date(row.last_date).toISOString(),
+				lastPurchaseDate: row.last_date ? new Date(row.last_date).toISOString() : null,
 			})),
 		}
 	}
@@ -501,7 +525,8 @@ export class ClientRepository implements OnModuleInit {
 		return {
 			fromFilter: range.from ? Prisma.sql`AND ls.last_date >= ${range.from}` : Prisma.empty,
 			toFilter: range.to ? Prisma.sql`AND ls.last_date < ${range.to}` : Prisma.empty,
-			orderBy: range.newestFirst ? Prisma.sql`ORDER BY ls.last_date DESC, u.fullname ASC` : Prisma.sql`ORDER BY ls.last_date ASC, u.fullname ASC`,
+			inactiveBefore: range.to ?? new Date(0),
+			orderBy: range.newestFirst ? Prisma.sql`ORDER BY ls.last_date DESC, u.fullname ASC` : Prisma.sql`ORDER BY ls.last_date ASC NULLS FIRST, u.fullname ASC`,
 		}
 	}
 
@@ -572,7 +597,7 @@ type ClientActivityRow = {
 	id: string
 	fullname: string
 	phone: string
-	last_date: Date
+	last_date: Date | null
 }
 
 type ClientActivityCountRow = {

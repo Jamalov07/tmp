@@ -41,3 +41,5 @@ export declare interface SellingGetPeriodStatsRequest {
 export declare interface SellingGetProductRankRequest extends PaginationRequest, Pick<RequestOtherFields, 'startDate' | 'endDate'> {
 	metric?: ProductRankMetricEnum
 }
+
+export declare interface SellingGetProductIdleRequest extends PaginationRequest, Pick<RequestOtherFields, 'startDate' | 'endDate'> {}
