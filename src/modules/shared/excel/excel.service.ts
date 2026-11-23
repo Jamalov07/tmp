@@ -1228,62 +1228,32 @@ export class ExcelService {
 		const clientAllInfos = await this.prisma.userModel.findFirst({
 			where: { id: query.id },
 			select: {
-				id: true,
-				fullname: true,
-				phone: true,
-				actions: true,
-				updatedAt: true,
-				createdAt: true,
-				deletedAt: true,
-				payments: {
-					where: { type: ServiceTypeEnum.client },
-					select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
-				},
+				balance: true,
 				sellings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
-						date: true,
-						products: { select: { totalPrice: true, cost: true, count: true, price: true } },
-						payment: {
-							select: { total: true, card: true, cash: true, other: true, transfer: true, createdAt: true, description: true },
-						},
+						totalPrice: true,
+						payment: { select: { total: true } },
 					},
-					orderBy: { date: 'desc' },
 				},
 				returnings: {
 					where: { status: SellingStatusEnum.accepted },
 					select: {
-						payment: {
-							select: { fromBalance: true, createdAt: true, description: true },
-						},
+						payment: { select: { fromBalance: true } },
 					},
 				},
 			},
 		})
 
-		let totalDebit2: Decimal = new Decimal(0)
-		let totalCredit2: Decimal = new Decimal(0)
-
-		clientAllInfos.payments.forEach((curr) => {
-			totalCredit2 = totalCredit2.plus(curr.total)
-		})
-
-		clientAllInfos.sellings.forEach((sel) => {
-			const productsSum = sel.products.reduce((a, p) => a.plus(p.totalPrice), new Decimal(0))
-			totalDebit2 = totalDebit2.plus(productsSum)
-
-			totalCredit2 = totalCredit2.plus(sel.payment.total)
-		})
-
-		clientAllInfos.returnings.forEach((returning) => {
-			totalCredit2 = totalCredit2.plus(returning.payment.fromBalance)
-		})
+		const sellingDebt = clientAllInfos.sellings.reduce((acc, sel) => acc.plus(sel.totalPrice).minus(sel.payment.total), new Decimal(0))
+		const returningDeduction = clientAllInfos.returnings.reduce((acc, returning) => acc.plus(returning.payment.fromBalance), new Decimal(0))
+		const debt = sellingDebt.plus(clientAllInfos.balance).minus(returningDeduction)
 		///=====================
 
 		const wb = new ExcelJS.Workbook()
 		const ws = wb.addWorksheet('Клиент')
 
-		const row1 = ws.addRow([`Клиент: ${client.fullname}`, '', '', `Остаток: ${totalDebit2.minus(totalCredit2).toFixed(2)}`, '', '', ''])
+		const row1 = ws.addRow([`Клиент: ${client.fullname}`, '', '', `Остаток: ${debt.toFixed(2)}`, '', '', ''])
 		ws.mergeCells(`A${row1.number}:C${row1.number}`)
 		ws.mergeCells(`D${row1.number}:G${row1.number}`)
 		styleRow(row1)
